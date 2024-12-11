@@ -179,6 +179,8 @@ class _ChatViewState extends State<ChatView>
 
   FeatureActiveConfig get featureActiveConfig => widget.featureActiveConfig;
 
+  RenderBox? chatViewRenderBox;
+
   @override
   void initState() {
     super.initState();
@@ -198,7 +200,19 @@ class _ChatViewState extends State<ChatView>
       profileCircleConfiguration: widget.profileCircleConfig,
       child: SuggestionsConfigIW(
         suggestionsConfig: widget.replySuggestionsConfig,
-        child: Builder(builder: (context) {
+        child: Builder(builder: (chatViewContext) {
+          WidgetsBinding.instance.addPostFrameCallback((duration) {
+            Future.delayed(
+              duration,
+              () {
+                setState(() {
+                  if (!chatViewContext.mounted) return;
+                  chatViewRenderBox =
+                      chatViewContext.findRenderObject() as RenderBox?;
+                });
+              },
+            );
+          });
           return ConfigurationsInheritedWidget(
             chatBackgroundConfig: widget.chatBackgroundConfig,
             reactionPopupConfig: widget.reactionPopupConfig,
@@ -215,9 +229,9 @@ class _ChatViewState extends State<ChatView>
               children: [
                 Container(
                   height: chatBackgroundConfig.height ??
-                      MediaQuery.of(context).size.height,
+                      MediaQuery.of(chatViewContext).size.height,
                   width: chatBackgroundConfig.width ??
-                      MediaQuery.of(context).size.width,
+                      MediaQuery.of(chatViewContext).size.width,
                   decoration: BoxDecoration(
                     color: chatBackgroundConfig.backgroundColor ?? Colors.white,
                     image: chatBackgroundConfig.backgroundImage != null
@@ -282,7 +296,7 @@ class _ChatViewState extends State<ChatView>
                                 sendMessageConfig: widget.sendMessageConfig,
                                 onSendTap:
                                     (message, replyMessage, messageType) {
-                                  if (context.suggestionsConfig
+                                  if (chatViewContext.suggestionsConfig
                                           ?.autoDismissOnSelection ??
                                       true) {
                                     chatController.removeReplySuggestions();
@@ -305,11 +319,11 @@ class _ChatViewState extends State<ChatView>
                 ),
                 if (featureActiveConfig.enableReactionPopup)
                   ValueListenableBuilder<bool>(
-                    valueListenable: context.chatViewIW!.showPopUp,
+                    valueListenable: chatViewContext.chatViewIW!.showPopUp,
                     builder: (_, showPopupValue, child) {
                       return ReactionPopup(
-                        key: context.chatViewIW!.reactionPopupKey,
-                        onTap: () => _onChatListTap(context),
+                        key: chatViewContext.chatViewIW!.reactionPopupKey,
+                        onTap: () => _onChatListTap(chatViewContext),
                         showPopUp: showPopupValue,
                       );
                     },

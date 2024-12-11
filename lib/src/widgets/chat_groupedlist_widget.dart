@@ -38,6 +38,7 @@ class ChatGroupedListWidget extends StatefulWidget {
     required this.onChatListTap,
     required this.onChatBubbleLongPress,
     required this.isEnableSwipeToSeeTime,
+    this.chatViewRenderBox,
   }) : super(key: key);
 
   /// Allow user to swipe to see time while reaction pop is not open.
@@ -61,6 +62,8 @@ class ChatGroupedListWidget extends StatefulWidget {
   /// Provide flag for turn on/off to see message crated time view when user
   /// swipe whole chat.
   final bool isEnableSwipeToSeeTime;
+
+  final RenderBox? chatViewRenderBox;
 
   @override
   State<ChatGroupedListWidget> createState() => _ChatGroupedListWidgetState();
@@ -316,6 +319,7 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
                       false;
                   return ChatBubbleWidget(
                     key: message.key,
+                    chatViewRenderBox: widget.chatViewRenderBox,
                     message: message,
                     slideAnimation: _slideAnimation,
                     onLongPress: (yCoordinate, xCoordinate) =>

@@ -40,6 +40,7 @@ class ChatBubbleWidget extends StatefulWidget {
     required this.onSwipe,
     this.onReplyTap,
     this.shouldHighlight = false,
+    this.chatViewRenderBox,
   }) : super(key: key);
 
   /// Represent current instance of message.
@@ -59,6 +60,8 @@ class ChatBubbleWidget extends StatefulWidget {
 
   /// Flag for when user tap on replied message and highlight actual message.
   final bool shouldHighlight;
+
+  final RenderBox? chatViewRenderBox;
 
   @override
   State<ChatBubbleWidget> createState() => _ChatBubbleWidgetState();
@@ -273,6 +276,7 @@ class _ChatBubbleWidgetState extends State<ChatBubbleWidget> {
           isMessageByCurrentUser: isMessageBySender,
           onSwipe: isMessageBySender ? onLeftSwipe : onRightSwipe,
           child: MessageView(
+            chatViewRenderBox: widget.chatViewRenderBox,
             outgoingChatBubbleConfig:
                 chatListConfig.chatBubbleConfig?.outgoingChatBubbleConfig,
             isLongPressEnable:

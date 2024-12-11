@@ -48,6 +48,7 @@ class MessageView extends StatefulWidget {
     this.messageConfig,
     this.onMaxDuration,
     this.controller,
+    this.chatViewRenderBox,
   }) : super(key: key);
 
   /// Provides message instance of chat.
@@ -93,6 +94,8 @@ class MessageView extends StatefulWidget {
   final ChatController? controller;
 
   final Function(int)? onMaxDuration;
+
+  final RenderBox? chatViewRenderBox;
 
   @override
   State<MessageView> createState() => _MessageViewState();
@@ -267,10 +270,19 @@ class _MessageViewState extends State<MessageView>
   }
 
   void _onLongPressStart(LongPressStartDetails details) async {
+    final RenderBox? chatViewRenderBox = widget.chatViewRenderBox;
+
+    final double dy = chatViewRenderBox == null
+        ? details.globalPosition.dy
+        : chatViewRenderBox.globalToLocal(details.globalPosition).dy;
+    final double dx = chatViewRenderBox == null
+        ? details.globalPosition.dx
+        : chatViewRenderBox.globalToLocal(details.globalPosition).dx;
+
     await _animationController?.forward();
     widget.onLongPress(
-      details.globalPosition.dy,
-      details.globalPosition.dx,
+      dy,
+      dx,
     );
   }
 

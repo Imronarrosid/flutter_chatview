@@ -31,6 +31,7 @@ class ReactionPopup extends StatefulWidget {
     Key? key,
     required this.onTap,
     required this.showPopUp,
+    this.chatViewRenderBox,
   }) : super(key: key);
 
   /// Provides call back when user taps on reaction pop-up.
@@ -38,6 +39,8 @@ class ReactionPopup extends StatefulWidget {
 
   /// Represents should pop-up show or not.
   final bool showPopUp;
+
+  final RenderBox? chatViewRenderBox;
 
   @override
   ReactionPopupState createState() => ReactionPopupState();
@@ -84,8 +87,9 @@ class ReactionPopupState extends State<ReactionPopup>
 
   @override
   Widget build(BuildContext context) {
-    final deviceWidth = MediaQuery.of(context).size.width;
-    final toolTipWidth = deviceWidth > 450 ? 450 : deviceWidth;
+    final chatViewWidth = widget.chatViewRenderBox?.size.width ??
+        MediaQuery.of(context).size.width;
+    final toolTipWidth = chatViewWidth > 450 ? 450 : chatViewWidth;
     if (showPopUp) {
       _animationController.forward();
     } else {
@@ -94,13 +98,13 @@ class ReactionPopupState extends State<ReactionPopup>
     return showPopUp
         ? Positioned(
             top: _yCoordinate,
-            left: _xCoordinate + toolTipWidth > deviceWidth
-                ? deviceWidth - toolTipWidth
+            left: _xCoordinate + toolTipWidth > chatViewWidth
+                ? chatViewWidth - toolTipWidth
                 : _xCoordinate - (toolTipWidth / 2) < 0
                     ? 0
                     : _xCoordinate - (toolTipWidth / 2),
             child: SizedBox(
-              width: deviceWidth > 450 ? 450 : deviceWidth,
+              width: chatViewWidth > 450 ? 450 : chatViewWidth,
               child: AnimatedBuilder(
                 animation: _scaleAnimation,
                 builder: (context, child) => Transform.scale(
