@@ -323,6 +323,7 @@ class _ChatViewState extends State<ChatView>
                     valueListenable: chatViewContext.chatViewIW!.showPopUp,
                     builder: (_, showPopupValue, child) {
                       return ReactionPopup(
+                        chatViewRenderBox: chatViewRenderBox,
                         key: chatViewContext.chatViewIW!.reactionPopupKey,
                         onTap: () => _onChatListTap(chatViewContext),
                         showPopUp: showPopupValue,
