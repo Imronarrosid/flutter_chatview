@@ -202,16 +202,12 @@ class _ChatViewState extends State<ChatView>
         suggestionsConfig: widget.replySuggestionsConfig,
         child: Builder(builder: (chatViewContext) {
           WidgetsBinding.instance.addPostFrameCallback((duration) {
-            Future.delayed(
-              duration,
-              () {
-                setState(() {
-                  if (!chatViewContext.mounted) return;
-                  chatViewRenderBox =
-                      chatViewContext.findRenderObject() as RenderBox?;
-                });
-              },
-            );
+            if (chatViewRenderBox == null) {
+              setState(() {
+                chatViewRenderBox =
+                    chatViewContext.findRenderObject() as RenderBox?;
+              });
+            }
           });
           return ConfigurationsInheritedWidget(
             chatBackgroundConfig: widget.chatBackgroundConfig,
