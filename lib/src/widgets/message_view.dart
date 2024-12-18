@@ -213,6 +213,7 @@ class _MessageViewState extends State<MessageView>
                   );
                 } else if (widget.message.messageType.isText) {
                   return TextMessageView(
+                    chatViewRenderBox: widget.chatViewRenderBox,
                     inComingChatBubbleConfig: widget.inComingChatBubbleConfig,
                     outgoingChatBubbleConfig: widget.outgoingChatBubbleConfig,
                     isMessageBySender: widget.isMessageBySender,
@@ -224,7 +225,8 @@ class _MessageViewState extends State<MessageView>
                   );
                 } else if (widget.message.messageType.isVoice) {
                   return VoiceMessageView(
-                    screenWidth: MediaQuery.of(context).size.width,
+                    screenWidth: widget.chatViewRenderBox?.size.width ??
+                        MediaQuery.of(context).size.width,
                     message: widget.message,
                     config: messageConfig?.voiceMessageConfig,
                     onMaxDuration: widget.onMaxDuration,

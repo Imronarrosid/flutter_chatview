@@ -39,6 +39,7 @@ class TextMessageView extends StatelessWidget {
     this.messageReactionConfig,
     this.highlightMessage = false,
     this.highlightColor,
+    this.chatViewRenderBox,
   }) : super(key: key);
 
   /// Represents current message is sent by current user.
@@ -64,6 +65,7 @@ class TextMessageView extends StatelessWidget {
 
   /// Allow user to set color of highlighted message.
   final Color? highlightColor;
+  final RenderBox? chatViewRenderBox;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +77,9 @@ class TextMessageView extends StatelessWidget {
         Container(
           constraints: BoxConstraints(
               maxWidth: chatBubbleMaxWidth ??
-                  MediaQuery.of(context).size.width * 0.75),
+                  (chatViewRenderBox?.size.width ??
+                          MediaQuery.of(context).size.width) *
+                      0.75),
           padding: _padding ??
               const EdgeInsets.symmetric(
                 horizontal: 12,
