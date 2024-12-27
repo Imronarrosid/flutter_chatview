@@ -22,9 +22,9 @@
 
 import 'dart:convert';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../conditional/conditional.dart';
 import '../utils/constants/constants.dart';
 import '../values/enumeration.dart';
 import '../values/typedefs.dart';
@@ -39,6 +39,8 @@ class ProfileImageWidget extends StatelessWidget {
     this.networkImageErrorBuilder,
     this.imageType = ImageType.network,
     required this.networkImageProgressIndicatorBuilder,
+    this.imageProviderBuilder,
+    this.imageHeaders,
   });
 
   /// Allow user to set radius of circle avatar.
@@ -57,11 +59,23 @@ class ProfileImageWidget extends StatelessWidget {
   final AssetImageErrorBuilder? assetImageErrorBuilder;
 
   /// Error builder to build error widget for network image
-  final NetworkImageErrorBuilder? networkImageErrorBuilder;
+  final ImageErrorWidgetBuilder? networkImageErrorBuilder;
+
+  final Map<String, String>? imageHeaders;
 
   /// Progress indicator builder for network image
-  final NetworkImageProgressIndicatorBuilder?
-      networkImageProgressIndicatorBuilder;
+
+  final ImageLoadingBuilder? networkImageProgressIndicatorBuilder;
+
+  /// This feature allows you to use a custom image provider.
+  /// This is useful if you want to manage image loading yourself, or if you need to cache images.
+  /// You can also use the `cached_network_image` feature, but when it comes to caching, you might want to decide on a per-message basis.
+  /// Plus, by using this provider, you can choose whether or not to send specific headers based on the URL.
+  final ImageProvider Function({
+    required String uri,
+    required Map<String, String>? imageHeaders,
+    required Conditional conditional,
+  })? imageProviderBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -76,14 +90,28 @@ class ProfileImageWidget extends StatelessWidget {
             fit: BoxFit.cover,
             errorBuilder: assetImageErrorBuilder ?? _errorWidget,
           ),
-        ImageType.network when (imageUrl?.isNotEmpty ?? false) =>
-          CachedNetworkImage(
-            imageUrl: imageUrl ?? defaultAvatarImage,
+        ImageType.network when (imageUrl?.isNotEmpty ?? false) => Image(
+            fit: BoxFit.cover,
             height: radius,
             width: radius,
-            fit: BoxFit.cover,
-            progressIndicatorBuilder: networkImageProgressIndicatorBuilder,
-            errorWidget: networkImageErrorBuilder ?? _networkImageErrorWidget,
+            image: imageProviderBuilder != null
+                ? imageProviderBuilder!(
+                    uri: imageUrl ?? defaultAvatarImage,
+                    imageHeaders: imageHeaders,
+                    conditional: Conditional(),
+                  )
+                : Conditional().getProvider(
+                    imageUrl ?? defaultAvatarImage,
+                    headers: imageHeaders,
+                  ),
+            loadingBuilder: networkImageProgressIndicatorBuilder,
+            errorBuilder: networkImageErrorBuilder ??
+                (context, error, stackTrace) => const Center(
+                      child: Icon(
+                        Icons.error_outline,
+                        size: 18,
+                      ),
+                    ),
           ),
         ImageType.base64 when (imageUrl?.isNotEmpty ?? false) => Image.memory(
             base64Decode(imageUrl!),
@@ -94,15 +122,6 @@ class ProfileImageWidget extends StatelessWidget {
           ),
         _ => const SizedBox.shrink(),
       },
-    );
-  }
-
-  Widget _networkImageErrorWidget(context, url, error) {
-    return const Center(
-      child: Icon(
-        Icons.error_outline,
-        size: 18,
-      ),
     );
   }
 

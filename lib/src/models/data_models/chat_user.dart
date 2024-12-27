@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+import 'package:flutter/material.dart';
+
 import '../../utils/constants/constants.dart';
 import '../../values/enumeration.dart';
 import '../../values/typedefs.dart';
@@ -46,11 +48,10 @@ class ChatUser {
   final AssetImageErrorBuilder? assetImageErrorBuilder;
 
   /// Error builder to build error widget for network image
-  final NetworkImageErrorBuilder? networkImageErrorBuilder;
+  final ImageErrorWidgetBuilder? networkImageErrorBuilder;
 
   /// Progress indicator builder for network image
-  final NetworkImageProgressIndicatorBuilder?
-      networkImageProgressIndicatorBuilder;
+  final ImageLoadingBuilder? networkImageProgressIndicatorBuilder;
 
   ChatUser({
     required this.id,

@@ -25,6 +25,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../chatview.dart';
+import '../conditional/conditional.dart';
 import '../utils/constants/constants.dart';
 import 'profile_image_widget.dart';
 
@@ -49,6 +50,7 @@ class ChatViewAppBar extends StatelessWidget {
     this.networkImageErrorBuilder,
     this.imageType = ImageType.network,
     this.networkImageProgressIndicatorBuilder,
+    this.imageProviderBuilder,
   }) : super(key: key);
 
   /// Allow user to change colour of appbar.
@@ -97,14 +99,23 @@ class ChatViewAppBar extends StatelessWidget {
   final AssetImageErrorBuilder? assetImageErrorBuilder;
 
   /// Error builder to build error widget for network image
-  final NetworkImageErrorBuilder? networkImageErrorBuilder;
+  final AssetImageErrorBuilder? networkImageErrorBuilder;
 
   /// Field to define image type [network, asset or base64]
   final ImageType imageType;
 
   /// Progress indicator builder for network image
-  final NetworkImageProgressIndicatorBuilder?
-      networkImageProgressIndicatorBuilder;
+  final ImageLoadingBuilder? networkImageProgressIndicatorBuilder;
+
+  /// This feature allows you to use a custom image provider.
+  /// This is useful if you want to manage image loading yourself, or if you need to cache images.
+  /// You can also use the `cached_network_image` feature, but when it comes to caching, you might want to decide on a per-message basis.
+  /// Plus, by using this provider, you can choose whether or not to send specific headers based on the URL.
+  final ImageProvider Function({
+    required String uri,
+    required Map<String, String>? imageHeaders,
+    required Conditional conditional,
+  })? imageProviderBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -144,6 +155,7 @@ class ChatViewAppBar extends StatelessWidget {
                         imageType: imageType,
                         networkImageProgressIndicatorBuilder:
                             networkImageProgressIndicatorBuilder,
+                        imageProviderBuilder: imageProviderBuilder,
                       ),
                     ),
                   Column(
