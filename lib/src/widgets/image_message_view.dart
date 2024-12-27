@@ -169,7 +169,7 @@ class ImageMessageView extends StatelessWidget {
             if (message.reaction.reactions.isNotEmpty)
               ReactionWidget(
                 isMessageBySender: isMessageBySender,
-                reaction: message.reaction,
+                message: message,
                 messageReactionConfig: messageReactionConfig,
               ),
           ],

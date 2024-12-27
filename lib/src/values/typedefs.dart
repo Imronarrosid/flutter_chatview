@@ -49,7 +49,7 @@ typedef ReactionCallback = void Function(
 );
 typedef ReactedUserCallback = void Function(
   ChatUser reactedUser,
-  String reaction,
+  Message message,
 );
 
 /// customMessageType view for a reply of custom message type

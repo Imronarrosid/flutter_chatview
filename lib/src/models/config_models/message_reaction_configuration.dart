@@ -88,6 +88,8 @@ class ReactionsBottomSheetConfiguration {
     this.profileCircleRadius,
     this.reactionSize,
     this.reactedUserCallback,
+    this.subtitle,
+    this.subtitleTextStyle,
   });
 
   /// Used for giving padding of bottom sheet.
@@ -108,6 +110,9 @@ class ReactionsBottomSheetConfiguration {
   /// Used for giving text style to reacted user name.
   final TextStyle? reactedUserTextStyle;
 
+  /// Used for giving text style to subtitle.
+  final TextStyle? subtitleTextStyle;
+
   /// Used for giving profile circle radius.
   final double? profileCircleRadius;
 
@@ -116,4 +121,7 @@ class ReactionsBottomSheetConfiguration {
 
   /// Called when user tap on reacted user from reaction list
   final ReactedUserCallback? reactedUserCallback;
+
+  /// Used for adding text bilow reacted user name.
+  final String? subtitle;
 }

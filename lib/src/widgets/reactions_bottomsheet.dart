@@ -8,8 +8,8 @@ class ReactionsBottomSheet {
   Future<void> show({
     required BuildContext context,
 
-    /// Provides reaction instance of message.
-    required Reaction reaction,
+    /// Provides instance of message.
+    required Message message,
 
     /// Provides controller for accessing few function for running chat.
     required ChatController chatController,
@@ -30,15 +30,15 @@ class ReactionsBottomSheet {
                   left: 12,
                   top: 18,
                 ),
-            itemCount: reaction.reactedUserIds.length,
+            itemCount: message.reaction.reactedUserIds.length,
             itemBuilder: (_, index) {
-              final reactedUser =
-                  chatController.getUserFromId(reaction.reactedUserIds[index]);
+              final reactedUser = chatController
+                  .getUserFromId(message.reaction.reactedUserIds[index]);
               return GestureDetector(
                 onTap: () {
                   reactionsBottomSheetConfig?.reactedUserCallback?.call(
                     reactedUser,
-                    reaction.reactions[index],
+                    message,
                   );
                 },
                 child: Container(
@@ -81,16 +81,30 @@ class ReactionsBottomSheet {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          reactedUser.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style:
-                              reactionsBottomSheetConfig?.reactedUserTextStyle,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              reactedUser.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: reactionsBottomSheetConfig
+                                  ?.reactedUserTextStyle,
+                            ),
+                            if (reactionsBottomSheetConfig?.subtitle != null)
+                              Text(
+                                reactionsBottomSheetConfig!.subtitle!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: reactionsBottomSheetConfig
+                                    .subtitleTextStyle,
+                              ),
+                          ],
                         ),
                       ),
                       Text(
-                        reaction.reactions[index],
+                        message.reaction.reactions[index],
                         style: TextStyle(
                           fontSize:
                               reactionsBottomSheetConfig?.reactionSize ?? 14,

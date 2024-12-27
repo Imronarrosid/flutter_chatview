@@ -110,7 +110,7 @@ class TextMessageView extends StatelessWidget {
           ReactionWidget(
             key: key,
             isMessageBySender: isMessageBySender,
-            reaction: message.reaction,
+            message: message,
             messageReactionConfig: messageReactionConfig,
           ),
       ],
