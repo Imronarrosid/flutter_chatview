@@ -1,3 +1,4 @@
+import 'package:chatview/src/widgets/image_galery.dart';
 import 'package:chatview/src/widgets/reaction_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:chatview/chatview.dart';
@@ -17,8 +18,11 @@ class ChatViewInheritedWidget extends InheritedWidget {
   final ChatController chatController;
   final GlobalKey chatTextFieldViewKey = GlobalKey();
   final ValueNotifier<bool> showPopUp = ValueNotifier(false);
+  final ValueNotifier<bool> showGallery = ValueNotifier(false);
+  final ValueNotifier<PageController> galleryPageController =
+      ValueNotifier(PageController());
   final GlobalKey<ReactionPopupState> reactionPopupKey = GlobalKey();
-
+  final GlobalKey<ImageGalleryState> galleryKey = GlobalKey();
   static ChatViewInheritedWidget? of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ChatViewInheritedWidget>();
 

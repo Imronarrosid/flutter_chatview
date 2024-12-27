@@ -25,6 +25,7 @@ import 'package:chatview/src/widgets/chat_view_inherited_widget.dart';
 import 'package:flutter/material.dart';
 
 import '../../chatview.dart';
+import '../models/data_models/image_preview.dart';
 import 'message_time_widget.dart';
 import 'message_view.dart';
 import 'profile_circle.dart';
@@ -41,6 +42,7 @@ class ChatBubbleWidget extends StatefulWidget {
     this.onReplyTap,
     this.shouldHighlight = false,
     this.chatViewRenderBox,
+    required this.images,
   }) : super(key: key);
 
   /// Represent current instance of message.
@@ -62,6 +64,8 @@ class ChatBubbleWidget extends StatefulWidget {
   final bool shouldHighlight;
 
   final RenderBox? chatViewRenderBox;
+
+  final List<PreviewImage> images;
 
   @override
   State<ChatBubbleWidget> createState() => _ChatBubbleWidgetState();
@@ -277,6 +281,7 @@ class _ChatBubbleWidgetState extends State<ChatBubbleWidget> {
           onSwipe: isMessageBySender ? onLeftSwipe : onRightSwipe,
           child: MessageView(
             chatViewRenderBox: widget.chatViewRenderBox,
+            images: widget.images,
             outgoingChatBubbleConfig:
                 chatListConfig.chatBubbleConfig?.outgoingChatBubbleConfig,
             isLongPressEnable:

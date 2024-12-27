@@ -24,6 +24,7 @@ import 'package:chatview/src/widgets/chat_view_inherited_widget.dart';
 import 'package:flutter/material.dart';
 
 import 'package:chatview/src/extensions/extensions.dart';
+import '../models/data_models/image_preview.dart';
 import '../utils/constants/constants.dart';
 import 'image_message_view.dart';
 import 'text_message_view.dart';
@@ -49,6 +50,7 @@ class MessageView extends StatefulWidget {
     this.onMaxDuration,
     this.controller,
     this.chatViewRenderBox,
+    required this.images,
   }) : super(key: key);
 
   /// Provides message instance of chat.
@@ -96,6 +98,8 @@ class MessageView extends StatefulWidget {
   final Function(int)? onMaxDuration;
 
   final RenderBox? chatViewRenderBox;
+
+  final List<PreviewImage> images;
 
   @override
   State<MessageView> createState() => _MessageViewState();
@@ -205,6 +209,7 @@ class _MessageViewState extends State<MessageView>
                 } else if (widget.message.messageType.isImage) {
                   return ImageMessageView(
                     message: widget.message,
+                    images: widget.images,
                     isMessageBySender: widget.isMessageBySender,
                     imageMessageConfig: messageConfig?.imageMessageConfig,
                     messageReactionConfig: messageConfig?.messageReactionConfig,

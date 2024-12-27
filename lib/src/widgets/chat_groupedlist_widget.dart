@@ -25,6 +25,7 @@ import 'package:chatview/src/widgets/suggestions/suggestion_list.dart';
 import 'package:chatview/src/widgets/type_indicator_widget.dart';
 import 'package:flutter/material.dart';
 
+import '../models/data_models/image_preview.dart';
 import 'chat_bubble_widget.dart';
 import 'chat_group_header.dart';
 
@@ -39,6 +40,7 @@ class ChatGroupedListWidget extends StatefulWidget {
     required this.onChatBubbleLongPress,
     required this.isEnableSwipeToSeeTime,
     this.chatViewRenderBox,
+    required this.images,
   }) : super(key: key);
 
   /// Allow user to swipe to see time while reaction pop is not open.
@@ -64,6 +66,8 @@ class ChatGroupedListWidget extends StatefulWidget {
   final bool isEnableSwipeToSeeTime;
 
   final RenderBox? chatViewRenderBox;
+
+  final List<PreviewImage> images;
 
   @override
   State<ChatGroupedListWidget> createState() => _ChatGroupedListWidgetState();
@@ -319,6 +323,7 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
                       false;
                   return ChatBubbleWidget(
                     key: message.key,
+                    images: widget.images,
                     chatViewRenderBox: widget.chatViewRenderBox,
                     message: message,
                     slideAnimation: _slideAnimation,

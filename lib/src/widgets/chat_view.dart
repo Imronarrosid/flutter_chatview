@@ -32,7 +32,10 @@ import 'package:chatview/src/widgets/suggestions/suggestions_config_inherited_wi
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart';
+import '../conditional/conditional.dart';
+import '../models/data_models/image_preview.dart';
 import '../values/custom_time_messages.dart';
+import 'image_galery.dart';
 import 'send_message_widget.dart';
 
 class ChatView extends StatefulWidget {
@@ -63,6 +66,7 @@ class ChatView extends StatefulWidget {
     this.replyMessageBuilder,
     this.replySuggestionsConfig,
     this.scrollToBottomButtonConfig,
+    this.imageProviderBuilder,
   })  : chatBackgroundConfig =
             chatBackgroundConfig ?? const ChatBackgroundConfiguration(),
         chatViewStateConfig =
@@ -150,6 +154,16 @@ class ChatView extends StatefulWidget {
   /// Provides a configuration for scroll to bottom button config
   final ScrollToBottomButtonConfig? scrollToBottomButtonConfig;
 
+  /// This feature allows you to use a custom image provider.
+  /// This is useful if you want to manage image loading yourself, or if you need to cache images.
+  /// You can also use the `cached_network_image` feature, but when it comes to caching, you might want to decide on a per-message basis.
+  /// Plus, by using this provider, you can choose whether or not to send specific headers based on the URL.
+  final ImageProvider Function({
+    required String uri,
+    required Map<String, String>? imageHeaders,
+    required Conditional conditional,
+  })? imageProviderBuilder;
+
   static void closeReplyMessageView(BuildContext context) {
     final state = context.findAncestorStateOfType<_ChatViewState>();
     if (state == null) return;
@@ -181,10 +195,12 @@ class _ChatViewState extends State<ChatView>
 
   RenderBox? chatViewRenderBox;
 
+  PageController? _galleryPageController;
   @override
   void initState() {
     super.initState();
     setLocaleMessages('en', ReceiptsCustomMessages());
+    _galleryPageController = PageController();
   }
 
   @override
@@ -274,6 +290,7 @@ class _ChatViewState extends State<ChatView>
                                 builder: (_, state, child) {
                                   return ChatListWidget(
                                     chatViewRenderBox: chatViewRenderBox,
+                                    images: _listGallery(),
                                     replyMessage: state,
                                     chatController: widget.chatController,
                                     loadMoreData: widget.loadMoreData,
@@ -326,12 +343,58 @@ class _ChatViewState extends State<ChatView>
                       );
                     },
                   ),
+                ValueListenableBuilder(
+                    key: chatViewContext.chatViewIW!.galleryKey,
+                    valueListenable: chatViewContext.chatViewIW!.showGallery,
+                    builder: (_, showGallery, child) {
+                      if (showGallery) {
+                        return ValueListenableBuilder(
+                            valueListenable: chatViewContext
+                                .chatViewIW!.galleryPageController,
+                            builder: (context, value, child) {
+                              return ImageGallery(
+                                imageProviderBuilder:
+                                    widget.imageProviderBuilder,
+                                images: _listGallery(),
+                                pageController: value,
+                                onClosePressed: () =>
+                                    _onCloseGalleryPressed(chatViewContext),
+                                options: widget
+                                        .messageConfig
+                                        ?.imageMessageConfig
+                                        ?.imageGalleryOptions ??
+                                    const ImageGalleryOptions(),
+                              );
+                            });
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    }),
               ],
             ),
           );
         }),
       ),
     );
+  }
+
+  List<PreviewImage> _listGallery() {
+    List<PreviewImage> results = [];
+    for (var element in widget.chatController.initialMessageList) {
+      if (element.messageType == MessageType.image) {
+        results.add(PreviewImage(id: element.id, uri: element.message));
+      }
+    }
+    return results;
+  }
+
+  void _onCloseGalleryPressed(BuildContext context) {
+    setState(() {
+      context.chatViewIW!.showGallery.value = false;
+    });
+    _galleryPageController?.dispose();
+    _galleryPageController = null;
+    _galleryPageController = PageController();
   }
 
   void _onChatListTap(BuildContext context) {

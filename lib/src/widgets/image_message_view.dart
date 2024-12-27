@@ -22,10 +22,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:chatview/chatview.dart';
 import 'package:chatview/src/extensions/extensions.dart';
-import 'package:chatview/src/models/models.dart';
+import 'package:chatview/src/models/data_models/image_preview.dart';
 import 'package:flutter/material.dart';
 
+import '../conditional/conditional.dart';
 import 'reaction_widget.dart';
 import 'share_icon.dart';
 
@@ -38,6 +40,7 @@ class ImageMessageView extends StatelessWidget {
     this.messageReactionConfig,
     this.highlightImage = false,
     this.highlightScale = 1.2,
+    required this.images,
   }) : super(key: key);
 
   /// Provides message instance of chat.
@@ -58,6 +61,8 @@ class ImageMessageView extends StatelessWidget {
   /// Provides scale of highlighted image when user taps on replied image.
   final double highlightScale;
 
+  final List<PreviewImage> images;
+
   String get imageUrl => message.message;
 
   Widget get iconButton => ShareIcon(
@@ -77,9 +82,21 @@ class ImageMessageView extends StatelessWidget {
         Stack(
           children: [
             GestureDetector(
-              onTap: () => imageMessageConfig?.onTap != null
-                  ? imageMessageConfig?.onTap!(message)
-                  : null,
+              onTap: () {
+                imageMessageConfig?.onTap != null
+                    ? imageMessageConfig?.onTap!(message)
+                    : null;
+
+                final initialPage = images.indexWhere(
+                  (element) =>
+                      element.id == message.id &&
+                      element.uri == message.message,
+                );
+                context.chatViewIW?.galleryPageController.value =
+                    PageController(initialPage: initialPage!);
+
+                context.chatViewIW?.showGallery.value = true;
+              },
               child: Transform.scale(
                 scale: highlightImage ? highlightScale : 1.0,
                 alignment: isMessageBySender
@@ -101,18 +118,33 @@ class ImageMessageView extends StatelessWidget {
                         BorderRadius.circular(14),
                     child: (() {
                       if (imageUrl.isUrl) {
-                        return Image.network(
-                          imageUrl,
+                        return Image(
+                          image:
+                              imageMessageConfig?.imageProviderBuilder != null
+                                  ? imageMessageConfig!.imageProviderBuilder!(
+                                      uri: message.message,
+                                      imageHeaders:
+                                          imageMessageConfig?.imageHeaders,
+                                      conditional: Conditional(),
+                                    )
+                                  : Conditional().getProvider(
+                                      message.message,
+                                      headers: imageMessageConfig?.imageHeaders,
+                                    ),
                           fit: BoxFit.fitHeight,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes !=
-                                        null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
+                            return Container(
+                              color: imageMessageConfig?.unloadedColor ??
+                                  Colors.transparent,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes !=
+                                          null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
                               ),
                             );
                           },

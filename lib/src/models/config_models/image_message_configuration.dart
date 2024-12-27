@@ -19,8 +19,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import 'package:chatview/src/widgets/image_galery.dart';
 import 'package:flutter/material.dart';
 
+import '../../conditional/conditional.dart';
 import '../../values/typedefs.dart';
 
 class ImageMessageConfiguration {
@@ -48,6 +50,22 @@ class ImageMessageConfiguration {
   /// Used for giving border radius of image message.
   final BorderRadius? borderRadius;
 
+  final Color? unloadedColor;
+
+  final ImageGalleryOptions imageGalleryOptions;
+
+  final Map<String, String>? imageHeaders;
+
+  /// This feature allows you to use a custom image provider.
+  /// This is useful if you want to manage image loading yourself, or if you need to cache images.
+  /// You can also use the `cached_network_image` feature, but when it comes to caching, you might want to decide on a per-message basis.
+  /// Plus, by using this provider, you can choose whether or not to send specific headers based on the URL.
+  final ImageProvider Function({
+    required String uri,
+    required Map<String, String>? imageHeaders,
+    required Conditional conditional,
+  })? imageProviderBuilder;
+
   const ImageMessageConfiguration({
     this.hideShareIcon = false,
     this.shareIconConfig,
@@ -57,6 +75,10 @@ class ImageMessageConfiguration {
     this.padding,
     this.margin,
     this.borderRadius,
+    this.unloadedColor,
+    this.imageGalleryOptions = const ImageGalleryOptions(),
+    this.imageProviderBuilder,
+    this.imageHeaders,
   });
 }
 
