@@ -21,6 +21,7 @@
  */
 import 'dart:async';
 
+import 'package:chatview/src/models/data_models/reation_bottom_sheet.dart';
 import 'package:chatview/src/widgets/suggestions/suggestion_list.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -57,6 +58,13 @@ class ChatController {
   ValueListenable<List<SuggestionItemData>> get newSuggestions =>
       _replySuggestion;
 
+  final ReationBottomSheet _reactionBottomSheetNotifier = ReationBottomSheet();
+
+  /// Initial [Reaction] value is null
+  /// assing previous [Reaction] value first before using it.
+  ReationBottomSheet get reactionBottomSheetNotifier =>
+      _reactionBottomSheetNotifier;
+
   /// Getter for typingIndicator value instead of accessing [_showTypingIndicator.value]
   /// for better accessibility.
   bool get showTypingIndicator => _showTypingIndicator.value;
@@ -88,6 +96,7 @@ class ChatController {
   void dispose() {
     _showTypingIndicator.dispose();
     _replySuggestion.dispose();
+    _reactionBottomSheetNotifier.dispose();
     scrollController.dispose();
     messageStreamController.close();
   }
@@ -145,6 +154,16 @@ class ChatController {
     if (!messageStreamController.isClosed) {
       messageStreamController.sink.add(initialMessageList);
     }
+  }
+
+  /// Funtion to update when reaction data is chaged.
+  void updateReactionBottomSheet(Reaction reaction) {
+    _reactionBottomSheetNotifier.value = reaction;
+  }
+
+  /// Funtion to reset [_bottomSheetReaction.value] onCloseReactionBottomSheet.
+  void onCloseReactionBottomSheet() {
+    _reactionBottomSheetNotifier.value = null;
   }
 
   /// Function to scroll to last messages in chat view
