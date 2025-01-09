@@ -1,4 +1,3 @@
-import 'package:chatview/src/extensions/extensions.dart';
 import 'package:flutter/material.dart';
 
 import '../controller/chat_controller.dart';
@@ -63,6 +62,24 @@ class _BottomSheetreactionViewState extends State<BottomSheetreactionView> {
           Reaction reaction =
               widget.chatController.reactionBottomSheetNotifier.reaction ??
                   widget.message.reaction;
+
+          String elementToMove = widget.chatController.currentUser.id;
+
+          // Check if the element exists in the list
+          if (reaction.reactedUserIds.contains(elementToMove)) {
+            int elementToMoveIndex =
+                reaction.reactedUserIds.indexOf(elementToMove);
+            String reactionToMove =
+                reaction.reactions.elementAt(elementToMoveIndex);
+            // Remove the element from its current position
+            reaction.reactedUserIds.remove(elementToMove);
+            reaction.reactions.removeAt(elementToMoveIndex);
+
+            // Insert the element at the first index
+            reaction.reactedUserIds.insert(0, elementToMove);
+            reaction.reactions.insert(0, reactionToMove);
+          }
+
           return Container(
             height: MediaQuery.of(context).size.height * 0.5,
             color: widget.reactionsBottomSheetConfig?.backgroundColor,
@@ -81,15 +98,8 @@ class _BottomSheetreactionViewState extends State<BottomSheetreactionView> {
                   onTap: () {
                     widget.reactionsBottomSheetConfig?.reactedUserCallback
                         ?.call(reactedUser, widget.message);
-                    widget.chatController.updateReactionBottomSheet(
-                      widget.chatController.initialMessageList
-                          .firstWhere(
-                              (element) => element.id == widget.message.id)
-                          .reaction,
-                    );
-                    // reactions.value = chatController.initialMessageList
-                    //     .firstWhere((element) => element.id == message.id)
-                    //     .reaction;
+
+                    _removeCurrentUserReaction(reactedUser);
                   },
                   child: Container(
                     margin: widget
@@ -144,17 +154,22 @@ class _BottomSheetreactionViewState extends State<BottomSheetreactionView> {
                                 style: widget.reactionsBottomSheetConfig
                                     ?.reactedUserTextStyle,
                               ),
-                              if (widget.reactionsBottomSheetConfig?.subtitle !=
-                                      null &&
-                                  context.chatViewIW!.chatController.currentUser
-                                          .id ==
-                                      reactedUser.id)
+                              if (widget.chatController.currentUser.id ==
+                                  reactedUser.id)
                                 Text(
-                                  widget.reactionsBottomSheetConfig!.subtitle!,
+                                  widget.reactionsBottomSheetConfig?.subtitle ??
+                                      'Tap to remove',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: widget.reactionsBottomSheetConfig
-                                      ?.subtitleTextStyle,
+                                          ?.subtitleTextStyle ??
+                                      TextStyle(
+                                        fontSize: 12,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.4),
+                                      ),
                                 ),
                             ],
                           ),
@@ -175,6 +190,34 @@ class _BottomSheetreactionViewState extends State<BottomSheetreactionView> {
             ),
           );
         });
+  }
+
+  /// Remove current user reaction from [ReactionsBottomSheet].
+  void _removeCurrentUserReaction(ChatUser reactedUser) {
+    List<String> reactedUserIds = widget.message.reaction.reactedUserIds;
+    List<String> reactions = widget.message.reaction.reactions;
+
+    final ChatUser currentUser = widget.chatController.currentUser;
+
+    widget.reactionsBottomSheetConfig?.removeReactedCurrentUserCallback?.call(
+      currentUser,
+      widget.message,
+    );
+
+    if (reactedUser.id == widget.chatController.currentUser.id) {
+      widget.chatController.setReaction(
+        emoji: widget.message.reaction.reactions[
+            widget.message.reaction.reactedUserIds.indexOf(currentUser.id)],
+        messageId: widget.message.id,
+        userId: widget.chatController.currentUser.id,
+      );
+
+      Reaction reactionResult =
+          Reaction(reactedUserIds: reactedUserIds, reactions: reactions);
+      widget.chatController.updateReactionBottomSheet(
+        reactionResult,
+      );
+    }
   }
 
   @override

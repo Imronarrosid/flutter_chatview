@@ -90,6 +90,7 @@ class ReactionsBottomSheetConfiguration {
     this.reactedUserCallback,
     this.subtitle,
     this.subtitleTextStyle,
+    this.removeReactedCurrentUserCallback,
   });
 
   /// Used for giving padding of bottom sheet.
@@ -122,6 +123,9 @@ class ReactionsBottomSheetConfiguration {
   /// Called when user tap on reacted user from reaction list
   final ReactedUserCallback? reactedUserCallback;
 
-  /// Used for adding text bilow reacted user name.
+  /// Called when user tap on reacted current user from reaction list
+  final ReactedUserCallback? removeReactedCurrentUserCallback;
+
+  /// Used for adding text below reacted current user username.
   final String? subtitle;
 }
