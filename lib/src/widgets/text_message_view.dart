@@ -95,7 +95,8 @@ class TextMessageView extends StatelessWidget {
           child: textMessage.isUrl
               ? LinkPreview(
                   linkPreviewConfig: _linkPreviewConfig,
-                  url: textMessage,
+                  message: textMessage,
+                  messageStyle:_textStyle,
                 )
               : Text(
                   textMessage,
