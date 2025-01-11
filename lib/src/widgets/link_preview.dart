@@ -57,11 +57,11 @@ class LinkPreview extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: verticalPadding),
-            child: message.isImageUrl
+            child: getUrl().isImageUrl
                 ? InkWell(
                     onTap: _onLinkTap,
                     child: Image.network(
-                      message,
+                      getUrl(),
                       height: 120,
                       width: double.infinity,
                       fit: BoxFit.fitWidth,
