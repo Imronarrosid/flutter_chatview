@@ -68,7 +68,7 @@ class LinkPreview extends StatelessWidget {
                     ),
                   )
                 : AnyLinkPreview(
-                    link: message,
+                    link: getUrl(),
                     removeElevation: true,
                     errorBody: linkPreviewConfig?.errorBody,
                     proxyUrl: linkPreviewConfig?.proxyUrl,
@@ -129,6 +129,12 @@ class LinkPreview extends StatelessWidget {
     } else {
       _launchURL();
     }
+  }
+
+  String getUrl() {
+    final RegExp urlRegex =
+        RegExp(r'^(.*?)((?:https?:\/\/|www\.)[^\s/$.?#].[^\s]*)');
+    return urlRegex.firstMatch(message)?[0] ?? '';
   }
 
   void _launchURL() async {
