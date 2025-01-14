@@ -93,7 +93,7 @@ class TextMessageView extends StatelessWidget {
             color: highlightMessage ? highlightColor : _color,
             borderRadius: _borderRadius(textMessage),
           ),
-          child: textMessage.isUrl && !kIsWeb
+          child: textMessage.isUrl 
               ? LinkPreview(
                   linkPreviewConfig: _linkPreviewConfig,
                   message: textMessage,
