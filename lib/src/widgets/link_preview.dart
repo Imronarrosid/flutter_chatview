@@ -95,7 +95,9 @@ class LinkPreview extends StatelessWidget {
                           titleStyle: linkPreviewConfig?.titleStyle,
                         ),
                 ),
-          const SizedBox(height: verticalPadding),
+          kIsWeb
+              ? const SizedBox.shrink()
+              : const SizedBox(height: verticalPadding),
           Linkify(
             text: message,
             style: messageStyle ??
