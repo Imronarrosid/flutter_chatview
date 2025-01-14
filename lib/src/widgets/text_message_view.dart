@@ -19,6 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:chatview/src/extensions/extensions.dart';
@@ -92,11 +93,11 @@ class TextMessageView extends StatelessWidget {
             color: highlightMessage ? highlightColor : _color,
             borderRadius: _borderRadius(textMessage),
           ),
-          child: textMessage.isUrl
+          child: textMessage.isUrl && !kIsWeb
               ? LinkPreview(
                   linkPreviewConfig: _linkPreviewConfig,
                   message: textMessage,
-                  messageStyle:_textStyle,
+                  messageStyle: _textStyle,
                 )
               : Text(
                   textMessage,
