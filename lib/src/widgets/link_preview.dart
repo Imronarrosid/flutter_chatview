@@ -22,6 +22,7 @@
 import 'package:any_link_preview/any_link_preview.dart';
 import 'package:chatview/src/extensions/extensions.dart';
 import 'package:chatview/src/models/config_models/link_preview_configuration.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -55,42 +56,45 @@ class LinkPreview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: verticalPadding),
-            child: getUrl().isImageUrl
-                ? InkWell(
-                    onTap: _onLinkTap,
-                    child: Image.network(
-                      getUrl(),
-                      height: 120,
-                      width: double.infinity,
-                      fit: BoxFit.fitWidth,
-                    ),
-                  )
-                : AnyLinkPreview(
-                    link: getUrl(),
-                    removeElevation: true,
-                    errorBody: linkPreviewConfig?.errorBody,
-                    proxyUrl: linkPreviewConfig?.proxyUrl,
-                    onTap: _onLinkTap,
-                    placeholderWidget: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.25,
-                      width: double.infinity,
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1,
-                          color: linkPreviewConfig?.loadingColor,
+          kIsWeb
+              ? const SizedBox.shrink()
+              : Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: verticalPadding),
+                  child: getUrl().isImageUrl
+                      ? InkWell(
+                          onTap: _onLinkTap,
+                          child: Image.network(
+                            getUrl(),
+                            height: 120,
+                            width: double.infinity,
+                            fit: BoxFit.fitWidth,
+                          ),
+                        )
+                      : AnyLinkPreview(
+                          link: getUrl(),
+                          removeElevation: true,
+                          errorBody: linkPreviewConfig?.errorBody,
+                          proxyUrl: linkPreviewConfig?.proxyUrl,
+                          onTap: _onLinkTap,
+                          placeholderWidget: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.25,
+                            width: double.infinity,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1,
+                                color: linkPreviewConfig?.loadingColor,
+                              ),
+                            ),
+                          ),
+                          backgroundColor: linkPreviewConfig?.backgroundColor ??
+                              Colors.grey.shade200,
+                          borderRadius: linkPreviewConfig?.borderRadius,
+                          bodyStyle: linkPreviewConfig?.bodyStyle ??
+                              const TextStyle(color: Colors.black),
+                          titleStyle: linkPreviewConfig?.titleStyle,
                         ),
-                      ),
-                    ),
-                    backgroundColor: linkPreviewConfig?.backgroundColor ??
-                        Colors.grey.shade200,
-                    borderRadius: linkPreviewConfig?.borderRadius,
-                    bodyStyle: linkPreviewConfig?.bodyStyle ??
-                        const TextStyle(color: Colors.black),
-                    titleStyle: linkPreviewConfig?.titleStyle,
-                  ),
-          ),
+                ),
           const SizedBox(height: verticalPadding),
           Linkify(
             text: message,
