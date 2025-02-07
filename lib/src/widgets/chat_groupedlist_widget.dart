@@ -456,8 +456,8 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
         allKeysCounter++;
 
         messageSeparator[i + counter] = messages[i].createdAt;
-        allKeys[i - counter] = messages[i].createdAt;
-        allKeys[i + allKeysCounter] = messages[i].id;
+        allKeys[i] = messages[i].createdAt;
+        allKeys[i + 1] = messages[i].id;
       } else {
         allKeys[i + allKeysCounter] = messages[i].id;
       }
