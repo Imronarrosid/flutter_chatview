@@ -23,6 +23,7 @@ import 'package:chatview/chatview.dart';
 import 'package:chatview/src/extensions/extensions.dart';
 import 'package:chatview/src/widgets/suggestions/suggestion_list.dart';
 import 'package:chatview/src/widgets/type_indicator_widget.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/data_models/image_preview.dart';
@@ -276,10 +277,11 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
               featureActiveConfig?.enableChatSeparator ?? false;
 
           Map<int, DateTime> messageSeparator = {};
+          Map<int, dynamic> allKeys = <int, dynamic>{};
 
           if (enableSeparator) {
             /// Get separator when date differ for two messages
-            (messageSeparator, lastMatchedDate) = _getMessageSeparator(
+            (allKeys, messageSeparator, lastMatchedDate) = _getMessageSeparator(
               messages,
               lastMatchedDate,
             );
@@ -289,59 +291,83 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
           /// needs to be display in chat
           var count = 0;
 
-          return ListView.builder(
+          if (kDebugMode) {
+            print('AllKeys: ${messages.length} messages');
+            print('AllKeys: ${allKeys.length} items');
+            print('AllKeys: $allKeys items');
+          }
+
+          return ListView.custom(
+            childrenDelegate: SliverChildBuilderDelegate(
+              (context, index) {
+                /// By removing [count] from [index] will get actual index
+                /// to display message in chat
+                var newIndex = index - count;
+
+                /// Check [messageSeparator] contains group separator for [index]
+                if (enableSeparator && messageSeparator.containsKey(index)) {
+                  /// Increase counter each time
+                  /// after separating messages with separator
+                  count++;
+                  return _groupSeparator(
+                    messageSeparator[index]!,
+                  );
+                }
+
+                return ValueListenableBuilder<String?>(
+                  key: ValueKey(messages[newIndex].id),
+                  valueListenable: _replyId,
+                  builder: (context, state, child) {
+                    final message = messages[newIndex];
+                    final enableScrollToRepliedMsg = chatListConfig
+                            .repliedMessageConfig
+                            ?.repliedMsgAutoScrollConfig
+                            .enableScrollToRepliedMsg ??
+                        false;
+                    return ChatBubbleWidget(
+                      key: message.key,
+                      images: widget.images,
+                      chatViewRenderBox: widget.chatViewRenderBox,
+                      message: message,
+                      slideAnimation: _slideAnimation,
+                      onLongPress: (yCoordinate, xCoordinate) =>
+                          widget.onChatBubbleLongPress(
+                        yCoordinate,
+                        xCoordinate,
+                        message,
+                      ),
+                      onSwipe: widget.assignReplyMessage,
+                      shouldHighlight: state == message.id,
+                      onReplyTap: enableScrollToRepliedMsg
+                          ? (replyId) => _onReplyTap(replyId, snapshot.data)
+                          : null,
+                    );
+                  },
+                );
+              },
+              findChildIndexCallback: (key) {
+                final valueKey = key as ValueKey<dynamic>;
+                if (valueKey.value is DateTime) {
+                  return messageSeparator.entries
+                      .toList()
+                      .indexWhere((element) {
+                    return element.value.day == valueKey.value.day &&
+                        element.value.month == valueKey.value.month &&
+                        element.value.year == valueKey.value.year;
+                  });
+                }
+                return allKeys.entries
+                    .toList()
+                    .indexWhere((element) => element.value == valueKey.value);
+              },
+              childCount: (enableSeparator
+                  ? messages.length + messageSeparator.length
+                  : messages.length),
+            ),
             key: widget.key,
             physics: const NeverScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
             shrinkWrap: true,
-            itemCount: (enableSeparator
-                ? messages.length + messageSeparator.length
-                : messages.length),
-            itemBuilder: (context, index) {
-              /// By removing [count] from [index] will get actual index
-              /// to display message in chat
-              var newIndex = index - count;
-
-              /// Check [messageSeparator] contains group separator for [index]
-              if (enableSeparator && messageSeparator.containsKey(index)) {
-                /// Increase counter each time
-                /// after separating messages with separator
-                count++;
-                return _groupSeparator(
-                  messageSeparator[index]!,
-                );
-              }
-
-              return ValueListenableBuilder<String?>(
-                valueListenable: _replyId,
-                builder: (context, state, child) {
-                  final message = messages[newIndex];
-                  final enableScrollToRepliedMsg = chatListConfig
-                          .repliedMessageConfig
-                          ?.repliedMsgAutoScrollConfig
-                          .enableScrollToRepliedMsg ??
-                      false;
-                  return ChatBubbleWidget(
-                    key: message.key,
-                    images: widget.images,
-                    chatViewRenderBox: widget.chatViewRenderBox,
-                    message: message,
-                    slideAnimation: _slideAnimation,
-                    onLongPress: (yCoordinate, xCoordinate) =>
-                        widget.onChatBubbleLongPress(
-                      yCoordinate,
-                      xCoordinate,
-                      message,
-                    ),
-                    onSwipe: widget.assignReplyMessage,
-                    shouldHighlight: state == message.id,
-                    onReplyTap: enableScrollToRepliedMsg
-                        ? (replyId) => _onReplyTap(replyId, snapshot.data)
-                        : null,
-                  );
-                },
-              );
-            },
           );
         }
       },
@@ -380,12 +406,15 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
   Widget _groupSeparator(DateTime createdAt) {
     return featureActiveConfig?.enableChatSeparator ?? false
         ? _GroupSeparatorBuilder(
+            key: ValueKey(createdAt),
             separator: createdAt,
             defaultGroupSeparatorConfig:
                 chatBackgroundConfig.defaultGroupSeparatorConfig,
             groupSeparatorBuilder: chatBackgroundConfig.groupSeparatorBuilder,
           )
-        : const SizedBox.shrink();
+        : SizedBox.shrink(
+            key: ValueKey(createdAt.toString()),
+          );
   }
 
   GetMessageSeparator _getMessageSeparator(
@@ -393,16 +422,24 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
     DateTime lastDate,
   ) {
     final messageSeparator = <int, DateTime>{};
+    final allKeys = <int, dynamic>{};
+
     var lastMatchedDate = lastDate;
     var counter = 0;
+    var allKeysCounter = 0;
 
     /// Holds index and separator mapping to display in chat
     for (var i = 0; i < messages.length; i++) {
       if (messageSeparator.isEmpty) {
         /// Separator for initial message
         messageSeparator[0] = messages[0].createdAt;
+
+        allKeysCounter++;
+        allKeys[0] = messages[0].createdAt;
+        allKeys[0 + allKeysCounter] = messages[0].id;
         continue;
       }
+
       lastMatchedDate = _groupBy(
         messages[i],
         lastMatchedDate,
@@ -416,12 +453,17 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
         /// Group separator when previous message and
         /// current message time differ
         counter++;
+        allKeysCounter++;
 
         messageSeparator[i + counter] = messages[i].createdAt;
+        allKeys[i - counter] = messages[i].createdAt;
+        allKeys[i + allKeysCounter] = messages[i].id;
+      } else {
+        allKeys[i + allKeysCounter] = messages[i].id;
       }
     }
 
-    return (messageSeparator, lastMatchedDate);
+    return (allKeys, messageSeparator, lastMatchedDate);
   }
 }
 

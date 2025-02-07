@@ -66,7 +66,7 @@ typedef CustomViewForReplyMessage = Widget Function(
   BuildContext context,
   ReplyMessage state,
 );
-typedef GetMessageSeparator = (Map<int, DateTime>, DateTime);
+typedef GetMessageSeparator = (Map<int, dynamic>, Map<int, DateTime>, DateTime);
 typedef AssetImageErrorBuilder = Widget Function(
   BuildContext context,
   Object error,
