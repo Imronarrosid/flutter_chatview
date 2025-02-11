@@ -59,15 +59,27 @@ class ChatController {
       _replySuggestion;
 
   final ReationBottomSheet _reactionBottomSheetNotifier = ReationBottomSheet();
+  final ValueNotifier<List<Message>> _messageListNotifier =
+      ValueNotifier<List<Message>>([]);
+  final ValueNotifier<bool> _isLoadMore = ValueNotifier<bool>(false);
 
   /// Initial [Reaction] value is null
   /// assing previous [Reaction] value first before using it.
   ReationBottomSheet get reactionBottomSheetNotifier =>
       _reactionBottomSheetNotifier;
 
+  ValueNotifier<List<Message>> get messageListNotifier {
+    if (_messageListNotifier.value.isEmpty) {
+      _messageListNotifier.value = initialMessageList;
+    }
+    return _messageListNotifier;
+  }
+
   /// Getter for typingIndicator value instead of accessing [_showTypingIndicator.value]
   /// for better accessibility.
   bool get showTypingIndicator => _showTypingIndicator.value;
+
+  bool get isLoadMore => _isLoadMore.value;
 
   /// Setter for changing values of typingIndicator
   /// ```dart
@@ -104,9 +116,7 @@ class ChatController {
   /// Used to add message in message list.
   void addMessage(Message message) {
     initialMessageList.add(message);
-    if (!messageStreamController.isClosed) {
-      messageStreamController.sink.add(initialMessageList);
-    }
+    _messageListNotifier.value = [...initialMessageList];
   }
 
   /// Used to add reply suggestions.
@@ -182,10 +192,12 @@ class ChatController {
   /// Function for loading data while pagination.
   void loadMoreData(List<Message> messageList) {
     /// Here, we have passed 0 index as we need to add data before first data
+    _isLoadMore.value = true;
     initialMessageList.insertAll(0, messageList);
-    if (!messageStreamController.isClosed) {
-      messageStreamController.sink.add(initialMessageList);
-    }
+    _messageListNotifier.value = [
+      ...initialMessageList,
+    ];
+    _isLoadMore.value = false;
   }
 
   /// Function for getting ChatUser object from user id

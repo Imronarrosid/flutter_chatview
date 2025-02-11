@@ -23,7 +23,6 @@ import 'package:chatview/chatview.dart';
 import 'package:chatview/src/extensions/extensions.dart';
 import 'package:chatview/src/widgets/suggestions/suggestion_list.dart';
 import 'package:chatview/src/widgets/type_indicator_widget.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/data_models/image_preview.dart';
@@ -259,110 +258,79 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
   }
 
   Widget get _chatStreamBuilder {
-    DateTime lastMatchedDate = DateTime.now();
-    return StreamBuilder<List<Message>>(
-      stream: chatController?.messageStreamController.stream,
-      builder: (context, snapshot) {
-        if (!snapshot.connectionState.isActive) {
-          return Center(
-            child: chatBackgroundConfig.loadingWidget ??
-                const CircularProgressIndicator(),
+    return ValueListenableBuilder<List<Message>>(
+      valueListenable: chatController!.messageListNotifier,
+      builder: (context, value, _) {
+        if (value.isEmpty) {
+          return const Center(
+            child: CircularProgressIndicator(),
           );
         } else {
-          final messages = chatBackgroundConfig.sortEnable
-              ? sortMessage(snapshot.data!)
-              : snapshot.data!;
-
-          final enableSeparator =
-              featureActiveConfig?.enableChatSeparator ?? false;
-
-          Map<int, DateTime> messageSeparator = {};
-          Map<int, dynamic> allKeys = <int, dynamic>{};
-
-          if (enableSeparator) {
-            /// Get separator when date differ for two messages
-            (allKeys, messageSeparator, lastMatchedDate) = _getMessageSeparator(
-              messages,
-              lastMatchedDate,
-            );
-          }
-
-          /// [count] that indicates how many separators
-          /// needs to be display in chat
-          var count = 0;
-
-          if (kDebugMode) {
-            print('AllKeys: ${messages.length} messages');
-            print('AllKeys: ${allKeys.length} items');
-            print('AllKeys: $allKeys items');
-          }
+          final messages =
+              chatBackgroundConfig.sortEnable ? sortMessage(value) : value;
 
           return ListView.custom(
             childrenDelegate: SliverChildBuilderDelegate(
+              childCount: messages.length,
               (context, index) {
                 /// By removing [count] from [index] will get actual index
                 /// to display message in chat
-                var newIndex = index - count;
-
-                /// Check [messageSeparator] contains group separator for [index]
-                if (enableSeparator && messageSeparator.containsKey(index)) {
-                  /// Increase counter each time
-                  /// after separating messages with separator
-                  count++;
-                  return _groupSeparator(
-                    messageSeparator[index]!,
-                  );
-                }
 
                 return ValueListenableBuilder<String?>(
-                  key: ValueKey(messages[newIndex].id),
+                  key: ValueKey(messages[index].id),
                   valueListenable: _replyId,
                   builder: (context, state, child) {
-                    final message = messages[newIndex];
+                    final message = messages[index];
                     final enableScrollToRepliedMsg = chatListConfig
                             .repliedMessageConfig
                             ?.repliedMsgAutoScrollConfig
                             .enableScrollToRepliedMsg ??
                         false;
-                    return ChatBubbleWidget(
-                      key: message.key,
-                      images: widget.images,
-                      chatViewRenderBox: widget.chatViewRenderBox,
-                      message: message,
-                      slideAnimation: _slideAnimation,
-                      onLongPress: (yCoordinate, xCoordinate) =>
-                          widget.onChatBubbleLongPress(
-                        yCoordinate,
-                        xCoordinate,
-                        message,
-                      ),
-                      onSwipe: widget.assignReplyMessage,
-                      shouldHighlight: state == message.id,
-                      onReplyTap: enableScrollToRepliedMsg
-                          ? (replyId) => _onReplyTap(replyId, snapshot.data)
-                          : null,
+
+                    return Column(
+                      children: [
+                        if (chatController!.isLoadMore && index == 0)
+                          Center(
+                            child: chatBackgroundConfig.loadingWidget ??
+                                const CircularProgressIndicator(),
+                          ),
+                        index == 0 ||
+                                messages[index].createdAt.day !=
+                                    messages[index - 1].createdAt.day
+                            ? _groupSeparator(messages[index].createdAt)
+                            : const SizedBox.shrink(),
+                        ChatBubbleWidget(
+                          key: message.key,
+                          images: widget.images,
+                          chatViewRenderBox: widget.chatViewRenderBox,
+                          message: message,
+                          slideAnimation: _slideAnimation,
+                          onLongPress: (yCoordinate, xCoordinate) =>
+                              widget.onChatBubbleLongPress(
+                            yCoordinate,
+                            xCoordinate,
+                            message,
+                          ),
+                          onSwipe: widget.assignReplyMessage,
+                          shouldHighlight: state == message.id,
+                          onReplyTap: enableScrollToRepliedMsg
+                              ? (replyId) => _onReplyTap(replyId, value)
+                              : null,
+                        ),
+                      ],
                     );
                   },
                 );
               },
               findChildIndexCallback: (key) {
                 final valueKey = key as ValueKey<dynamic>;
-                if (valueKey.value is DateTime) {
-                  return messageSeparator.entries
-                      .toList()
-                      .indexWhere((element) {
-                    return element.value.day == valueKey.value.day &&
-                        element.value.month == valueKey.value.month &&
-                        element.value.year == valueKey.value.year;
-                  });
-                }
-                return allKeys.entries
-                    .toList()
-                    .indexWhere((element) => element.value == valueKey.value);
+
+                final Map<String, int> messageMap = {
+                  for (int i = 0; i < messages.length; i++) messages[i].id: i
+                };
+
+                return messageMap[valueKey.value];
               },
-              childCount: (enableSeparator
-                  ? messages.length + messageSeparator.length
-                  : messages.length),
             ),
             key: widget.key,
             physics: const NeverScrollableScrollPhysics(),
@@ -387,26 +355,25 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
     }
   }
 
-  /// return DateTime by checking lastMatchedDate and message created DateTime
-  DateTime _groupBy(
-    Message message,
-    DateTime lastMatchedDate,
-  ) {
-    /// If the conversation is ongoing on the same date,
-    /// return the same date [lastMatchedDate].
+  // /// return DateTime by checking lastMatchedDate and message created DateTime
+  // DateTime _groupBy(
+  //   Message message,
+  //   DateTime lastMatchedDate,
+  // ) {
+  //   /// If the conversation is ongoing on the same date,
+  //   /// return the same date [lastMatchedDate].
 
-    /// When the conversation starts on a new date,
-    /// we are returning new date [message.createdAt].
-    return lastMatchedDate.getDateFromDateTime ==
-            message.createdAt.getDateFromDateTime
-        ? lastMatchedDate
-        : message.createdAt;
-  }
+  //   /// When the conversation starts on a new date,
+  //   /// we are returning new date [message.createdAt].
+  //   return lastMatchedDate.getDateFromDateTime ==
+  //           message.createdAt.getDateFromDateTime
+  //       ? lastMatchedDate
+  //       : message.createdAt;
+  // }
 
   Widget _groupSeparator(DateTime createdAt) {
     return featureActiveConfig?.enableChatSeparator ?? false
         ? _GroupSeparatorBuilder(
-            key: ValueKey(createdAt),
             separator: createdAt,
             defaultGroupSeparatorConfig:
                 chatBackgroundConfig.defaultGroupSeparatorConfig,
@@ -417,54 +384,76 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
           );
   }
 
-  GetMessageSeparator _getMessageSeparator(
-    List<Message> messages,
-    DateTime lastDate,
-  ) {
-    final messageSeparator = <int, DateTime>{};
-    final allKeys = <int, dynamic>{};
+  // GetMessageSeparator _getMessageSeparator(
+  //   List<Message> messages,
+  //   DateTime lastDate,
+  // ) {
+  //   final messageSeparator = <int, DateTime>{};
+  //   final allKeys = <int, dynamic>{};
 
-    var lastMatchedDate = lastDate;
-    var counter = 0;
-    var allKeysCounter = 0;
+  //   var lastMatchedDate = lastDate;
+  //   var counter = 0;
+  //   var allKeysCounter = 0;
 
-    /// Holds index and separator mapping to display in chat
-    for (var i = 0; i < messages.length; i++) {
-      if (messageSeparator.isEmpty) {
-        /// Separator for initial message
-        messageSeparator[0] = messages[0].createdAt;
+  //   /// Holds index and separator mapping to display in chat
+  //   for (var i = 0; i < messages.length; i++) {
+  //     if (messageSeparator.isEmpty) {
+  //       /// Separator for initial message
+  //       messageSeparator[0] = messages[0].createdAt;
 
-        allKeysCounter++;
-        allKeys[0] = messages[0].createdAt;
-        allKeys[0 + allKeysCounter] = messages[0].id;
-        continue;
-      }
+  //       allKeysCounter++;
+  //       allKeys[0] = messages[0].createdAt;
+  //       allKeys[0 + allKeysCounter] = messages[0].id;
+  //       continue;
+  //     }
 
-      lastMatchedDate = _groupBy(
-        messages[i],
-        lastMatchedDate,
-      );
-      var previousDate = _groupBy(
-        messages[i - 1],
-        lastMatchedDate,
-      );
+  //     lastMatchedDate = _groupBy(
+  //       messages[i],
+  //       lastMatchedDate,
+  //     );
+  //     var previousDate = _groupBy(
+  //       messages[i - 1],
+  //       lastMatchedDate,
+  //     );
 
-      if (previousDate != lastMatchedDate) {
-        /// Group separator when previous message and
-        /// current message time differ
-        counter++;
-        allKeysCounter++;
+  //     if (previousDate != lastMatchedDate) {
+  //       /// Group separator when previous message and
+  //       /// current message time differ
+  //       counter++;
+  //       allKeysCounter++;
 
-        messageSeparator[i + counter] = messages[i].createdAt;
-        allKeys[i] = messages[i].createdAt;
-        allKeys[i + 1] = messages[i].id;
-      } else {
-        allKeys[i + allKeysCounter] = messages[i].id;
-      }
-    }
+  //       messageSeparator[i + counter] = messages[i].createdAt;
 
-    return (allKeys, messageSeparator, lastMatchedDate);
-  }
+  //       if (allKeys.isEmpty) {
+  //         allKeys[0] = messages[0].createdAt;
+  //         allKeys[i] = messages[i].id;
+  //       } else {
+  //         allKeys[i] = messages[i].createdAt;
+  //         allKeys[i + 1] = messages[i].id;
+  //       }
+  //     } else if (allKeys.isEmpty) {
+  //       allKeys[0] = messages[0].id;
+  //       allKeys[1] = messages[1].id;
+  //     } else {
+  //       allKeys[i + allKeysCounter] = messages[i].id;
+  //     }
+  //   }
+
+  //   return (messageSeparator, lastMatchedDate);
+  // }
+
+  // void _updateFloatingDate(List<Message> messages) {
+  //   for (int i = 0; i < messages.length; i++) {
+  //     final RenderObject? renderObject = context.findRenderObject();
+  //     if (renderObject is RenderBox) {
+  //       final position = renderObject.localToGlobal(Offset.zero);
+  //       if (position.dy >= 0) {
+  //         _floatingDate.value = messages[i].createdAt;
+  //         break;
+  //       }
+  //     }
+  //   }
+  // }
 }
 
 class _GroupSeparatorBuilder extends StatelessWidget {
