@@ -162,6 +162,7 @@ class ChatController {
       status: message.status,
     );
     if (!messageStreamController.isClosed) {
+      _messageListNotifier.value = initialMessageList;
       messageStreamController.sink.add(initialMessageList);
     }
   }
