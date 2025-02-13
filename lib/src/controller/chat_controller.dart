@@ -79,7 +79,9 @@ class ChatController {
   /// for better accessibility.
   bool get showTypingIndicator => _showTypingIndicator.value;
 
-  bool get isLoadMore => _isLoadMore.value;
+  ValueListenable<bool> get isLoadMore => _isLoadMore;
+
+  set setIsLoadMore(bool value) => _isLoadMore.value = value;
 
   /// Setter for changing values of typingIndicator
   /// ```dart
