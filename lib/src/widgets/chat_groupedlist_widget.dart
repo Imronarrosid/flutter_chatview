@@ -286,7 +286,7 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
 
                     return Column(
                       children: [
-                        if (chatController!.isLoadMore.value && index == 0)
+                        if (index == 0)
                           ValueListenableBuilder(
                               valueListenable: chatController!.isLoadMore,
                               builder: (context, value, _) {
