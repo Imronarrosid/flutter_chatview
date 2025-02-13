@@ -273,9 +273,6 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
             childrenDelegate: SliverChildBuilderDelegate(
               childCount: messages.length,
               (context, index) {
-                /// By removing [count] from [index] will get actual index
-                /// to display message in chat
-
                 return ValueListenableBuilder<String?>(
                   key: ValueKey(messages[index].id),
                   valueListenable: _replyId,
@@ -289,11 +286,19 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
 
                     return Column(
                       children: [
-                        if (chatController!.isLoadMore && index == 0)
-                          Center(
-                            child: chatBackgroundConfig.loadingWidget ??
-                                const CircularProgressIndicator(),
-                          ),
+                        if (chatController!.isLoadMore.value && index == 0)
+                          ValueListenableBuilder(
+                              valueListenable: chatController!.isLoadMore,
+                              builder: (context, value, _) {
+                                if (value) {
+                                  return Center(
+                                    child: chatBackgroundConfig.loadingWidget ??
+                                        const CircularProgressIndicator(),
+                                  );
+                                } else {
+                                  return const SizedBox.shrink();
+                                }
+                              }),
                         index == 0 ||
                                 messages[index].createdAt.day !=
                                     messages[index - 1].createdAt.day
