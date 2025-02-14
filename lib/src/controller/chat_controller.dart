@@ -79,7 +79,7 @@ class ChatController {
   /// for better accessibility.
   bool get showTypingIndicator => _showTypingIndicator.value;
 
-  ValueListenable<bool> get isLoadMore => _isLoadMore;
+  ValueNotifier<bool> get isLoadMore => _isLoadMore;
 
   set setIsLoadMore(bool value) => _isLoadMore.value = value;
 
