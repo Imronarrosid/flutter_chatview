@@ -119,65 +119,37 @@ class _ChatListWidgetState extends State<ChatListWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ValueListenableBuilder<bool>(
-          valueListenable: _isNextPageLoading,
-          builder: (_, isNextPageLoading, child) {
-            if (isNextPageLoading &&
-                (featureActiveConfig?.enablePagination ?? false)) {
-              return SizedBox(
-                height: Scaffold.of(context).appBarMaxHeight,
-                child: Center(
-                  child:
-                      widget.loadingWidget ?? const CircularProgressIndicator(),
-                ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: chatViewIW!.showPopUp,
+      builder: (_, showPopupValue, child) {
+        return ChatGroupedListWidget(
+          chatViewRenderBox: widget.chatViewRenderBox,
+          images: widget.images,
+          showPopUp: showPopupValue,
+          scrollController: scrollController,
+          isEnableSwipeToSeeTime:
+              featureActiveConfig?.enableSwipeToSeeTime ?? true,
+          assignReplyMessage: widget.assignReplyMessage,
+          replyMessage: widget.replyMessage,
+          onChatBubbleLongPress: (yCoordinate, xCoordinate, message) {
+            if (featureActiveConfig?.enableReactionPopup ?? false) {
+              chatViewIW?.reactionPopupKey.currentState?.refreshWidget(
+                message: message,
+                xCoordinate: xCoordinate,
+                yCoordinate: yCoordinate,
               );
-            } else {
-              return const SizedBox.shrink();
+              chatViewIW?.showPopUp.value = true;
+            }
+            if (featureActiveConfig?.enableReplySnackBar ?? false) {
+              _showReplyPopup(
+                message: message,
+                sentByCurrentUser: message.sentBy == currentUser?.id,
+              );
             }
           },
-        ),
-        Expanded(
-          child: ValueListenableBuilder<bool>(
-            valueListenable: chatViewIW!.showPopUp,
-            builder: (_, showPopupValue, child) {
-              return Stack(
-                children: [
-                  ChatGroupedListWidget(
-                    chatViewRenderBox: widget.chatViewRenderBox,
-                    images: widget.images,
-                    showPopUp: showPopupValue,
-                    scrollController: scrollController,
-                    isEnableSwipeToSeeTime:
-                        featureActiveConfig?.enableSwipeToSeeTime ?? true,
-                    assignReplyMessage: widget.assignReplyMessage,
-                    replyMessage: widget.replyMessage,
-                    onChatBubbleLongPress: (yCoordinate, xCoordinate, message) {
-                      if (featureActiveConfig?.enableReactionPopup ?? false) {
-                        chatViewIW?.reactionPopupKey.currentState
-                            ?.refreshWidget(
-                          message: message,
-                          xCoordinate: xCoordinate,
-                          yCoordinate: yCoordinate,
-                        );
-                        chatViewIW?.showPopUp.value = true;
-                      }
-                      if (featureActiveConfig?.enableReplySnackBar ?? false) {
-                        _showReplyPopup(
-                          message: message,
-                          sentByCurrentUser: message.sentBy == currentUser?.id,
-                        );
-                      }
-                    },
-                    onChatListTap: _onChatListTap,
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
+          onChatListTap: _onChatListTap,
+        );
+      },
     );
   }
 

@@ -149,61 +149,58 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
 
   @override
   Widget build(BuildContext context) {
-    final suggestionsListConfig =
-        suggestionsConfig?.listConfig ?? const SuggestionListConfig();
-    return SingleChildScrollView(
-      reverse: true,
-      // When reaction popup is being appeared at that user should not scroll.
-      physics: showPopUp ? const NeverScrollableScrollPhysics() : null,
-      controller: widget.scrollController,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          GestureDetector(
-            onHorizontalDragUpdate: (details) =>
-                isEnableSwipeToSeeTime && !showPopUp
-                    ? _onHorizontalDrag(details)
-                    : null,
-            onHorizontalDragEnd: (details) =>
-                isEnableSwipeToSeeTime && !showPopUp
-                    ? _animationController?.reverse()
-                    : null,
-            onTap: widget.onChatListTap,
-            child: _animationController != null
-                ? AnimatedBuilder(
-                    animation: _animationController!,
-                    builder: (context, child) {
-                      return _chatStreamBuilder;
-                    },
-                  )
-                : _chatStreamBuilder,
-          ),
-          if (chatController != null)
-            ValueListenableBuilder(
-              valueListenable: chatController!.typingIndicatorNotifier,
-              builder: (context, value, child) => TypingIndicator(
-                typeIndicatorConfig: chatListConfig.typeIndicatorConfig,
-                chatBubbleConfig:
-                    chatListConfig.chatBubbleConfig?.inComingChatBubbleConfig,
-                showIndicator: value,
-              ),
-            ),
-          if (chatController != null)
-            Flexible(
-              child: Align(
-                alignment: suggestionsListConfig.axisAlignment.alignment,
-                child: const SuggestionList(),
-              ),
-            ),
-
-          // Adds bottom space to the message list, ensuring it is displayed
-          // above the message text field.
-          SizedBox(
-            height: chatTextFieldHeight,
-          ),
-        ],
-      ),
+    return
+        // SingleChildScrollView(
+        //   reverse: true,
+        //   // When reaction popup is being appeared at that user should not scroll.
+        //   physics: showPopUp ? const NeverScrollableScrollPhysics() : null,
+        //   controller: widget.scrollController,
+        //   child: Column(
+        //     mainAxisSize: MainAxisSize.min,
+        //     children: [
+        GestureDetector(
+      onHorizontalDragUpdate: (details) => isEnableSwipeToSeeTime && !showPopUp
+          ? _onHorizontalDrag(details)
+          : null,
+      onHorizontalDragEnd: (details) => isEnableSwipeToSeeTime && !showPopUp
+          ? _animationController?.reverse()
+          : null,
+      onTap: widget.onChatListTap,
+      child: _animationController != null
+          ? AnimatedBuilder(
+              animation: _animationController!,
+              builder: (context, child) {
+                return _chatStreamBuilder;
+              },
+            )
+          : _chatStreamBuilder,
     );
+    //     if (chatController != null)
+    //       ValueListenableBuilder(
+    //         valueListenable: chatController!.typingIndicatorNotifier,
+    //         builder: (context, value, child) => TypingIndicator(
+    //           typeIndicatorConfig: chatListConfig.typeIndicatorConfig,
+    //           chatBubbleConfig:
+    //               chatListConfig.chatBubbleConfig?.inComingChatBubbleConfig,
+    //           showIndicator: value,
+    //         ),
+    //       ),
+    //     if (chatController != null)
+    //       Flexible(
+    //         child: Align(
+    //           alignment: suggestionsListConfig.axisAlignment.alignment,
+    //           child: const SuggestionList(),
+    //         ),
+    //       ),
+
+    //     // Adds bottom space to the message list, ensuring it is displayed
+    //     // above the message text field.
+    //     SizedBox(
+    //       height: chatTextFieldHeight,
+    //     ),
+    //   ],
+    // ),
+    // );
   }
 
   Future<void> _onReplyTap(String id, List<Message>? messages) async {
@@ -258,6 +255,8 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
   }
 
   Widget get _chatStreamBuilder {
+    final suggestionsListConfig =
+        suggestionsConfig?.listConfig ?? const SuggestionListConfig();
     return ValueListenableBuilder<List<Message>>(
       valueListenable: chatController!.messageListNotifier,
       builder: (context, value, _) {
@@ -270,14 +269,46 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
               chatBackgroundConfig.sortEnable ? sortMessage(value) : value;
 
           return ListView.custom(
+            controller: widget.scrollController,
+            reverse: true,
+
             childrenDelegate: SliverChildBuilderDelegate(
-              childCount: messages.length,
+              childCount: messages.length + 3,
               (context, index) {
+                int newIndex = messages.length + 2 - index;
+                if (chatController != null) {
+                  if (newIndex == messages.length) {
+                    return ValueListenableBuilder(
+                      key: const ValueKey('typingIndicator'),
+                      valueListenable: chatController!.typingIndicatorNotifier,
+                      builder: (context, value, child) => TypingIndicator(
+                        typeIndicatorConfig: chatListConfig.typeIndicatorConfig,
+                        chatBubbleConfig: chatListConfig
+                            .chatBubbleConfig?.inComingChatBubbleConfig,
+                        showIndicator: value,
+                      ),
+                    );
+                  }
+
+                  if (newIndex == messages.length + 1) {
+                    return Container(
+                      key: const ValueKey('suggestionsList'),
+                      alignment: suggestionsListConfig.axisAlignment.alignment,
+                      child: const SuggestionList(),
+                    );
+                  }
+
+                  if (newIndex == messages.length + 2) {
+                    return SizedBox(
+                        key: const ValueKey('chatTextFieldHeight'),
+                        height: chatTextFieldHeight);
+                  }
+                }
                 return ValueListenableBuilder<String?>(
-                  key: ValueKey(messages[index].id),
+                  key: ValueKey(messages[newIndex].id),
                   valueListenable: _replyId,
                   builder: (context, state, child) {
-                    final message = messages[index];
+                    final message = messages[newIndex];
                     final enableScrollToRepliedMsg = chatListConfig
                             .repliedMessageConfig
                             ?.repliedMsgAutoScrollConfig
@@ -286,7 +317,7 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
 
                     return Column(
                       children: [
-                        if (index == 0)
+                        if (newIndex == 0)
                           ValueListenableBuilder(
                               valueListenable: chatController!.isLoadMore,
                               builder: (context, value, _) {
@@ -299,10 +330,10 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
                                   return const SizedBox.shrink();
                                 }
                               }),
-                        index == 0 ||
-                                messages[index].createdAt.day !=
-                                    messages[index - 1].createdAt.day
-                            ? _groupSeparator(messages[index].createdAt)
+                        newIndex == 0 ||
+                                messages[newIndex].createdAt.day !=
+                                    messages[newIndex - 1].createdAt.day
+                            ? _groupSeparator(messages[newIndex].createdAt)
                             : const SizedBox.shrink(),
                         ChatBubbleWidget(
                           key: message.key,
@@ -328,17 +359,24 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
                 );
               },
               findChildIndexCallback: (key) {
+                if (key == const ValueKey('typingIndicator')) {
+                  return messages.length;
+                } else if (key == const ValueKey('suggestionsList')) {
+                  return messages.length + 1;
+                } else if (key == const ValueKey('chatTextFieldHeight')) {
+                  return messages.length + 2;
+                }
                 final valueKey = key as ValueKey<dynamic>;
 
                 final Map<String, int> messageMap = {
                   for (int i = 0; i < messages.length; i++) messages[i].id: i
                 };
 
-                return messageMap[valueKey.value];
+                return messageMap.length + 2 - messageMap[valueKey.value]!;
               },
             ),
             key: widget.key,
-            physics: const NeverScrollableScrollPhysics(),
+            // physics: const NeverScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
             shrinkWrap: true,
           );
