@@ -112,6 +112,8 @@ class ChatController {
     _replySuggestion.dispose();
     _reactionBottomSheetNotifier.dispose();
     scrollController.dispose();
+    _messageListNotifier.dispose();
+    _isLoadMore.dispose();
     messageStreamController.close();
   }
 

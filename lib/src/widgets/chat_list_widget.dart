@@ -78,8 +78,6 @@ class ChatListWidget extends StatefulWidget {
 
 class _ChatListWidgetState extends State<ChatListWidget>
     with SingleTickerProviderStateMixin {
-  final ValueNotifier<bool> _isNextPageLoading = ValueNotifier<bool>(false);
-
   ChatController get chatController => widget.chatController;
 
   List<Message> get messageList => chatController.initialMessageList;
@@ -157,10 +155,9 @@ class _ChatListWidgetState extends State<ChatListWidget>
     if (widget.loadMoreData == null || widget.isLastPage == true) return;
     if ((scrollController.position.pixels ==
             scrollController.position.maxScrollExtent) &&
-        !_isNextPageLoading.value) {
-      _isNextPageLoading.value = true;
-      widget.loadMoreData!()
-          .whenComplete(() => _isNextPageLoading.value = false);
+        !widget.chatController.isLoadMore.value) {
+      widget.chatController.isLoadMore.value = true;
+      widget.loadMoreData!();
     }
   }
 
@@ -229,7 +226,6 @@ class _ChatListWidgetState extends State<ChatListWidget>
   void dispose() {
     chatController.messageStreamController.close();
     scrollController.dispose();
-    _isNextPageLoading.dispose();
     super.dispose();
   }
 }
