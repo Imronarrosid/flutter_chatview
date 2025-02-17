@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:chatview/chatview.dart';
-import 'package:chatview/src/extensions/extensions.dart';
 import 'package:chatview/src/widgets/reaction_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -65,19 +64,28 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
   @override
   void initState() {
     super.initState();
+
     if (!widget.message.message.startsWith('https')) {
-      controller = PlayerController()
-        ..preparePlayer(
-          path: widget.message.message,
-          noOfSamples: widget.config?.playerWaveStyle
-                  ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
-              playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
-        ).whenComplete(
-            () => widget.onMaxDuration?.call(controller.maxDuration));
-      playerStateSubscription = controller.onPlayerStateChanged
-          .listen((state) => _playerState.value = state);
       // downloadFile(widget.message.message, widget.message.message);
       _isFileExist.value = true;
+    } else {
+      isFileDownloaded(widget.message.id).then((value) {
+        bool isDownloaded = value.$1;
+        String? path = value.$2;
+        if (isDownloaded) {
+          controller = PlayerController()
+            ..preparePlayer(
+              path: path,
+              noOfSamples: widget.config?.playerWaveStyle
+                      ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
+                  playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
+            ).whenComplete(
+                () => widget.onMaxDuration?.call(controller.maxDuration));
+          playerStateSubscription = controller.onPlayerStateChanged
+              .listen((state) => _playerState.value = state);
+        }
+        _isFileExist.value = isDownloaded;
+      });
     }
   }
 
@@ -232,10 +240,10 @@ class DownloadProgressWidget extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         SizedBox(
-          width: 50,
-          height: 50,
+          width: 30,
+          height: 30,
           child: CircularProgressIndicator(
-            value: progress,
+            value: progress / 100,
             strokeWidth: 2,
             backgroundColor: Colors.grey.shade300,
             valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),

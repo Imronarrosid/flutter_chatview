@@ -6,9 +6,9 @@ Future<String?> downloadFile(String url, String fileName,
     Function(int received, int total) onReceiveProgress) async {
   try {
     Dio dio = Dio();
-    Directory tempDir =
+    Directory appDir =
         await getApplicationDocumentsDirectory(); // Or use getApplicationDocumentsDirectory()
-    String savePath = "${tempDir.path}/$fileName.m4a";
+    String savePath = "${appDir.path}/$fileName.m4a";
 
     await dio.download(url, savePath, onReceiveProgress: (received, total) {
       if (total != -1) {
@@ -23,4 +23,12 @@ Future<String?> downloadFile(String url, String fileName,
     print("Download error: $e");
     return null;
   }
+}
+
+Future<(bool, String)> isFileDownloaded(String fileName) async {
+  Directory appDir =
+      await getApplicationDocumentsDirectory(); // Or use getApplicationDocumentsDirectory()
+  String path = "${appDir.path}/$fileName.m4a";
+
+  return (File(path).existsSync(), path); // Check if the file exists
 }
