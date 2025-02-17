@@ -178,9 +178,6 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
     String? path = await downloadFile(
         widget.message.message, widget.message.message, (received, total) {
       _downloadProgress.value = (received / total * 100);
-      if (received == total) {
-        _isFileExist.value = true;
-      }
     });
     if (path != null) {
       controller = PlayerController()
@@ -194,6 +191,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
       playerStateSubscription = controller.onPlayerStateChanged
           .listen((state) => _playerState.value = state);
 
+      _isFileExist.value = true;
       _playOrPause();
     }
   }
