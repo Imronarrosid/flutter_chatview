@@ -67,6 +67,17 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
 
     if (!widget.message.message.startsWith('https')) {
       // downloadFile(widget.message.message, widget.message.message);
+      controller = PlayerController()
+        ..preparePlayer(
+          path: widget.message.message,
+          noOfSamples: widget.config?.playerWaveStyle
+                  ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
+              playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
+        ).whenComplete(
+            () => widget.onMaxDuration?.call(controller.maxDuration));
+      playerStateSubscription = controller.onPlayerStateChanged
+          .listen((state) => _playerState.value = state);
+
       _isFileExist.value = true;
     } else {
       isFileDownloaded(widget.message.id).then((value) {
