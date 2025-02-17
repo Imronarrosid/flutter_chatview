@@ -65,16 +65,17 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
   @override
   void initState() {
     super.initState();
-    controller = PlayerController()
-      ..preparePlayer(
-        path: widget.message.message,
-        noOfSamples: widget.config?.playerWaveStyle
-                ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
-            playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
-      ).whenComplete(() => widget.onMaxDuration?.call(controller.maxDuration));
-    playerStateSubscription = controller.onPlayerStateChanged
-        .listen((state) => _playerState.value = state);
     if (!widget.message.message.startsWith('https')) {
+      controller = PlayerController()
+        ..preparePlayer(
+          path: widget.message.message,
+          noOfSamples: widget.config?.playerWaveStyle
+                  ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
+              playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
+        ).whenComplete(
+            () => widget.onMaxDuration?.call(controller.maxDuration));
+      playerStateSubscription = controller.onPlayerStateChanged
+          .listen((state) => _playerState.value = state);
       // downloadFile(widget.message.message, widget.message.message);
       _isFileExist.value = true;
     }
@@ -144,22 +145,27 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
                       },
                       valueListenable: _playerState,
                     ),
-                    AudioFileWaveforms(
-                      size: Size(widget.screenWidth * 0.50, 60),
-                      playerController: controller,
-                      waveformType: WaveformType.fitWidth,
-                      playerWaveStyle:
-                          widget.config?.playerWaveStyle ?? playerWaveStyle,
-                      padding: widget.config?.waveformPadding ??
-                          const EdgeInsets.only(right: 10),
-                      margin: widget.config?.waveformMargin,
-                      animationCurve:
-                          widget.config?.animationCurve ?? Curves.easeIn,
-                      animationDuration: widget.config?.animationDuration ??
-                          const Duration(milliseconds: 500),
-                      enableSeekGesture:
-                          widget.config?.enableSeekGesture ?? true,
-                    ),
+                    value
+                        ? AudioFileWaveforms(
+                            size: Size(widget.screenWidth * 0.50, 60),
+                            playerController: controller,
+                            waveformType: WaveformType.fitWidth,
+                            playerWaveStyle: widget.config?.playerWaveStyle ??
+                                playerWaveStyle,
+                            padding: widget.config?.waveformPadding ??
+                                const EdgeInsets.only(right: 10),
+                            margin: widget.config?.waveformMargin,
+                            animationCurve:
+                                widget.config?.animationCurve ?? Curves.easeIn,
+                            animationDuration:
+                                widget.config?.animationDuration ??
+                                    const Duration(milliseconds: 500),
+                            enableSeekGesture:
+                                widget.config?.enableSeekGesture ?? true,
+                          )
+                        : SizedBox.fromSize(
+                            size: Size(widget.screenWidth * 0.50, 60),
+                          ),
                   ],
                 ),
               ),
@@ -175,8 +181,8 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
   }
 
   void _dowloadFile() async {
-    String? path = await downloadFile(
-        widget.message.message, widget.message.id, (received, total) {
+    String? path = await downloadFile(widget.message.message, widget.message.id,
+        (received, total) {
       _downloadProgress.value = (received / total * 100);
     });
     if (path != null) {
