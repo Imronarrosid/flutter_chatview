@@ -176,7 +176,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
 
   void _dowloadFile() async {
     String? path = await downloadFile(
-        widget.message.message, widget.message.message, (received, total) {
+        widget.message.message, widget.message.id, (received, total) {
       _downloadProgress.value = (received / total * 100);
     });
     if (path != null) {
