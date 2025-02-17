@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:chatview/chatview.dart';
+import 'package:chatview/src/extensions/extensions.dart';
 import 'package:chatview/src/widgets/reaction_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import '../utils/download_audio.dart';
 
 class VoiceMessageView extends StatefulWidget {
   const VoiceMessageView({
@@ -56,18 +59,26 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
 
   PlayerWaveStyle playerWaveStyle = const PlayerWaveStyle(scaleFactor: 70);
 
+  final ValueNotifier<bool> _isFileExist = ValueNotifier(false);
+  final ValueNotifier<double> _downloadProgress = ValueNotifier<double>(0);
+
   @override
   void initState() {
     super.initState();
-    controller = PlayerController()
-      ..preparePlayer(
-        path: widget.message.message,
-        noOfSamples: widget.config?.playerWaveStyle
-                ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
-            playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
-      ).whenComplete(() => widget.onMaxDuration?.call(controller.maxDuration));
-    playerStateSubscription = controller.onPlayerStateChanged
-        .listen((state) => _playerState.value = state);
+    if (!widget.message.message.startsWith('https')) {
+      // downloadFile(widget.message.message, widget.message.message);
+      controller = PlayerController()
+        ..preparePlayer(
+          path: widget.message.message,
+          noOfSamples: widget.config?.playerWaveStyle
+                  ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
+              playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
+        ).whenComplete(
+            () => widget.onMaxDuration?.call(controller.maxDuration));
+      playerStateSubscription = controller.onPlayerStateChanged
+          .listen((state) => _playerState.value = state);
+    }
+    _isFileExist.value = true;
   }
 
   @override
@@ -80,72 +91,112 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          decoration: widget.config?.decoration ??
-              BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: widget.isMessageBySender
-                    ? widget.outgoingChatBubbleConfig?.color
-                    : widget.inComingChatBubbleConfig?.color,
-              ),
-          padding: widget.config?.padding ??
-              const EdgeInsets.symmetric(horizontal: 8),
-          margin: widget.config?.margin ??
-              EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: widget.message.reaction.reactions.isNotEmpty ? 15 : 0,
-              ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+    return ValueListenableBuilder<bool>(
+        valueListenable: _isFileExist,
+        builder: (context, value, child) {
+          return Stack(
+            clipBehavior: Clip.none,
             children: [
-              ValueListenableBuilder<PlayerState>(
-                builder: (context, state, child) {
-                  return IconButton(
-                    onPressed: _playOrPause,
-                    icon:
-                        state.isStopped || state.isPaused || state.isInitialised
-                            ? widget.config?.playIcon ??
-                                const Icon(
-                                  Icons.play_arrow,
-                                  color: Colors.white,
-                                )
-                            : widget.config?.pauseIcon ??
-                                const Icon(
-                                  Icons.stop,
-                                  color: Colors.white,
-                                ),
-                  );
-                },
-                valueListenable: _playerState,
+              Container(
+                decoration: widget.config?.decoration ??
+                    BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: widget.isMessageBySender
+                          ? widget.outgoingChatBubbleConfig?.color
+                          : widget.inComingChatBubbleConfig?.color,
+                    ),
+                padding: widget.config?.padding ??
+                    const EdgeInsets.symmetric(horizontal: 8),
+                margin: widget.config?.margin ??
+                    EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical:
+                          widget.message.reaction.reactions.isNotEmpty ? 15 : 0,
+                    ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ValueListenableBuilder<PlayerState>(
+                      builder: (context, state, child) {
+                        return IconButton(
+                          onPressed: !value ? _dowloadFile : _playOrPause,
+                          icon: !value
+                              ? ValueListenableBuilder<double>(
+                                  valueListenable: _downloadProgress,
+                                  builder: (context, downloadProgress, _) {
+                                    return DownloadProgressWidget(
+                                      progress: downloadProgress / 100,
+                                    );
+                                  })
+                              : state.isStopped ||
+                                      state.isPaused ||
+                                      state.isInitialised
+                                  ? widget.config?.playIcon ??
+                                      const Icon(
+                                        Icons.play_arrow,
+                                        color: Colors.white,
+                                      )
+                                  : widget.config?.pauseIcon ??
+                                      const Icon(
+                                        Icons.stop,
+                                        color: Colors.white,
+                                      ),
+                        );
+                      },
+                      valueListenable: _playerState,
+                    ),
+                    AudioFileWaveforms(
+                      size: Size(widget.screenWidth * 0.50, 60),
+                      playerController: controller,
+                      waveformType: WaveformType.fitWidth,
+                      playerWaveStyle:
+                          widget.config?.playerWaveStyle ?? playerWaveStyle,
+                      padding: widget.config?.waveformPadding ??
+                          const EdgeInsets.only(right: 10),
+                      margin: widget.config?.waveformMargin,
+                      animationCurve:
+                          widget.config?.animationCurve ?? Curves.easeIn,
+                      animationDuration: widget.config?.animationDuration ??
+                          const Duration(milliseconds: 500),
+                      enableSeekGesture:
+                          widget.config?.enableSeekGesture ?? true,
+                    ),
+                  ],
+                ),
               ),
-              AudioFileWaveforms(
-                size: Size(widget.screenWidth * 0.50, 60),
-                playerController: controller,
-                waveformType: WaveformType.fitWidth,
-                playerWaveStyle:
-                    widget.config?.playerWaveStyle ?? playerWaveStyle,
-                padding: widget.config?.waveformPadding ??
-                    const EdgeInsets.only(right: 10),
-                margin: widget.config?.waveformMargin,
-                animationCurve: widget.config?.animationCurve ?? Curves.easeIn,
-                animationDuration: widget.config?.animationDuration ??
-                    const Duration(milliseconds: 500),
-                enableSeekGesture: widget.config?.enableSeekGesture ?? true,
-              ),
+              if (widget.message.reaction.reactions.isNotEmpty)
+                ReactionWidget(
+                  isMessageBySender: widget.isMessageBySender,
+                  message: widget.message,
+                  messageReactionConfig: widget.messageReactionConfig,
+                ),
             ],
-          ),
-        ),
-        if (widget.message.reaction.reactions.isNotEmpty)
-          ReactionWidget(
-            isMessageBySender: widget.isMessageBySender,
-            message: widget.message,
-            messageReactionConfig: widget.messageReactionConfig,
-          ),
-      ],
-    );
+          );
+        });
+  }
+
+  void _dowloadFile() async {
+    String? path = await downloadFile(
+        widget.message.message, widget.message.message, (received, total) {
+      _downloadProgress.value = (received / total * 100);
+      if (received == total) {
+        _isFileExist.value = true;
+      }
+    });
+    if (path != null) {
+      controller = PlayerController()
+        ..preparePlayer(
+          path: path,
+          noOfSamples: widget.config?.playerWaveStyle
+                  ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
+              playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
+        ).whenComplete(
+            () => widget.onMaxDuration?.call(controller.maxDuration));
+      playerStateSubscription = controller.onPlayerStateChanged
+          .listen((state) => _playerState.value = state);
+
+      _playOrPause();
+    }
   }
 
   void _playOrPause() {
@@ -161,5 +212,38 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
     } else {
       controller.pausePlayer();
     }
+  }
+}
+
+class DownloadProgressWidget extends StatelessWidget {
+  final double progress; // Progress value from 0.0 to 1.0
+
+  const DownloadProgressWidget({
+    Key? key,
+    required this.progress,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          width: 50,
+          height: 50,
+          child: CircularProgressIndicator(
+            value: progress,
+            strokeWidth: 2,
+            backgroundColor: Colors.grey.shade300,
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+        const Icon(
+          Icons.download,
+          color: Colors.white,
+          size: 24,
+        ),
+      ],
+    );
   }
 }
