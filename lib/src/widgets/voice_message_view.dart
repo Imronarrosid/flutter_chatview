@@ -65,20 +65,19 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
   @override
   void initState() {
     super.initState();
+    controller = PlayerController()
+      ..preparePlayer(
+        path: widget.message.message,
+        noOfSamples: widget.config?.playerWaveStyle
+                ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
+            playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
+      ).whenComplete(() => widget.onMaxDuration?.call(controller.maxDuration));
+    playerStateSubscription = controller.onPlayerStateChanged
+        .listen((state) => _playerState.value = state);
     if (!widget.message.message.startsWith('https')) {
       // downloadFile(widget.message.message, widget.message.message);
-      controller = PlayerController()
-        ..preparePlayer(
-          path: widget.message.message,
-          noOfSamples: widget.config?.playerWaveStyle
-                  ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
-              playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
-        ).whenComplete(
-            () => widget.onMaxDuration?.call(controller.maxDuration));
-      playerStateSubscription = controller.onPlayerStateChanged
-          .listen((state) => _playerState.value = state);
+      _isFileExist.value = true;
     }
-    _isFileExist.value = true;
   }
 
   @override
