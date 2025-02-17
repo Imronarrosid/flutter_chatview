@@ -14,6 +14,11 @@ class VoiceMessageConfiguration {
     this.playIcon,
     this.waveformMargin,
     this.waveformPadding,
+    this.voiceIcon,
+    this.waveColor,
+    this.bgProgressColor,
+    this.progressColor,
+    this.downloadIcon,
     this.enableSeekGesture = true,
   });
 
@@ -46,6 +51,17 @@ class VoiceMessageConfiguration {
 
   /// Icon for pausing audio
   final Icon? pauseIcon;
+
+  /// Icon for voice message.
+  final Icon? voiceIcon;
+
+  /// Icon for download audio.
+  final Icon? downloadIcon;
+
+  ///color for wave
+  final Color? waveColor;
+  final Color? bgProgressColor;
+  final Color? progressColor;
 
   /// Enable/disable seeking with gestures. Enabled by default.
   final bool enableSeekGesture;

@@ -151,14 +151,16 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
                                       state.isPaused ||
                                       state.isInitialised
                                   ? widget.config?.playIcon ??
-                                      const Icon(
+                                      Icon(
                                         Icons.play_arrow,
-                                        color: Colors.white,
+                                        color: widget.config?.waveColor ??
+                                            Colors.white,
                                       )
                                   : widget.config?.pauseIcon ??
-                                      const Icon(
+                                      Icon(
                                         Icons.stop,
-                                        color: Colors.white,
+                                        color: widget.config?.waveColor ??
+                                            Colors.white,
                                       ),
                         );
                       },
@@ -166,7 +168,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
                     ),
                     value
                         ? AudioFileWaveforms(
-                            size: Size(widget.screenWidth * 0.50, 60),
+                            size: Size(widget.screenWidth * 0.30, 60),
                             playerController: controller,
                             waveformType: WaveformType.fitWidth,
                             playerWaveStyle: widget.config?.playerWaveStyle ??
@@ -183,8 +185,11 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
                                 widget.config?.enableSeekGesture ?? true,
                           )
                         : SizedBox.fromSize(
-                            size: Size(widget.screenWidth * 0.50, 60),
+                            size: Size(widget.screenWidth * 0.30, 60),
                           ),
+                    widget.config?.voiceIcon ??
+                        Icon(Icons.mic_rounded,
+                            color: widget.config?.waveColor ?? Colors.white),
                   ],
                 ),
               ),
@@ -239,10 +244,12 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
 
 class DownloadProgressWidget extends StatelessWidget {
   final double progress; // Progress value from 0.0 to 1.0
+  final VoiceMessageConfiguration? config;
 
   const DownloadProgressWidget({
     Key? key,
     required this.progress,
+    this.config,
   }) : super(key: key);
 
   @override
@@ -256,15 +263,18 @@ class DownloadProgressWidget extends StatelessWidget {
           child: CircularProgressIndicator(
             value: progress / 100,
             strokeWidth: 2,
-            backgroundColor: Colors.grey.shade300,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+            backgroundColor: config?.bgProgressColor ?? Colors.grey.shade300,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              config?.progressColor ?? Colors.white,
+            ),
           ),
         ),
-        const Icon(
-          Icons.download,
-          color: Colors.white,
-          size: 24,
-        ),
+        config?.downloadIcon ??
+            Icon(
+              Icons.download,
+              color: config?.waveColor ?? Colors.white,
+              size: 24,
+            ),
       ],
     );
   }
