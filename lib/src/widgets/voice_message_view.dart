@@ -188,7 +188,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
     if (path != null) {
       controller = PlayerController()
         ..preparePlayer(
-          path: '$path.m4a',
+          path: path,
           noOfSamples: widget.config?.playerWaveStyle
                   ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
               playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
