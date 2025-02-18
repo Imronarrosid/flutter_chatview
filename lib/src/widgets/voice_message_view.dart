@@ -47,11 +47,10 @@ class VoiceMessageView extends StatefulWidget {
   State<VoiceMessageView> createState() => _VoiceMessageViewState();
 }
 
-class _VoiceMessageViewState extends State<VoiceMessageView> {
+class _VoiceMessageViewState extends State<VoiceMessageView>
+    with AutomaticKeepAliveClientMixin {
   late PlayerController controller;
   late StreamSubscription<PlayerState> playerStateSubscription;
-  bool _isPlayerStateSubscriptionInitialized = false;
-  bool _isControllerInitialized = false;
 
   final ValueNotifier<PlayerState> _playerState =
       ValueNotifier(PlayerState.stopped);
@@ -76,12 +75,10 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
                   ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
               playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
         ).whenComplete(() {
-          _isControllerInitialized = true;
           widget.onMaxDuration?.call(controller.maxDuration);
         });
       playerStateSubscription = controller.onPlayerStateChanged
           .listen((state) => _playerState.value = state);
-      _isPlayerStateSubscriptionInitialized = true;
 
       _isFileExist.value = true;
     } else {
@@ -96,13 +93,11 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
                       ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
                   playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
             ).whenComplete(() {
-              _isControllerInitialized = true;
               _isFileExist.value = isDownloaded;
               widget.onMaxDuration?.call(controller.maxDuration);
             });
           playerStateSubscription = controller.onPlayerStateChanged
               .listen((state) => _playerState.value = state);
-          _isPlayerStateSubscriptionInitialized = true;
         }
       });
     }
@@ -110,13 +105,8 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
 
   @override
   void dispose() {
-    if (_isPlayerStateSubscriptionInitialized) {
-      playerStateSubscription.cancel();
-    }
-    if (_isControllerInitialized) {
-      controller.dispose();
-    }
-
+    playerStateSubscription.cancel();
+    controller.dispose();
     _playerState.dispose();
     super.dispose();
   }
@@ -254,6 +244,9 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
       controller.pausePlayer();
     }
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class DownloadProgressWidget extends StatelessWidget {
