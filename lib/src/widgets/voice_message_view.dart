@@ -90,12 +90,13 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
               noOfSamples: widget.config?.playerWaveStyle
                       ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
                   playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
-            ).whenComplete(
-                () => widget.onMaxDuration?.call(controller.maxDuration));
+            ).whenComplete(() {
+              widget.onMaxDuration?.call(controller.maxDuration);
+              _isFileExist.value = isDownloaded;
+            });
           playerStateSubscription = controller.onPlayerStateChanged
               .listen((state) => _playerState.value = state);
         }
-        _isFileExist.value = isDownloaded;
       });
     }
   }
@@ -144,6 +145,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
                                   valueListenable: _downloadProgress,
                                   builder: (context, downloadProgress, _) {
                                     return DownloadProgressWidget(
+                                      config: widget.config,
                                       progress: downloadProgress / 100,
                                     );
                                   })
