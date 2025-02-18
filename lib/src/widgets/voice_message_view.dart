@@ -51,6 +51,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
   late PlayerController controller;
   late StreamSubscription<PlayerState> playerStateSubscription;
   bool _isPlayerStateSubscriptionInitialized = false;
+  bool _isControllerInitialized = false;
 
   final ValueNotifier<PlayerState> _playerState =
       ValueNotifier(PlayerState.stopped);
@@ -74,8 +75,10 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
           noOfSamples: widget.config?.playerWaveStyle
                   ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
               playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
-        ).whenComplete(
-            () => widget.onMaxDuration?.call(controller.maxDuration));
+        ).whenComplete(() {
+          _isControllerInitialized = true;
+          widget.onMaxDuration?.call(controller.maxDuration);
+        });
       playerStateSubscription = controller.onPlayerStateChanged
           .listen((state) => _playerState.value = state);
       _isPlayerStateSubscriptionInitialized = true;
@@ -93,8 +96,9 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
                       ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
                   playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
             ).whenComplete(() {
-              widget.onMaxDuration?.call(controller.maxDuration);
+              _isControllerInitialized = true;
               _isFileExist.value = isDownloaded;
+              widget.onMaxDuration?.call(controller.maxDuration);
             });
           playerStateSubscription = controller.onPlayerStateChanged
               .listen((state) => _playerState.value = state);
@@ -109,7 +113,10 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
     if (_isPlayerStateSubscriptionInitialized) {
       playerStateSubscription.cancel();
     }
-    controller.dispose();
+    if (_isControllerInitialized) {
+      controller.dispose();
+    }
+
     _playerState.dispose();
     super.dispose();
   }
