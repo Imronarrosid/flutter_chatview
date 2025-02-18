@@ -113,6 +113,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return ValueListenableBuilder<bool>(
         valueListenable: _isFileExist,
         builder: (context, value, child) {
