@@ -76,6 +76,9 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
               playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
         ).whenComplete(() {
           widget.onMaxDuration?.call(controller.maxDuration);
+          controller.setFinishMode(
+            finishMode: FinishMode.pause,
+          );
         });
       playerStateSubscription = controller.onPlayerStateChanged
           .listen((state) => _playerState.value = state);
@@ -94,6 +97,9 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
                   playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
             ).whenComplete(() {
               _isFileExist.value = isDownloaded;
+              controller.setFinishMode(
+                finishMode: FinishMode.stop,
+              );
               widget.onMaxDuration?.call(controller.maxDuration);
             });
           playerStateSubscription = controller.onPlayerStateChanged
@@ -276,12 +282,10 @@ class DownloadProgressWidget extends StatelessWidget {
           width: 30,
           height: 30,
           child: CircularProgressIndicator(
-            value: progress / 100,
+            value: progress,
             strokeWidth: 2,
-            backgroundColor: config?.bgProgressColor ?? Colors.grey.shade300,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              config?.progressColor ?? Colors.white,
-            ),
+            backgroundColor: config?.bgProgressColor ?? Colors.grey.shade100,
+            color: config?.progressColor ?? Colors.white,
           ),
         ),
         config?.downloadIcon ??
