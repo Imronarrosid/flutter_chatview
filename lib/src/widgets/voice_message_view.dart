@@ -50,6 +50,7 @@ class VoiceMessageView extends StatefulWidget {
 class _VoiceMessageViewState extends State<VoiceMessageView> {
   late PlayerController controller;
   late StreamSubscription<PlayerState> playerStateSubscription;
+  bool _isPlayerStateSubscriptionInitialized = false;
 
   final ValueNotifier<PlayerState> _playerState =
       ValueNotifier(PlayerState.stopped);
@@ -77,6 +78,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
             () => widget.onMaxDuration?.call(controller.maxDuration));
       playerStateSubscription = controller.onPlayerStateChanged
           .listen((state) => _playerState.value = state);
+      _isPlayerStateSubscriptionInitialized = true;
 
       _isFileExist.value = true;
     } else {
@@ -96,6 +98,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
             });
           playerStateSubscription = controller.onPlayerStateChanged
               .listen((state) => _playerState.value = state);
+          _isPlayerStateSubscriptionInitialized = true;
         }
       });
     }
@@ -103,7 +106,9 @@ class _VoiceMessageViewState extends State<VoiceMessageView> {
 
   @override
   void dispose() {
-    playerStateSubscription.cancel();
+    if (_isPlayerStateSubscriptionInitialized) {
+      playerStateSubscription.cancel();
+    }
     controller.dispose();
     _playerState.dispose();
     super.dispose();
