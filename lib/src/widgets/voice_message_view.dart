@@ -104,10 +104,16 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   void dispose() {
-    playerStateSubscription.cancel();
-    controller.dispose();
-    _playerState.dispose();
+    if (_isFileExist.value) {
+      playerStateSubscription.cancel();
+      controller.dispose();
+      _playerState.dispose();
+      _downloadProgress.dispose();
+    }
     super.dispose();
   }
 
@@ -116,7 +122,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
     super.build(context);
     return ValueListenableBuilder<bool>(
         valueListenable: _isFileExist,
-        builder: (context, value, child) {
+        builder: (context, isFileExsit, child) {
           return Stack(
             clipBehavior: Clip.none,
             children: [
@@ -139,39 +145,43 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    ValueListenableBuilder<PlayerState>(
-                      builder: (context, state, child) {
-                        return IconButton(
-                          onPressed: !value ? _dowloadFile : _playOrPause,
-                          icon: !value
-                              ? ValueListenableBuilder<double>(
-                                  valueListenable: _downloadProgress,
-                                  builder: (context, downloadProgress, _) {
-                                    return DownloadProgressWidget(
-                                      config: widget.config,
-                                      progress: downloadProgress / 100,
-                                    );
-                                  })
-                              : state.isStopped ||
-                                      state.isPaused ||
-                                      state.isInitialised
-                                  ? widget.config?.playIcon ??
-                                      Icon(
-                                        Icons.play_arrow,
-                                        color: widget.config?.waveColor ??
-                                            Colors.white,
-                                      )
-                                  : widget.config?.pauseIcon ??
-                                      Icon(
-                                        Icons.stop,
-                                        color: widget.config?.waveColor ??
-                                            Colors.white,
-                                      ),
-                        );
-                      },
-                      valueListenable: _playerState,
-                    ),
-                    value
+                    if (!isFileExsit)
+                      IconButton(
+                        onPressed: _dowloadFile,
+                        icon: ValueListenableBuilder<double>(
+                            valueListenable: _downloadProgress,
+                            builder: (context, downloadProgress, _) {
+                              return DownloadProgressWidget(
+                                config: widget.config,
+                                progress: downloadProgress / 100,
+                              );
+                            }),
+                      )
+                    else
+                      ValueListenableBuilder<PlayerState>(
+                        builder: (context, state, child) {
+                          return IconButton(
+                            onPressed: _playOrPause,
+                            icon: state.isStopped ||
+                                    state.isPaused ||
+                                    state.isInitialised
+                                ? widget.config?.playIcon ??
+                                    Icon(
+                                      Icons.play_arrow,
+                                      color: widget.config?.waveColor ??
+                                          Colors.white,
+                                    )
+                                : widget.config?.pauseIcon ??
+                                    Icon(
+                                      Icons.stop,
+                                      color: widget.config?.waveColor ??
+                                          Colors.white,
+                                    ),
+                          );
+                        },
+                        valueListenable: _playerState,
+                      ),
+                    isFileExsit
                         ? AudioFileWaveforms(
                             size: Size(widget.screenWidth * 0.30, 60),
                             playerController: controller,
@@ -245,9 +255,6 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
       controller.pausePlayer();
     }
   }
-
-  @override
-  bool get wantKeepAlive => true;
 }
 
 class DownloadProgressWidget extends StatelessWidget {
