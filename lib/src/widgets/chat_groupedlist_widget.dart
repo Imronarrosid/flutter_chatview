@@ -360,11 +360,11 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
               },
               findChildIndexCallback: (key) {
                 if (key == const ValueKey('typingIndicator')) {
-                  return messages.length;
+                  return 2;
                 } else if (key == const ValueKey('suggestionsList')) {
-                  return messages.length + 1;
+                  return 1;
                 } else if (key == const ValueKey('chatTextFieldHeight')) {
-                  return messages.length + 2;
+                  return 0;
                 }
                 final valueKey = key as ValueKey<dynamic>;
 
