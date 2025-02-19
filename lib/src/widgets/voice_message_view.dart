@@ -207,7 +207,13 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
                                 widget.config?.enableSeekGesture ?? true,
                           )
                         : SizedBox.fromSize(
-                            size: Size(widget.screenWidth * 0.30, 60),
+                            size: Size(widget.screenWidth * 0.30, 2),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: widget.config?.waveColor ?? Colors.white,
+                              ),
+                            ),
                           ),
                     IconButton(
                       onPressed: null,
