@@ -19,6 +19,7 @@ class VoiceMessageConfiguration {
     this.bgProgressColor,
     this.progressColor,
     this.downloadIcon,
+    this.durationTextStyle,
     this.enableSeekGesture = true,
   });
 
@@ -47,16 +48,20 @@ class VoiceMessageConfiguration {
   final Curve? animationCurve;
 
   /// Icon for playing the audio.
-  final Icon? playIcon;
+  final Widget? playIcon;
 
   /// Icon for pausing audio
-  final Icon? pauseIcon;
+  final Widget? pauseIcon;
 
   /// Icon for voice message.
-  final Icon? voiceIcon;
+  final Widget? voiceIcon;
 
   /// Icon for download audio.
-  final Icon? downloadIcon;
+  final Widget? downloadIcon;
+
+  /// Text duration style for voice message.
+
+  final TextStyle? durationTextStyle;
 
   ///color for wave
   final Color? waveColor;

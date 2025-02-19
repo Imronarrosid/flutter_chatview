@@ -169,3 +169,17 @@ extension BuildContextExtension on BuildContext {
               child: SizedBox.shrink(),
             );
 }
+
+extension DurationFormatter on Duration {
+  /// Converts the duration to a string in MM:SS format.
+  String toMMSS() {
+    // Helper function to ensure two digits.
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+
+    // Use total minutes and the remaining seconds.
+    final minutes = twoDigits(inMinutes);
+    final seconds = twoDigits(inSeconds % 60);
+
+    return '$minutes:$seconds';
+  }
+}

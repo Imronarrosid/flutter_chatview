@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:chatview/chatview.dart';
+import 'package:chatview/src/extensions/extensions.dart';
 import 'package:chatview/src/widgets/reaction_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -208,9 +209,27 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
                         : SizedBox.fromSize(
                             size: Size(widget.screenWidth * 0.30, 60),
                           ),
-                    widget.config?.voiceIcon ??
-                        Icon(Icons.mic_rounded,
-                            color: widget.config?.waveColor ?? Colors.white),
+                    IconButton(
+                      onPressed: null,
+                      icon: Column(
+                        children: [
+                          widget.config?.voiceIcon ??
+                              Icon(Icons.mic_rounded,
+                                  color:
+                                      widget.config?.waveColor ?? Colors.white),
+                          Text(
+                            (widget.message.voiceMessageDuration ??
+                                    Duration.zero)
+                                .toMMSS(),
+                            style: widget.config?.durationTextStyle ??
+                                const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -283,7 +302,7 @@ class DownloadProgressWidget extends StatelessWidget {
           height: 30,
           child: CircularProgressIndicator(
             value: progress,
-            strokeWidth: 2,
+            strokeWidth: 1.5,
             backgroundColor: config?.bgProgressColor ?? Colors.grey.shade100,
             color: config?.progressColor ?? Colors.white,
           ),
