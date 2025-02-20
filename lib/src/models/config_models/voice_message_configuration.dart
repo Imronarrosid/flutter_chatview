@@ -21,6 +21,7 @@ class VoiceMessageConfiguration {
     this.downloadIcon,
     this.durationTextStyle,
     this.unDownoadedWaveColor,
+    this.circularProgressIndicatorSize,
     this.enableSeekGesture = true,
   });
 
@@ -63,6 +64,9 @@ class VoiceMessageConfiguration {
   /// Text duration style for voice message.
 
   final TextStyle? durationTextStyle;
+
+  ///CircularProgrIndicatorSize
+  final double? circularProgressIndicatorSize;
 
   ///color for wave
   final Color? waveColor;

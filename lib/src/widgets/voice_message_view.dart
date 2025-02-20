@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:chatview/chatview.dart';
 import 'package:chatview/src/extensions/extensions.dart';
+import 'package:chatview/src/mixins/loading_state_mixin.dart';
 import 'package:chatview/src/widgets/reaction_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -153,16 +154,10 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (!isFileExsit)
-                      IconButton(
-                        onPressed: _dowloadFile,
-                        icon: ValueListenableBuilder<double>(
-                            valueListenable: _downloadProgress,
-                            builder: (context, downloadProgress, _) {
-                              return DownloadProgressWidget(
-                                config: widget.config,
-                                progress: downloadProgress / 100,
-                              );
-                            }),
+                      DownloadProgressWidget(
+                        progress: _downloadProgress,
+                        onPressed: _downloadFile,
+                        config: widget.config,
                       )
                     else
                       ValueListenableBuilder<PlayerState>(
@@ -209,13 +204,25 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
                         : Padding(
                             padding: widget.config?.waveformPadding ??
                                 const EdgeInsets.only(right: 10),
-                            child: SizedBox.fromSize(
-                              size: Size(widget.screenWidth * 0.30, 2),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: widget.config?.unDownoadedWaveColor ??
-                                      Colors.white,
+                            child: SizedBox(
+                              width: widget.screenWidth * 0.30,
+                              height: 60,
+                              child: UnconstrainedBox(
+                                child: SizedBox.fromSize(
+                                  size: Size(widget.screenWidth * 0.30, 2),
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 4,
+                                    ),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        color: widget
+                                                .config?.unDownoadedWaveColor ??
+                                            Colors.white,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -255,7 +262,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
         });
   }
 
-  void _dowloadFile() async {
+  Future<void> _downloadFile() async {
     String? path = await downloadFile(widget.message.message, widget.message.id,
         (received, total) {
       _downloadProgress.value = (received / total * 100);
@@ -293,38 +300,56 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
   }
 }
 
-class DownloadProgressWidget extends StatelessWidget {
-  final double progress; // Progress value from 0.0 to 1.0
+class DownloadProgressWidget extends StatefulWidget {
+  final ValueListenable<double> progress; // Progress value from 0.0 to 1.0
   final VoiceMessageConfiguration? config;
+  final Future<void> Function() onPressed;
 
   const DownloadProgressWidget({
     Key? key,
     required this.progress,
     this.config,
+    required this.onPressed,
   }) : super(key: key);
 
   @override
+  State<DownloadProgressWidget> createState() => _DownloadProgressWidgetState();
+}
+
+class _DownloadProgressWidgetState extends State<DownloadProgressWidget>
+    with LoadingStateMixin {
+  @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        SizedBox(
-          width: 30,
-          height: 30,
-          child: CircularProgressIndicator(
-            value: progress,
-            strokeWidth: 1.5,
-            backgroundColor: config?.bgProgressColor ?? Colors.grey.shade100,
-            color: config?.progressColor ?? Colors.white,
-          ),
-        ),
-        config?.downloadIcon ??
-            Icon(
-              Icons.download,
-              color: config?.waveColor ?? Colors.white,
-              size: 24,
-            ),
-      ],
-    );
+    return ValueListenableBuilder<double>(
+        valueListenable: widget.progress,
+        builder: (context, downloadProgress, _) {
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: widget.config?.circularProgressIndicatorSize,
+                height: widget.config?.circularProgressIndicatorSize,
+                child: CircularProgressIndicator(
+                  value: widget.progress.value / 100,
+                  strokeWidth: 1,
+                  backgroundColor:
+                      widget.config?.bgProgressColor ?? Colors.grey.shade100,
+                  color: widget.config?.progressColor ?? Colors.white,
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  withLoading(widget.onPressed);
+                },
+                icon: widget.config?.downloadIcon ??
+                    Icon(
+                      Icons.download,
+                      color: widget.config?.waveColor ?? Colors.white,
+                      size: 20,
+                    ),
+              ),
+            ],
+          );
+        });
   }
 }
