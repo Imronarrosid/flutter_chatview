@@ -211,7 +211,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
                             child: Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
-                                color: widget.config?.waveColor ?? Colors.white,
+                                color: widget.config?.unDownoadedWaveColor ?? Colors.white,
                               ),
                             ),
                           ),

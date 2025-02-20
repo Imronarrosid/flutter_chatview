@@ -20,6 +20,7 @@ class VoiceMessageConfiguration {
     this.progressColor,
     this.downloadIcon,
     this.durationTextStyle,
+    this.unDownoadedWaveColor,
     this.enableSeekGesture = true,
   });
 
@@ -67,6 +68,7 @@ class VoiceMessageConfiguration {
   final Color? waveColor;
   final Color? bgProgressColor;
   final Color? progressColor;
+  final Color? unDownoadedWaveColor;
 
   /// Enable/disable seeking with gestures. Enabled by default.
   final bool enableSeekGesture;
