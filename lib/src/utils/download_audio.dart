@@ -13,14 +13,11 @@ Future<String?> downloadFile(String url, String fileName,
     await dio.download(url, savePath, onReceiveProgress: (received, total) {
       if (total != -1) {
         onReceiveProgress.call(received, total);
-        print("Downloading: ${(received / total * 100).toStringAsFixed(0)}%");
       }
     });
 
-    print("File saved at: $savePath");
     return savePath;
   } catch (e) {
-    print("Download error: $e");
     return null;
   }
 }
