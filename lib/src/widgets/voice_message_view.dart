@@ -206,11 +206,11 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
                             enableSeekGesture:
                                 widget.config?.enableSeekGesture ?? true,
                           )
-                        : SizedBox.fromSize(
-                            size: Size(widget.screenWidth * 0.30, 2),
-                            child: Padding(
-                              padding: widget.config?.waveformPadding ??
-                                  const EdgeInsets.only(right: 10),
+                        : Padding(
+                            padding: widget.config?.waveformPadding ??
+                                const EdgeInsets.only(right: 10),
+                            child: SizedBox.fromSize(
+                              size: Size(widget.screenWidth * 0.30, 2),
                               child: Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
