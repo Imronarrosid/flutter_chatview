@@ -93,7 +93,9 @@ class ImageMessageView extends StatelessWidget {
                       element.uri == message.message,
                 );
                 context.chatViewIW?.galleryPageController.value =
-                    PageController(initialPage: initialPage!);
+                    PageController(
+                  initialPage: initialPage,
+                );
 
                 context.chatViewIW?.showGallery.value = true;
               },
@@ -131,7 +133,7 @@ class ImageMessageView extends StatelessWidget {
                                       message.message,
                                       headers: imageMessageConfig?.imageHeaders,
                                     ),
-                          fit: BoxFit.fitHeight,
+                          fit: BoxFit.cover,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
                             return Container(
@@ -153,12 +155,12 @@ class ImageMessageView extends StatelessWidget {
                         return Image.memory(
                           base64Decode(imageUrl
                               .substring(imageUrl.indexOf('base64') + 7)),
-                          fit: BoxFit.fill,
+                          fit: BoxFit.cover,
                         );
                       } else {
                         return Image.file(
                           File(imageUrl),
-                          fit: BoxFit.fill,
+                          fit: BoxFit.cover,
                         );
                       }
                     }()),

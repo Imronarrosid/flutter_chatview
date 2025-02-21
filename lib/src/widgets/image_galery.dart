@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:chatview/src/extensions/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
@@ -78,16 +81,7 @@ class ImageGalleryState extends State<ImageGallery> {
               PhotoViewGallery.builder(
                 builder: (BuildContext context, int index) =>
                     PhotoViewGalleryPageOptions(
-                  imageProvider: widget.imageProviderBuilder != null
-                      ? widget.imageProviderBuilder!(
-                          uri: listImages[index].uri,
-                          imageHeaders: widget.imageHeaders,
-                          conditional: Conditional(),
-                        )
-                      : Conditional().getProvider(
-                          listImages[index].uri,
-                          headers: widget.imageHeaders,
-                        ),
+                  imageProvider: _getProvider(index),
                   minScale: widget.options.minScale,
                   maxScale: widget.options.maxScale,
                 ),
@@ -118,6 +112,25 @@ class ImageGalleryState extends State<ImageGallery> {
           ),
         ),
       );
+
+  ImageProvider<Object> _getProvider(int index) {
+    if (listImages[index].uri.isUrl) {
+      return widget.imageProviderBuilder != null
+          ? widget.imageProviderBuilder!(
+              uri: listImages[index].uri,
+              imageHeaders: widget.imageHeaders,
+              conditional: Conditional(),
+            )
+          : Conditional().getProvider(
+              listImages[index].uri,
+              headers: widget.imageHeaders,
+            );
+    } else {
+      return FileImage(
+        File(listImages[index].uri),
+      );
+    }
+  }
 }
 
 class ImageGalleryOptions {
