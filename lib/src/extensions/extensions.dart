@@ -70,14 +70,14 @@ extension ValidateString on String {
     return true;
   }
 
-  // bool get isUrl => Uri.tryParse(this)?.isAbsolute??false;
-  bool get isUrl {
-    // var isUrlRegex = RegExp(r'https?://[^\s/$.?#].[^\s]*');
-    var isUrlRegex =
-        RegExp(r'(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-&?=%.]+');
+  bool get isUrl => Uri.tryParse(this)?.isAbsolute ?? false;
+  // bool get isUrl {
+  //   // var isUrlRegex = RegExp(r'https?://[^\s/$.?#].[^\s]*');
+  //   var isUrlRegex =
+  //       RegExp(r'(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-&?=%.]+');
 
-    return isUrlRegex.hasMatch(this);
-  }
+  //   return isUrlRegex.hasMatch(this);
+  // }
 
   Widget getUserProfilePicture({
     required ChatUser? Function(String) getChatUser,
