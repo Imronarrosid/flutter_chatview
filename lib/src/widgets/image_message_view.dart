@@ -94,7 +94,7 @@ class ImageMessageView extends StatelessWidget {
                 );
                 context.chatViewIW?.galleryPageController.value =
                     PageController(
-                  initialPage: initialPage,
+                  initialPage: initialPage == -1 ? images.length : initialPage,
                 );
 
                 context.chatViewIW?.showGallery.value = true;

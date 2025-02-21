@@ -71,6 +71,12 @@ class ImageGalleryState extends State<ImageGallery> {
   }
 
   @override
+  void dispose() {
+    widget.pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => PopScope(
         child: Dismissible(
           key: const Key('photo_view_gallery'),
