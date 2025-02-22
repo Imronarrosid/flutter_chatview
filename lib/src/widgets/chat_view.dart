@@ -20,7 +20,6 @@
  * SOFTWARE.
  */
 import 'dart:io';
-import 'dart:nativewrappers/_internal/vm/lib/ffi_allocation_patch.dart';
 
 import 'package:chatview/chatview.dart';
 import 'package:chatview/src/extensions/extensions.dart';

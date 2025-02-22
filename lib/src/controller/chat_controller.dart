@@ -21,7 +21,6 @@
  */
 import 'dart:async';
 
-import 'package:chatview/src/models/data_models/image_preview.dart';
 import 'package:chatview/src/models/data_models/reation_bottom_sheet.dart';
 import 'package:chatview/src/values/enumeration.dart';
 import 'package:chatview/src/widgets/suggestions/suggestion_list.dart';

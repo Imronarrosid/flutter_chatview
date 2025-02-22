@@ -24,7 +24,6 @@ import 'dart:io';
 
 import 'package:chatview/chatview.dart';
 import 'package:chatview/src/extensions/extensions.dart';
-import 'package:chatview/src/models/data_models/image_preview.dart';
 import 'package:flutter/material.dart';
 
 import '../conditional/conditional.dart';

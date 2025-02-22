@@ -25,7 +25,6 @@ import 'package:chatview/src/widgets/suggestions/suggestion_list.dart';
 import 'package:chatview/src/widgets/type_indicator_widget.dart';
 import 'package:flutter/material.dart';
 
-import '../models/data_models/image_preview.dart';
 import 'chat_bubble_widget.dart';
 import 'chat_group_header.dart';
 
