@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 import 'dart:io';
+import 'dart:nativewrappers/_internal/vm/lib/ffi_allocation_patch.dart';
 
 import 'package:chatview/chatview.dart';
 import 'package:chatview/src/extensions/extensions.dart';
@@ -49,6 +50,7 @@ class ChatView extends StatefulWidget {
     this.replyPopupConfig,
     this.reactionPopupConfig,
     this.loadMoreData,
+    this.loadMoreImages,
     this.loadingWidget,
     this.messageConfig,
     this.isLastPage,
@@ -103,6 +105,8 @@ class ChatView extends StatefulWidget {
   /// Provides callback when user actions reaches to top and needs to load more
   /// chat
   final VoidCallBackWithFuture? loadMoreData;
+
+  final VoidCallBackWithFuture? loadMoreImages;
 
   /// Provides widget for loading view while pagination is enabled.
   final Widget? loadingWidget;
@@ -351,6 +355,7 @@ class _ChatViewState extends State<ChatView>
                                 .chatViewIW!.galleryPageController,
                             builder: (context, value, child) {
                               return ImageGallery(
+                                loadMoreImages: widget.loadMoreImages,
                                 imageListNotifier:
                                     chatController.imageListNotifier,
                                 imageProviderBuilder:

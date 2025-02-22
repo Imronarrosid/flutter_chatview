@@ -44,7 +44,7 @@ class ImageGallery extends StatefulWidget {
   /// Page controller for the image pages.
   final PageController pageController;
 
-  final List<PreviewImage> Function()? loadMoreImages;
+  final void Function()? loadMoreImages;
 
   @override
   State<ImageGallery> createState() => ImageGalleryState();
@@ -97,12 +97,10 @@ class ImageGalleryState extends State<ImageGallery> {
                       scrollPhysics: const ClampingScrollPhysics(),
                       onPageChanged: (index) {
                         if (0 == index && widget.loadMoreImages != null) {
-                          setState(() {
-                            listImages.addAll(widget.loadMoreImages!.call());
-                          });
+                          widget.loadMoreImages!.call();
                         }
                         if (0 == index) {
-                          kDebugMode ? print('Load more images') : null;
+                          kDebugMode ? debugPrint('Load more images') : null;
                         }
                       },
                     );
