@@ -33,7 +33,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart';
 import '../conditional/conditional.dart';
-import '../models/data_models/image_preview.dart';
 import '../values/custom_time_messages.dart';
 import 'image_galery.dart';
 import 'send_message_widget.dart';
@@ -290,7 +289,6 @@ class _ChatViewState extends State<ChatView>
                                 builder: (_, state, child) {
                                   return ChatListWidget(
                                     chatViewRenderBox: chatViewRenderBox,
-                                    images: _listGallery(),
                                     replyMessage: state,
                                     chatController: widget.chatController,
                                     loadMoreData: widget.loadMoreData,
@@ -343,19 +341,20 @@ class _ChatViewState extends State<ChatView>
                       );
                     },
                   ),
-                ValueListenableBuilder(
+                ValueListenableBuilder<bool>(
                     key: chatViewContext.chatViewIW!.galleryKey,
                     valueListenable: chatViewContext.chatViewIW!.showGallery,
                     builder: (_, showGallery, child) {
                       if (showGallery) {
-                        return ValueListenableBuilder(
+                        return ValueListenableBuilder<PageController>(
                             valueListenable: chatViewContext
                                 .chatViewIW!.galleryPageController,
                             builder: (context, value, child) {
                               return ImageGallery(
+                                imageListNotifier:
+                                    chatController.imageListNotifier,
                                 imageProviderBuilder:
                                     widget.imageProviderBuilder,
-                                images: _listGallery(),
                                 pageController: value,
                                 onClosePressed: () =>
                                     _onCloseGalleryPressed(chatViewContext),
@@ -376,16 +375,6 @@ class _ChatViewState extends State<ChatView>
         }),
       ),
     );
-  }
-
-  List<PreviewImage> _listGallery() {
-    List<PreviewImage> results = [];
-    for (var element in widget.chatController.initialMessageList) {
-      if (element.messageType == MessageType.image) {
-        results.add(PreviewImage(id: element.id, uri: element.message));
-      }
-    }
-    return results;
   }
 
   void _onCloseGalleryPressed(BuildContext context) {

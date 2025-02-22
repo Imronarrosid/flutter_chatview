@@ -42,7 +42,7 @@ class ChatBubbleWidget extends StatefulWidget {
     this.onReplyTap,
     this.shouldHighlight = false,
     this.chatViewRenderBox,
-    required this.images,
+    required this.imageListNotifier,
   }) : super(key: key);
 
   /// Represent current instance of message.
@@ -65,7 +65,7 @@ class ChatBubbleWidget extends StatefulWidget {
 
   final RenderBox? chatViewRenderBox;
 
-  final List<PreviewImage> images;
+  final ValueNotifier<List<PreviewImage>> imageListNotifier;
 
   @override
   State<ChatBubbleWidget> createState() => _ChatBubbleWidgetState();
@@ -281,7 +281,7 @@ class _ChatBubbleWidgetState extends State<ChatBubbleWidget> {
           onSwipe: isMessageBySender ? onLeftSwipe : onRightSwipe,
           child: MessageView(
             chatViewRenderBox: widget.chatViewRenderBox,
-            images: widget.images,
+            imageListNotifier: widget.imageListNotifier,
             outgoingChatBubbleConfig:
                 chatListConfig.chatBubbleConfig?.outgoingChatBubbleConfig,
             isLongPressEnable:

@@ -40,7 +40,7 @@ class ImageMessageView extends StatelessWidget {
     this.messageReactionConfig,
     this.highlightImage = false,
     this.highlightScale = 1.2,
-    required this.images,
+    required this.imageListNotifier,
   }) : super(key: key);
 
   /// Provides message instance of chat.
@@ -61,7 +61,7 @@ class ImageMessageView extends StatelessWidget {
   /// Provides scale of highlighted image when user taps on replied image.
   final double highlightScale;
 
-  final List<PreviewImage> images;
+  final ValueNotifier<List<PreviewImage>> imageListNotifier;
 
   String get imageUrl => message.message;
 
@@ -81,93 +81,105 @@ class ImageMessageView extends StatelessWidget {
           iconButton,
         Stack(
           children: [
-            GestureDetector(
-              onTap: () {
-                imageMessageConfig?.onTap != null
-                    ? imageMessageConfig?.onTap!(message)
-                    : null;
+            ValueListenableBuilder<List<PreviewImage>>(
+                valueListenable: imageListNotifier,
+                builder: (context, snapshot, _) {
+                  return GestureDetector(
+                    onTap: () {
+                      imageMessageConfig?.onTap != null
+                          ? imageMessageConfig?.onTap!(message)
+                          : null;
 
-                final initialPage = images.indexWhere(
-                  (element) =>
-                      element.id == message.id &&
-                      element.uri == message.message,
-                );
-                context.chatViewIW?.galleryPageController.value =
-                    PageController(
-                  initialPage: initialPage == -1 ? images.length : initialPage,
-                );
+                      final initialPage = snapshot.indexWhere(
+                        (element) =>
+                            element.id == message.id &&
+                            element.uri == message.message,
+                      );
+                      context.chatViewIW?.galleryPageController.value =
+                          PageController(
+                        initialPage: initialPage,
+                      );
 
-                context.chatViewIW?.showGallery.value = true;
-              },
-              child: Transform.scale(
-                scale: highlightImage ? highlightScale : 1.0,
-                alignment: isMessageBySender
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
-                child: Container(
-                  padding: imageMessageConfig?.padding ?? EdgeInsets.zero,
-                  margin: imageMessageConfig?.margin ??
-                      EdgeInsets.only(
-                        top: 6,
-                        right: isMessageBySender ? 6 : 0,
-                        left: isMessageBySender ? 0 : 6,
-                        bottom: message.reaction.reactions.isNotEmpty ? 15 : 0,
-                      ),
-                  height: imageMessageConfig?.height ?? 200,
-                  width: imageMessageConfig?.width ?? 150,
-                  child: ClipRRect(
-                    borderRadius: imageMessageConfig?.borderRadius ??
-                        BorderRadius.circular(14),
-                    child: (() {
-                      if (imageUrl.isUrl) {
-                        return Image(
-                          image:
-                              imageMessageConfig?.imageProviderBuilder != null
-                                  ? imageMessageConfig!.imageProviderBuilder!(
-                                      uri: message.message,
-                                      imageHeaders:
-                                          imageMessageConfig?.imageHeaders,
-                                      conditional: Conditional(),
-                                    )
-                                  : Conditional().getProvider(
-                                      message.message,
-                                      headers: imageMessageConfig?.imageHeaders,
+                      context.chatViewIW?.showGallery.value = true;
+                    },
+                    child: Transform.scale(
+                      scale: highlightImage ? highlightScale : 1.0,
+                      alignment: isMessageBySender
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Container(
+                        padding: imageMessageConfig?.padding ?? EdgeInsets.zero,
+                        margin: imageMessageConfig?.margin ??
+                            EdgeInsets.only(
+                              top: 6,
+                              right: isMessageBySender ? 6 : 0,
+                              left: isMessageBySender ? 0 : 6,
+                              bottom: message.reaction.reactions.isNotEmpty
+                                  ? 15
+                                  : 0,
+                            ),
+                        height: imageMessageConfig?.height ?? 200,
+                        width: imageMessageConfig?.width ?? 150,
+                        child: ClipRRect(
+                          borderRadius: imageMessageConfig?.borderRadius ??
+                              BorderRadius.circular(14),
+                          child: (() {
+                            if (imageUrl.isUrl) {
+                              return Image(
+                                image: imageMessageConfig
+                                            ?.imageProviderBuilder !=
+                                        null
+                                    ? imageMessageConfig!.imageProviderBuilder!(
+                                        uri: message.message,
+                                        imageHeaders:
+                                            imageMessageConfig?.imageHeaders,
+                                        conditional: Conditional(),
+                                      )
+                                    : Conditional().getProvider(
+                                        message.message,
+                                        headers:
+                                            imageMessageConfig?.imageHeaders,
+                                      ),
+                                fit: BoxFit.cover,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                    color: imageMessageConfig?.unloadedColor ??
+                                        Colors.transparent,
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        value: loadingProgress
+                                                    .expectedTotalBytes !=
+                                                null
+                                            ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                loadingProgress
+                                                    .expectedTotalBytes!
+                                            : null,
+                                      ),
                                     ),
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              color: imageMessageConfig?.unloadedColor ??
-                                  Colors.transparent,
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  value: loadingProgress.expectedTotalBytes !=
-                                          null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                      : null,
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      } else if (imageUrl.fromMemory) {
-                        return Image.memory(
-                          base64Decode(imageUrl
-                              .substring(imageUrl.indexOf('base64') + 7)),
-                          fit: BoxFit.cover,
-                        );
-                      } else {
-                        return Image.file(
-                          File(imageUrl),
-                          fit: BoxFit.cover,
-                        );
-                      }
-                    }()),
-                  ),
-                ),
-              ),
-            ),
+                                  );
+                                },
+                              );
+                            } else if (imageUrl.fromMemory) {
+                              return Image.memory(
+                                base64Decode(imageUrl
+                                    .substring(imageUrl.indexOf('base64') + 7)),
+                                fit: BoxFit.cover,
+                              );
+                            } else {
+                              return Image.file(
+                                File(imageUrl),
+                                fit: BoxFit.cover,
+                              );
+                            }
+                          }()),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
             if (message.reaction.reactions.isNotEmpty)
               ReactionWidget(
                 isMessageBySender: isMessageBySender,

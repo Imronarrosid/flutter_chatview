@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:chatview/src/extensions/extensions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
@@ -12,11 +13,11 @@ class ImageGallery extends StatefulWidget {
     super.key,
     this.imageHeaders,
     this.imageProviderBuilder,
-    required this.images,
     required this.onClosePressed,
     this.options = const ImageGalleryOptions(),
     required this.pageController,
     this.loadMoreImages,
+    required this.imageListNotifier,
   });
 
   final Map<String, String>? imageHeaders;
@@ -32,7 +33,7 @@ class ImageGallery extends StatefulWidget {
   })? imageProviderBuilder;
 
   /// Images to show in the gallery.
-  final List<PreviewImage> images;
+  final ValueNotifier<List<PreviewImage>> imageListNotifier;
 
   /// Triggered when the gallery is swiped down or closed via the icon.
   final VoidCallback onClosePressed;
@@ -50,8 +51,6 @@ class ImageGallery extends StatefulWidget {
 }
 
 class ImageGalleryState extends State<ImageGallery> {
-  late final List<PreviewImage> listImages;
-
   Widget _imageGalleryLoadingBuilder(ImageChunkEvent? event) => Center(
         child: SizedBox(
           width: 20,
@@ -63,12 +62,6 @@ class ImageGalleryState extends State<ImageGallery> {
           ),
         ),
       );
-
-  @override
-  void initState() {
-    listImages = widget.images;
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -84,27 +77,36 @@ class ImageGalleryState extends State<ImageGallery> {
           onDismissed: (direction) => widget.onClosePressed(),
           child: Stack(
             children: [
-              PhotoViewGallery.builder(
-                builder: (BuildContext context, int index) =>
-                    PhotoViewGalleryPageOptions(
-                  imageProvider: _getProvider(index),
-                  minScale: widget.options.minScale,
-                  maxScale: widget.options.maxScale,
-                ),
-                itemCount: listImages.length,
-                loadingBuilder: (context, event) =>
-                    _imageGalleryLoadingBuilder(event),
-                pageController: widget.pageController,
-                scrollPhysics: const ClampingScrollPhysics(),
-                onPageChanged: (index) {
-                  if (listImages.length == index + 1 &&
-                      widget.loadMoreImages != null) {
-                    setState(() {
-                      listImages.addAll(widget.loadMoreImages!.call());
-                    });
-                  }
-                },
-              ),
+              ValueListenableBuilder<List<PreviewImage>>(
+                  valueListenable: widget.imageListNotifier,
+                  builder: (context, listImages, _) {
+                    return PhotoViewGallery.builder(
+                      builder: (BuildContext context, int index) =>
+                          PhotoViewGalleryPageOptions(
+                        imageProvider: _getProvider(
+                          index,
+                          listImages,
+                        ),
+                        minScale: widget.options.minScale,
+                        maxScale: widget.options.maxScale,
+                      ),
+                      itemCount: listImages.length,
+                      loadingBuilder: (context, event) =>
+                          _imageGalleryLoadingBuilder(event),
+                      pageController: widget.pageController,
+                      scrollPhysics: const ClampingScrollPhysics(),
+                      onPageChanged: (index) {
+                        if (0 == index && widget.loadMoreImages != null) {
+                          setState(() {
+                            listImages.addAll(widget.loadMoreImages!.call());
+                          });
+                        }
+                        if (0 == index) {
+                          kDebugMode ? print('Load more images') : null;
+                        }
+                      },
+                    );
+                  }),
               Positioned.directional(
                 end: 16,
                 textDirection: Directionality.of(context),
@@ -119,7 +121,7 @@ class ImageGalleryState extends State<ImageGallery> {
         ),
       );
 
-  ImageProvider<Object> _getProvider(int index) {
+  ImageProvider<Object> _getProvider(int index, List<PreviewImage> listImages) {
     if (listImages[index].uri.isUrl) {
       return widget.imageProviderBuilder != null
           ? widget.imageProviderBuilder!(

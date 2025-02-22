@@ -50,7 +50,7 @@ class MessageView extends StatefulWidget {
     this.onMaxDuration,
     this.controller,
     this.chatViewRenderBox,
-    required this.images,
+    required this.imageListNotifier,
   }) : super(key: key);
 
   /// Provides message instance of chat.
@@ -99,7 +99,7 @@ class MessageView extends StatefulWidget {
 
   final RenderBox? chatViewRenderBox;
 
-  final List<PreviewImage> images;
+  final ValueNotifier<List<PreviewImage>> imageListNotifier;
 
   @override
   State<MessageView> createState() => _MessageViewState();
@@ -209,7 +209,7 @@ class _MessageViewState extends State<MessageView>
                 } else if (widget.message.messageType.isImage) {
                   return ImageMessageView(
                     message: widget.message,
-                    images: widget.images,
+                    imageListNotifier: widget.imageListNotifier,
                     isMessageBySender: widget.isMessageBySender,
                     imageMessageConfig: messageConfig?.imageMessageConfig,
                     messageReactionConfig: messageConfig?.messageReactionConfig,

@@ -23,7 +23,6 @@ import 'dart:async';
 import 'dart:io' if (kIsWeb) 'dart:html';
 
 import 'package:chatview/src/extensions/extensions.dart';
-import 'package:chatview/src/models/data_models/image_preview.dart';
 import 'package:chatview/src/widgets/chat_groupedlist_widget.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -42,7 +41,6 @@ class ChatListWidget extends StatefulWidget {
     this.isLastPage,
     this.onChatListTap,
     this.chatViewRenderBox,
-    required this.images,
   }) : super(key: key);
 
   /// Provides controller for accessing few function for running chat.
@@ -69,8 +67,6 @@ class ChatListWidget extends StatefulWidget {
   final VoidCallBack? onChatListTap;
 
   final RenderBox? chatViewRenderBox;
-
-  final List<PreviewImage> images;
 
   @override
   State<ChatListWidget> createState() => _ChatListWidgetState();
@@ -122,7 +118,7 @@ class _ChatListWidgetState extends State<ChatListWidget>
       builder: (_, showPopupValue, child) {
         return ChatGroupedListWidget(
           chatViewRenderBox: widget.chatViewRenderBox,
-          images: widget.images,
+          imageListNotifier: widget.chatController.imageListNotifier,
           showPopUp: showPopupValue,
           scrollController: scrollController,
           isEnableSwipeToSeeTime:

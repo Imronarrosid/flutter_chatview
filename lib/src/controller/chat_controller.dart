@@ -21,7 +21,9 @@
  */
 import 'dart:async';
 
+import 'package:chatview/src/models/data_models/image_preview.dart';
 import 'package:chatview/src/models/data_models/reation_bottom_sheet.dart';
+import 'package:chatview/src/values/enumeration.dart';
 import 'package:chatview/src/widgets/suggestions/suggestion_list.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +33,8 @@ import '../models/models.dart';
 class ChatController {
   /// Represents initial message list in chat which can be add by user.
   List<Message> initialMessageList;
+
+  List<PreviewImage> imageList = <PreviewImage>[];
 
   ScrollController scrollController;
 
@@ -59,8 +63,13 @@ class ChatController {
       _replySuggestion;
 
   final ReationBottomSheet _reactionBottomSheetNotifier = ReationBottomSheet();
+
   final ValueNotifier<List<Message>> _messageListNotifier =
       ValueNotifier<List<Message>>([]);
+
+  final ValueNotifier<List<PreviewImage>> _imageListNotifier =
+      ValueNotifier<List<PreviewImage>>([]);
+
   final ValueNotifier<bool> _isLoadMore = ValueNotifier<bool>(false);
 
   /// Initial [Reaction] value is null
@@ -74,6 +83,8 @@ class ChatController {
     }
     return _messageListNotifier;
   }
+
+  ValueNotifier<List<PreviewImage>> get imageListNotifier => _imageListNotifier;
 
   /// Getter for typingIndicator value instead of accessing [_showTypingIndicator.value]
   /// for better accessibility.
@@ -120,7 +131,13 @@ class ChatController {
   /// Used to add message in message list.
   void addMessage(Message message) {
     initialMessageList.add(message);
+
     _messageListNotifier.value = [...initialMessageList];
+
+    if (message.messageType == MessageType.image) {
+      imageList.add(PreviewImage(id: message.id, uri: message.message));
+      _imageListNotifier.value = imageList;
+    }
   }
 
   /// Used to add reply suggestions.
@@ -202,7 +219,29 @@ class ChatController {
     _messageListNotifier.value = [
       ...initialMessageList,
     ];
+
+    imageList.insertAll(
+      0,
+      messageList
+          .where((element) => element.messageType == MessageType.image)
+          .toList()
+          .fold([], (previousValue, element) {
+        return [
+          ...previousValue,
+          PreviewImage(id: element.id, uri: element.message)
+        ];
+      }),
+    );
+
+    _imageListNotifier.value = imageList;
+
     _isLoadMore.value = false;
+  }
+
+  void loadMoreImages(List<PreviewImage> imageList) {
+    imageList.insertAll(0, imageList);
+
+    _imageListNotifier.value = imageList;
   }
 
   /// Function for getting ChatUser object from user id
