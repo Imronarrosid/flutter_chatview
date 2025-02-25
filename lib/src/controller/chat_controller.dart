@@ -151,8 +151,14 @@ class ChatController {
     _messageListNotifier.value = [...initialMessageList];
 
     if (message.messageType == MessageType.image) {
-      imageList.add(PreviewImage(id: message.id, uri: message.message));
-      _imageListNotifier.value = imageList;
+      imageList.add(
+        PreviewImage(
+          id: message.id,
+          uri: message.message,
+          createdAt: message.createdAt.millisecondsSinceEpoch,
+        ),
+      );
+      _imageListNotifier.value = [...imageList];
     }
   }
 
@@ -244,7 +250,11 @@ class ChatController {
           .fold([], (previousValue, element) {
         return [
           ...previousValue,
-          PreviewImage(id: element.id, uri: element.message)
+          PreviewImage(
+            id: element.id,
+            uri: element.message,
+            createdAt: element.createdAt.millisecondsSinceEpoch,
+          ),
         ];
       }),
     );

@@ -8,6 +8,7 @@ class PreviewImage extends Equatable {
   const PreviewImage({
     required this.id,
     required this.uri,
+    required this.createdAt,
   });
 
   /// Unique ID of the image.
@@ -16,7 +17,14 @@ class PreviewImage extends Equatable {
   /// Image's URI.
   final String uri;
 
+  /// Image's URI.
+  final int createdAt;
+
   /// Equatable props.
   @override
-  List<Object> get props => [id, uri];
+  List<Object> get props => [
+        id,
+        uri,
+        createdAt,
+      ];
 }
