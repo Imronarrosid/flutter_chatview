@@ -69,7 +69,17 @@ class ChatController {
   final ValueNotifier<List<PreviewImage>> _imageListNotifier =
       ValueNotifier<List<PreviewImage>>([]);
 
+  final ValueNotifier<PageController> _galleryPageController =
+      ValueNotifier<PageController>(PageController());
+
+  final ValueNotifier<PreviewImage?> _currentIndexGalery =
+      ValueNotifier<PreviewImage?>(null);
+
+  final ValueNotifier<bool> _showGallery = ValueNotifier(false);
+
   final ValueNotifier<bool> _isLoadMore = ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> _isLoadMoreImage = ValueNotifier<bool>(false);
 
   /// Initial [Reaction] value is null
   /// assing previous [Reaction] value first before using it.
@@ -84,12 +94,19 @@ class ChatController {
   }
 
   ValueNotifier<List<PreviewImage>> get imageListNotifier => _imageListNotifier;
+  ValueNotifier<PageController> get galleryPageController =>
+      _galleryPageController;
+  ValueNotifier<PreviewImage?> get currentIndexGalery => _currentIndexGalery;
+
+  ValueNotifier<bool> get showGallery => _showGallery;
 
   /// Getter for typingIndicator value instead of accessing [_showTypingIndicator.value]
   /// for better accessibility.
   bool get showTypingIndicator => _showTypingIndicator.value;
 
   ValueNotifier<bool> get isLoadMore => _isLoadMore;
+
+  ValueNotifier<bool> get isLoadMoreImage => _isLoadMoreImage;
 
   set setIsLoadMore(bool value) => _isLoadMore.value = value;
 
@@ -231,16 +248,19 @@ class ChatController {
         ];
       }),
     );
-
-    _imageListNotifier.value = imageList;
+    _imageListNotifier.value = [...imageList];
 
     _isLoadMore.value = false;
   }
 
-  void loadMoreImages(List<PreviewImage> imageList) {
-    imageList.insertAll(0, imageList);
+  void loadMoreImages(List<PreviewImage> newImageList) {
+    imageList.insertAll(0, newImageList);
 
-    _imageListNotifier.value = imageList;
+    int initialPage = imageList.indexOf(_currentIndexGalery.value!);
+
+    _imageListNotifier.value = [...imageList];
+    _galleryPageController.value = PageController(initialPage: initialPage);
+    _isLoadMoreImage.value = false;
   }
 
   /// Function for getting ChatUser object from user id

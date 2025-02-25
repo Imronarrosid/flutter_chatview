@@ -18,9 +18,6 @@ class ChatViewInheritedWidget extends InheritedWidget {
   final ChatController chatController;
   final GlobalKey chatTextFieldViewKey = GlobalKey();
   final ValueNotifier<bool> showPopUp = ValueNotifier(false);
-  final ValueNotifier<bool> showGallery = ValueNotifier(false);
-  final ValueNotifier<PageController> galleryPageController =
-      ValueNotifier(PageController());
   final GlobalKey<ReactionPopupState> reactionPopupKey = GlobalKey();
   final GlobalKey<ImageGalleryState> galleryKey = GlobalKey();
   static ChatViewInheritedWidget? of(BuildContext context) =>

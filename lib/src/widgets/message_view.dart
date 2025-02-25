@@ -207,6 +207,7 @@ class _MessageViewState extends State<MessageView>
                   );
                 } else if (widget.message.messageType.isImage) {
                   return ImageMessageView(
+                    chatController: widget.controller!,
                     message: widget.message,
                     imageListNotifier: widget.imageListNotifier,
                     isMessageBySender: widget.isMessageBySender,

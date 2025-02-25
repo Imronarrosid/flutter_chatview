@@ -40,6 +40,7 @@ class ImageMessageView extends StatelessWidget {
     this.highlightImage = false,
     this.highlightScale = 1.2,
     required this.imageListNotifier,
+    required this.chatController,
   }) : super(key: key);
 
   /// Provides message instance of chat.
@@ -61,6 +62,8 @@ class ImageMessageView extends StatelessWidget {
   final double highlightScale;
 
   final ValueNotifier<List<PreviewImage>> imageListNotifier;
+
+  final ChatController chatController;
 
   String get imageUrl => message.message;
 
@@ -94,12 +97,15 @@ class ImageMessageView extends StatelessWidget {
                             element.id == message.id &&
                             element.uri == message.message,
                       );
-                      context.chatViewIW?.galleryPageController.value =
+                      // context.chatViewIW?.galleryInitialPage.value =
+                      //     initialPage;
+
+                      chatController.galleryPageController.value =
                           PageController(
                         initialPage: initialPage,
                       );
 
-                      context.chatViewIW?.showGallery.value = true;
+                      chatController.showGallery.value = true;
                     },
                     child: Transform.scale(
                       scale: highlightImage ? highlightScale : 1.0,

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chatview/src/controller/chat_controller.dart';
 import 'package:chatview/src/extensions/extensions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -15,9 +16,9 @@ class ImageGallery extends StatefulWidget {
     this.imageProviderBuilder,
     required this.onClosePressed,
     this.options = const ImageGalleryOptions(),
-    required this.pageController,
     this.loadMoreImages,
     required this.imageListNotifier,
+    required this.chatContoller,
   });
 
   final Map<String, String>? imageHeaders;
@@ -41,16 +42,108 @@ class ImageGallery extends StatefulWidget {
   /// Customisation options for the gallery.
   final ImageGalleryOptions options;
 
-  /// Page controller for the image pages.
-  final PageController pageController;
+  // /// Page controller for the image pages.
+  // final PageController pageController;
 
   final void Function()? loadMoreImages;
+
+  final ChatController chatContoller;
 
   @override
   State<ImageGallery> createState() => ImageGalleryState();
 }
 
 class ImageGalleryState extends State<ImageGallery> {
+  @override
+  void initState() {
+    final imageList = widget.chatContoller.imageList;
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (imageList.length == 1) {
+        widget.chatContoller.currentIndexGalery.value = imageList.first;
+        widget.chatContoller.isLoadMoreImage.value = true;
+        widget.loadMoreImages!.call();
+      }
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => PopScope(
+        child: PopScope(
+          onPopInvokedWithResult: (didPop, result) {
+            widget.chatContoller.showGallery.value = false;
+          },
+          child: Dismissible(
+            key: const Key('photo_view_gallery'),
+            direction: DismissDirection.down,
+            onDismissed: (direction) => widget.onClosePressed(),
+            child: Stack(
+              children: [
+                ValueListenableBuilder<PageController>(
+                    valueListenable: widget.chatContoller.galleryPageController,
+                    builder: (context, pageController, _) {
+                      return ValueListenableBuilder<List<PreviewImage>>(
+                          valueListenable: widget.imageListNotifier,
+                          builder: (context, listImages, _) {
+                            pageController.initialPage;
+                            return PhotoViewGallery.builder(
+                              key: UniqueKey(),
+                              builder: (BuildContext context, int index) =>
+                                  PhotoViewGalleryPageOptions(
+                                imageProvider: _getProvider(
+                                  index,
+                                  listImages,
+                                ),
+                                minScale: widget.options.minScale,
+                                maxScale: widget.options.maxScale,
+                              ),
+                              itemCount: listImages.length,
+                              loadingBuilder: (context, event) =>
+                                  _imageGalleryLoadingBuilder(event),
+                              pageController: pageController,
+                              scrollPhysics: const ClampingScrollPhysics(),
+                              onPageChanged: (index) {
+                                widget.chatContoller.currentIndexGalery.value =
+                                    listImages[index];
+
+                                final bool isLoadMoreImage =
+                                    widget.chatContoller.isLoadMoreImage.value;
+
+                                if (0 == index &&
+                                    widget.loadMoreImages != null &&
+                                    !isLoadMoreImage) {
+                                  widget.chatContoller.isLoadMoreImage.value =
+                                      true;
+                                  widget.loadMoreImages!.call();
+                                }
+                                if (0 == index) {
+                                  kDebugMode
+                                      ? debugPrint('Load more images')
+                                      : null;
+                                }
+                              },
+                            );
+                          });
+                    }),
+                Positioned.directional(
+                  end: 16,
+                  textDirection: Directionality.of(context),
+                  top: 56,
+                  child: CloseButton(
+                    color: Colors.white,
+                    onPressed: widget.onClosePressed,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
   Widget _imageGalleryLoadingBuilder(ImageChunkEvent? event) => Center(
         child: SizedBox(
           width: 20,
@@ -59,62 +152,6 @@ class ImageGalleryState extends State<ImageGallery> {
             value: event == null || event.expectedTotalBytes == null
                 ? 0
                 : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
-          ),
-        ),
-      );
-
-  @override
-  void dispose() {
-    widget.pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => PopScope(
-        child: Dismissible(
-          key: const Key('photo_view_gallery'),
-          direction: DismissDirection.down,
-          onDismissed: (direction) => widget.onClosePressed(),
-          child: Stack(
-            children: [
-              ValueListenableBuilder<List<PreviewImage>>(
-                  valueListenable: widget.imageListNotifier,
-                  builder: (context, listImages, _) {
-                    return PhotoViewGallery.builder(
-                      builder: (BuildContext context, int index) =>
-                          PhotoViewGalleryPageOptions(
-                        imageProvider: _getProvider(
-                          index,
-                          listImages,
-                        ),
-                        minScale: widget.options.minScale,
-                        maxScale: widget.options.maxScale,
-                      ),
-                      itemCount: listImages.length,
-                      loadingBuilder: (context, event) =>
-                          _imageGalleryLoadingBuilder(event),
-                      pageController: widget.pageController,
-                      scrollPhysics: const ClampingScrollPhysics(),
-                      onPageChanged: (index) {
-                        if (0 == index && widget.loadMoreImages != null) {
-                          widget.loadMoreImages!.call();
-                        }
-                        if (0 == index) {
-                          kDebugMode ? debugPrint('Load more images') : null;
-                        }
-                      },
-                    );
-                  }),
-              Positioned.directional(
-                end: 16,
-                textDirection: Directionality.of(context),
-                top: 56,
-                child: CloseButton(
-                  color: Colors.white,
-                  onPressed: widget.onClosePressed,
-                ),
-              ),
-            ],
           ),
         ),
       );
