@@ -129,7 +129,7 @@ class ImageMessageView extends StatelessWidget {
                           borderRadius: imageMessageConfig?.borderRadius ??
                               BorderRadius.circular(14),
                           child: (() {
-                            if (imageUrl.isUrl) {
+                            if (imageUrl.startsWith('http')) {
                               return Image(
                                 image: imageMessageConfig
                                             ?.imageProviderBuilder !=
