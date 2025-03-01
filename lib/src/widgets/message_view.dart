@@ -208,6 +208,8 @@ class _MessageViewState extends State<MessageView>
                 } else if (widget.message.messageType.isImage) {
                   return ImageMessageView(
                     chatController: widget.controller!,
+                    outgoingChatBubbleConfig: widget.outgoingChatBubbleConfig,
+                    inComingChatBubbleConfig: widget.inComingChatBubbleConfig,
                     message: widget.message,
                     imageListNotifier: widget.imageListNotifier,
                     isMessageBySender: widget.isMessageBySender,
@@ -218,6 +220,7 @@ class _MessageViewState extends State<MessageView>
                   );
                 } else if (widget.message.messageType.isText) {
                   return TextMessageView(
+                    chatController: widget.controller!,
                     chatViewRenderBox: widget.chatViewRenderBox,
                     inComingChatBubbleConfig: widget.inComingChatBubbleConfig,
                     outgoingChatBubbleConfig: widget.outgoingChatBubbleConfig,

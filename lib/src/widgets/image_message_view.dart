@@ -19,11 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:chatview/chatview.dart';
-import 'package:chatview/src/extensions/extensions.dart';
+import 'package:chatview/src/widgets/timed_and_receipt_message_widget.dart';
 import 'package:flutter/material.dart';
 
 import '../conditional/conditional.dart';
@@ -41,6 +38,8 @@ class ImageMessageView extends StatelessWidget {
     this.highlightScale = 1.2,
     required this.imageListNotifier,
     required this.chatController,
+    this.outgoingChatBubbleConfig,
+    this.inComingChatBubbleConfig,
   }) : super(key: key);
 
   /// Provides message instance of chat.
@@ -64,6 +63,10 @@ class ImageMessageView extends StatelessWidget {
   final ValueNotifier<List<PreviewImage>> imageListNotifier;
 
   final ChatController chatController;
+
+  final ChatBubble? outgoingChatBubbleConfig;
+
+  final ChatBubble? inComingChatBubbleConfig;
 
   String get imageUrl => message.message;
 
@@ -128,31 +131,58 @@ class ImageMessageView extends StatelessWidget {
                         child: ClipRRect(
                           borderRadius: imageMessageConfig?.borderRadius ??
                               BorderRadius.circular(14),
-                          child: (() {
-                            if (imageUrl.startsWith('http')) {
-                              return Image(
-                                image: imageMessageConfig
-                                            ?.imageProviderBuilder !=
-                                        null
-                                    ? imageMessageConfig!.imageProviderBuilder!(
-                                        uri: message.message,
-                                        imageHeaders:
-                                            imageMessageConfig?.imageHeaders,
-                                        conditional: Conditional(),
-                                      )
-                                    : Conditional().getProvider(
-                                        message.message,
-                                        headers:
-                                            imageMessageConfig?.imageHeaders,
-                                      ),
-                                fit: BoxFit.cover,
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Container(
-                                    color: imageMessageConfig?.unloadedColor ??
-                                        Colors.transparent,
-                                    child: Center(
+                          child: TimedAndReceiptMessageWidget(
+                            chatController: chatController,
+                            isMessageBySender: isMessageBySender,
+                            message: message,
+                            inComingChatBubbleConfig: inComingChatBubbleConfig,
+                            outgoingChatBubbleConfig: outgoingChatBubbleConfig,
+                            imageMessageConfiguration: imageMessageConfig,
+                            padding: const EdgeInsets.only(
+                              left: 20,
+                              top: 20,
+                              bottom: 4,
+                              right: 6,
+                            ),
+                            decoration: const BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(50)),
+                                boxShadow: <BoxShadow>[
+                                  BoxShadow(
+                                      blurRadius: 16,
+                                      offset: Offset(5, 10),
+                                      color: Colors.black45),
+                                ]),
+                            child: Container(
+                              // height: double.infinity,
+                              color: imageMessageConfig?.unloadedColor ??
+                                  Colors.red,
+                              child: (() {
+                                return Image(
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  image: imageMessageConfig
+                                              ?.imageProviderBuilder !=
+                                          null
+                                      ? imageMessageConfig!
+                                          .imageProviderBuilder!(
+                                          uri: message.message,
+                                          imageHeaders:
+                                              imageMessageConfig?.imageHeaders,
+                                          conditional: Conditional(),
+                                        )
+                                      : Conditional().getProvider(
+                                          message.message,
+                                          headers:
+                                              imageMessageConfig?.imageHeaders,
+                                        ),
+                                  fit: BoxFit.cover,
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                    if (loadingProgress == null) {
+                                      return child;
+                                    }
+                                    return Center(
                                       child: CircularProgressIndicator(
                                         value: loadingProgress
                                                     .expectedTotalBytes !=
@@ -163,23 +193,41 @@ class ImageMessageView extends StatelessWidget {
                                                     .expectedTotalBytes!
                                             : null,
                                       ),
-                                    ),
-                                  );
-                                },
-                              );
-                            } else if (imageUrl.fromMemory) {
-                              return Image.memory(
-                                base64Decode(imageUrl
-                                    .substring(imageUrl.indexOf('base64') + 7)),
-                                fit: BoxFit.cover,
-                              );
-                            } else {
-                              return Image.file(
-                                File(imageUrl),
-                                fit: BoxFit.cover,
-                              );
-                            }
-                          }()),
+                                    );
+                                  },
+                                );
+                                // } else if (imageUrl.fromMemory) {
+                                //   return Image.memory(
+                                //     base64Decode(imageUrl.substring(
+                                //         imageUrl.indexOf('base64') + 7)),
+                                //     fit: BoxFit.cover,
+                                //   );
+                                // } else {
+                                //   return Image.file(
+                                //     frameBuilder: (context, child, frame,
+                                //         wasSynchronouslyLoaded) {
+                                //       // If the image was loaded synchronously or the frame is not null (image loaded)
+                                //       if (wasSynchronouslyLoaded ||
+                                //           frame != null) {
+                                //         return child; // Return the image directly
+                                //       }
+
+                                //       // While the image is loading, show a placeholder with a fade-in animation
+                                //       return AnimatedOpacity(
+                                //         opacity: frame != null ? 1.0 : 0.0,
+                                //         duration:
+                                //             const Duration(milliseconds: 300),
+                                //         curve: Curves.easeOut,
+                                //         child: child,
+                                //       );
+                                //     },
+                                //     File(imageUrl),
+                                //     fit: BoxFit.cover,
+                                //   );
+                                // }
+                              }()),
+                            ),
+                          ),
                         ),
                       ),
                     ),

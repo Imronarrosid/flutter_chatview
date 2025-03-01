@@ -56,6 +56,8 @@ class ImageMessageConfiguration {
 
   final Map<String, String>? imageHeaders;
 
+  final CreatedAtWidget? messageTimeBuilder;
+
   /// This feature allows you to use a custom image provider.
   /// This is useful if you want to manage image loading yourself, or if you need to cache images.
   /// You can also use the `cached_network_image` feature, but when it comes to caching, you might want to decide on a per-message basis.
@@ -79,6 +81,7 @@ class ImageMessageConfiguration {
     this.imageGalleryOptions = const ImageGalleryOptions(),
     this.imageProviderBuilder,
     this.imageHeaders,
+    this.messageTimeBuilder,
   });
 }
 

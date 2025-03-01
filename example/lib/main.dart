@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chatview/chatview.dart';
 import 'package:example/data.dart';
 import 'package:example/models/theme.dart';
@@ -72,14 +73,25 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void receiveMessage() async {
-    _chatController.addMessage(
-      Message(
-        id: DateTime.now().toString(),
-        message: 'I will schedule the meeting.',
-        createdAt: DateTime.now(),
-        sentBy: '2',
-      ),
-    );
+    await Future.delayed(const Duration(milliseconds: 300), () {
+      _chatController.loadMoreData([
+        ...List.generate(
+          5, // Number of messages
+          (index) {
+            DateTime createdAt =
+                DateTime.now().subtract(Duration(hours: 20 * index));
+            return Message(
+              id: createdAt.toString(), // More consistent ID
+              message:
+                  "https://miro.medium.com/max/1000/0*s7of7kWnf9fDg4XM.jpeg",
+              createdAt: createdAt,
+              sentBy: '2',
+              messageType: MessageType.image,
+            );
+          },
+        ).reversed.toList(),
+      ]);
+    });
     await Future.delayed(const Duration(milliseconds: 500));
     _chatController.addReplySuggestions([
       const SuggestionItemData(text: 'Thanks.'),
@@ -88,17 +100,60 @@ class _ChatScreenState extends State<ChatScreen> {
     ]);
   }
 
+  void _receiveMessage() async {
+    DateTime createdAt = DateTime.now();
+    _chatController.addMessage(Message(
+      id: createdAt.toString(), // More consistent ID
+      message: "https://picsum.photos/200/300",
+      createdAt: createdAt,
+      sentBy: '2',
+      messageType: MessageType.image,
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: ChatView(
         chatController: _chatController,
         onSendTap: _onSendTap,
+        loadMoreData: () async => receiveMessage(),
+        loadMoreImages: () async {
+          _chatController.loadMoreImages([
+            ...List.generate(
+              5, // Number of messages
+              (index) {
+                DateTime createdAt =
+                    DateTime.now().subtract(Duration(hours: 20 * index));
+                return Message(
+                  id: createdAt.toString(), // More consistent ID
+                  message:
+                      "https://miro.medium.com/max/1000/0*s7of7kWnf9fDg4XM.jpeg",
+                  createdAt: createdAt,
+                  sentBy: '2',
+                  messageType: MessageType.image,
+                );
+              },
+            ).reversed.toList().fold([], (previouse, item) {
+              return [
+                ...previouse,
+                PreviewImage(
+                  id: item.id,
+                  uri: item.message,
+                  createdAt: item.createdAt.millisecondsSinceEpoch,
+                )
+              ];
+            }),
+          ]);
+        },
         featureActiveConfig: const FeatureActiveConfig(
-          lastSeenAgoBuilderVisibility: true,
-          receiptsBuilderVisibility: true,
-          enableScrollToBottomButton: true,
-        ),
+            lastSeenAgoBuilderVisibility: true,
+            receiptsBuilderVisibility: true,
+            enableScrollToBottomButton: true,
+            enablePagination: true,
+            enableChatSeparator: true,
+            enableOtherUserProfileAvatar: false,
+            enableOtherUserName: false),
         scrollToBottomButtonConfig: ScrollToBottomButtonConfig(
           backgroundColor: theme.textFieldBackgroundColor,
           border: Border.all(
@@ -135,6 +190,16 @@ class _ChatScreenState extends State<ChatScreen> {
             letterSpacing: 0.25,
           ),
           userStatus: "online",
+          imageProviderBuilder: (
+              {required conditional, required imageHeaders, required uri}) {
+            if (!uri.startsWith('http')) {
+              return conditional.getProvider(uri);
+            }
+            return CachedNetworkImageProvider(
+              uri,
+              headers: imageHeaders,
+            );
+          },
           userStatusTextStyle: const TextStyle(color: Colors.grey),
           actions: [
             IconButton(
@@ -157,6 +222,14 @@ class _ChatScreenState extends State<ChatScreen> {
             IconButton(
               tooltip: 'Simulate Message receive',
               onPressed: receiveMessage,
+              icon: Icon(
+                Icons.supervised_user_circle,
+                color: theme.themeIconColor,
+              ),
+            ),
+            IconButton(
+              tooltip: 'Simulate Message receive',
+              onPressed: _receiveMessage,
               icon: Icon(
                 Icons.supervised_user_circle,
                 color: theme.themeIconColor,
@@ -212,8 +285,16 @@ class _ChatScreenState extends State<ChatScreen> {
               bodyStyle: theme.outgoingChatLinkBodyStyle,
               titleStyle: theme.outgoingChatLinkTitleStyle,
             ),
-            receiptsWidgetConfig:
-                const ReceiptsWidgetConfig(showReceiptsIn: ShowReceiptsIn.all),
+            receiptsWidgetConfig: ReceiptsWidgetConfig(
+              showReceiptsIn: ShowReceiptsIn.all,
+              receiptsBuilder: (status) {
+                return const Icon(
+                  Icons.check_rounded,
+                  color: Colors.white,
+                  size: 14,
+                );
+              },
+            ),
             color: theme.outgoingChatBubbleColor,
           ),
           inComingChatBubbleConfig: ChatBubble(
@@ -248,7 +329,19 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           backgroundColor: theme.reactionPopupColor,
         ),
+        imageProviderBuilder: (
+            {required conditional, required imageHeaders, required uri}) {
+          if (!uri.startsWith('http')) {
+            return conditional.getProvider(uri);
+          }
+
+          return CachedNetworkImageProvider(
+            uri,
+            headers: imageHeaders,
+          );
+        },
         messageConfig: MessageConfiguration(
+          voiceMessageConfig: VoiceMessageConfiguration(),
           messageReactionConfig: MessageReactionConfiguration(
             backgroundColor: theme.messageReactionBackGroundColor,
             borderColor: theme.messageReactionBackGroundColor,
@@ -275,6 +368,17 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           imageMessageConfig: ImageMessageConfiguration(
+            unloadedColor: Colors.black,
+            imageProviderBuilder: (
+                {required conditional, required imageHeaders, required uri}) {
+              if (!uri.startsWith('http')) {
+                return conditional.getProvider(uri);
+              }
+              return CachedNetworkImageProvider(
+                uri,
+                headers: imageHeaders,
+              );
+            },
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
             shareIconConfig: ShareIconConfiguration(
               defaultIconBackgroundColor: theme.shareIconBackgroundColor,

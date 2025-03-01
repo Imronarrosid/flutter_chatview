@@ -52,7 +52,10 @@ class ChatBubble {
   /// time only
   final Function(Message message)? onMessageRead;
 
+  final CreatedAtWidget? messageTimeBuilder;
+
   const ChatBubble({
+    this.messageTimeBuilder,
     this.color,
     this.borderRadius,
     this.textStyle,

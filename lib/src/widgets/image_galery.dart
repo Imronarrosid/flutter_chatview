@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:chatview/src/controller/chat_controller.dart';
-import 'package:chatview/src/extensions/extensions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -157,7 +156,7 @@ class ImageGalleryState extends State<ImageGallery> {
       );
 
   ImageProvider<Object> _getProvider(int index, List<PreviewImage> listImages) {
-    if (listImages[index].uri.isUrl) {
+    if (listImages[index].uri.startsWith('http')) {
       return widget.imageProviderBuilder != null
           ? widget.imageProviderBuilder!(
               uri: listImages[index].uri,
