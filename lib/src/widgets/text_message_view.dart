@@ -19,17 +19,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import 'package:flutter/foundation.dart';
+import 'package:chatview/chatview.dart';
+import 'package:chatview/src/inherited_widgets/configurations_inherited_widgets.dart';
+import 'package:chatview/src/widgets/timed_and_receipt_message_widget.dart';
 import 'package:flutter/material.dart';
 
 import 'package:chatview/src/extensions/extensions.dart';
-import 'package:chatview/src/models/models.dart';
 
 import '../utils/constants/constants.dart';
+import 'chat_view_inherited_widget.dart';
 import 'link_preview.dart';
 import 'reaction_widget.dart';
 
-class TextMessageView extends StatelessWidget {
+class TextMessageView extends StatefulWidget {
   const TextMessageView({
     Key? key,
     required this.isMessageBySender,
@@ -41,6 +43,7 @@ class TextMessageView extends StatelessWidget {
     this.highlightMessage = false,
     this.highlightColor,
     this.chatViewRenderBox,
+    required this.chatController,
   }) : super(key: key);
 
   /// Represents current message is sent by current user.
@@ -66,86 +69,210 @@ class TextMessageView extends StatelessWidget {
 
   /// Allow user to set color of highlighted message.
   final Color? highlightColor;
+
   final RenderBox? chatViewRenderBox;
 
+  final ChatController chatController;
+
+  @override
+  State<TextMessageView> createState() => _TextMessageViewState();
+}
+
+class _TextMessageViewState extends State<TextMessageView> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final textMessage = message.message;
+    final textMessage = widget.message.message;
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Container(
           constraints: BoxConstraints(
-              maxWidth: chatBubbleMaxWidth ??
-                  (chatViewRenderBox?.size.width ??
+              maxWidth: widget.chatBubbleMaxWidth ??
+                  (widget.chatViewRenderBox?.size.width ??
                           MediaQuery.of(context).size.width) *
                       0.75),
           padding: _padding ??
-              const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
+              const EdgeInsets.only(
+                left: 10,
+                right: 10,
+                top: 10,
               ),
           margin: _margin ??
-              EdgeInsets.fromLTRB(
-                  5, 0, 6, message.reaction.reactions.isNotEmpty ? 15 : 2),
+              EdgeInsets.fromLTRB(5, 0, 6,
+                  widget.message.reaction.reactions.isNotEmpty ? 15 : 2),
           decoration: BoxDecoration(
-            color: highlightMessage ? highlightColor : _color,
+            color: widget.highlightMessage ? widget.highlightColor : _color,
             borderRadius: _borderRadius(textMessage),
           ),
-          child: textMessage.isUrl 
+          child: textMessage.isUrl
               ? LinkPreview(
                   linkPreviewConfig: _linkPreviewConfig,
                   message: textMessage,
                   messageStyle: _textStyle,
                 )
-              : Text(
-                  textMessage,
-                  style: _textStyle ??
-                      textTheme.bodyMedium!.copyWith(
-                        color: Colors.white,
-                        fontSize: 16,
+              : LayoutBuilder(builder: (context, constraints) {
+                  double aditionalPadding = getLastLineWidth(
+                    widget.message.message,
+                    _textStyle ??
+                        textTheme.bodyMedium!
+                            .copyWith(color: Colors.white, fontSize: 16),
+                    constraints.maxWidth,
+                  );
+                  return TimedAndReceiptMessageWidget(
+                    chatController: widget.chatController,
+                    isMessageBySender: widget.isMessageBySender,
+                    message: widget.message,
+                    inComingChatBubbleConfig: widget.inComingChatBubbleConfig,
+                    outgoingChatBubbleConfig: widget.outgoingChatBubbleConfig,
+                    padding: const EdgeInsets.only(bottom: 3),
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                          bottom: aditionalPadding,
+                          right: _isNeedRightPadding() ? 65 : 0),
+                      child: Text(
+                        textMessage,
+                        style: _textStyle ??
+                            textTheme.bodyMedium!.copyWith(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
                       ),
-                ),
+                    ),
+                  );
+                }),
         ),
-        if (message.reaction.reactions.isNotEmpty)
+        if (widget.message.reaction.reactions.isNotEmpty)
           ReactionWidget(
-            key: key,
-            isMessageBySender: isMessageBySender,
-            message: message,
-            messageReactionConfig: messageReactionConfig,
+            key: widget.key,
+            isMessageBySender: widget.isMessageBySender,
+            message: widget.message,
+            messageReactionConfig: widget.messageReactionConfig,
           ),
       ],
     );
   }
 
-  EdgeInsetsGeometry? get _padding => isMessageBySender
-      ? outgoingChatBubbleConfig?.padding
-      : inComingChatBubbleConfig?.padding;
+  bool _isNeedRightPadding() {
+    bool isNeedPadding = false;
+    for (var element in widget.message.message.split('\n')) {
+      if (element.length < 37) {
+        isNeedPadding = true;
+      } else {
+        isNeedPadding = false;
+      }
+    }
+    return isNeedPadding;
+  }
 
-  EdgeInsetsGeometry? get _margin => isMessageBySender
-      ? outgoingChatBubbleConfig?.margin
-      : inComingChatBubbleConfig?.margin;
+  double getLastLineWidth(String text, TextStyle style, double maxWidth) {
+    // Create a TextSpan with your text and style
+    final textSpan = TextSpan(
+      text: text,
+      style: style,
+    );
 
-  LinkPreviewConfiguration? get _linkPreviewConfig => isMessageBySender
-      ? outgoingChatBubbleConfig?.linkPreviewConfig
-      : inComingChatBubbleConfig?.linkPreviewConfig;
+    // Create a TextPainter
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+      maxLines: null, // Allow unlimited lines
+    );
 
-  TextStyle? get _textStyle => isMessageBySender
-      ? outgoingChatBubbleConfig?.textStyle
-      : inComingChatBubbleConfig?.textStyle;
+    // Layout the text with the given constraints
+    textPainter.layout(maxWidth: maxWidth);
 
-  BorderRadiusGeometry _borderRadius(String message) => isMessageBySender
-      ? outgoingChatBubbleConfig?.borderRadius ??
+    // Get the number of lines
+    final lineMetrics = textPainter.computeLineMetrics();
+
+    // If there are no lines (empty text), return 0
+
+    // Get the last line's width
+    final lastLine = lineMetrics.last;
+    if (lastLine.width > maxWidth - 80) {
+      return 16;
+    }
+    return 10;
+  }
+
+  Widget getReceipt() {
+    final showReceipts = chatListConfig.chatBubbleConfig
+            ?.outgoingChatBubbleConfig?.receiptsWidgetConfig?.showReceiptsIn ??
+        ShowReceiptsIn.lastMessage;
+    if (showReceipts == ShowReceiptsIn.all) {
+      return ValueListenableBuilder(
+        valueListenable: widget.message.statusNotifier,
+        builder: (context, value, child) {
+          if (ChatViewInheritedWidget.of(context)
+                  ?.featureActiveConfig
+                  .receiptsBuilderVisibility ??
+              true) {
+            return chatListConfig.chatBubbleConfig?.outgoingChatBubbleConfig
+                    ?.receiptsWidgetConfig?.receiptsBuilder
+                    ?.call(value) ??
+                sendMessageAnimationBuilder(value);
+          }
+          return const SizedBox();
+        },
+      );
+    } else if (showReceipts == ShowReceiptsIn.lastMessage && isLastMessage) {
+      return ValueListenableBuilder(
+          valueListenable:
+              widget.chatController.initialMessageList.last.statusNotifier,
+          builder: (context, value, child) {
+            if (ChatViewInheritedWidget.of(context)
+                    ?.featureActiveConfig
+                    .receiptsBuilderVisibility ??
+                true) {
+              return chatListConfig.chatBubbleConfig?.outgoingChatBubbleConfig
+                      ?.receiptsWidgetConfig?.receiptsBuilder
+                      ?.call(value) ??
+                  sendMessageAnimationBuilder(value);
+            }
+            return sendMessageAnimationBuilder(value);
+          });
+    }
+    return const SizedBox();
+  }
+
+  EdgeInsetsGeometry? get _padding => widget.isMessageBySender
+      ? widget.outgoingChatBubbleConfig?.padding
+      : widget.inComingChatBubbleConfig?.padding;
+
+  EdgeInsetsGeometry? get _margin => widget.isMessageBySender
+      ? widget.outgoingChatBubbleConfig?.margin
+      : widget.inComingChatBubbleConfig?.margin;
+
+  LinkPreviewConfiguration? get _linkPreviewConfig => widget.isMessageBySender
+      ? widget.outgoingChatBubbleConfig?.linkPreviewConfig
+      : widget.inComingChatBubbleConfig?.linkPreviewConfig;
+
+  TextStyle? get _textStyle => widget.isMessageBySender
+      ? widget.outgoingChatBubbleConfig?.textStyle
+      : widget.inComingChatBubbleConfig?.textStyle;
+
+  BorderRadiusGeometry _borderRadius(String message) => widget.isMessageBySender
+      ? widget.outgoingChatBubbleConfig?.borderRadius ??
           (message.length < 37
-              ? BorderRadius.circular(replyBorderRadius1)
-              : BorderRadius.circular(replyBorderRadius2))
-      : inComingChatBubbleConfig?.borderRadius ??
+              ? BorderRadius.circular(12)
+              : BorderRadius.circular(12))
+      : widget.inComingChatBubbleConfig?.borderRadius ??
           (message.length < 29
-              ? BorderRadius.circular(replyBorderRadius1)
-              : BorderRadius.circular(replyBorderRadius2));
+              ? BorderRadius.circular(12)
+              : BorderRadius.circular(12));
 
-  Color get _color => isMessageBySender
-      ? outgoingChatBubbleConfig?.color ?? Colors.purple
-      : inComingChatBubbleConfig?.color ?? Colors.grey.shade500;
+  Color get _color => widget.isMessageBySender
+      ? widget.outgoingChatBubbleConfig?.color ?? Colors.purple
+      : widget.inComingChatBubbleConfig?.color ?? Colors.grey.shade500;
+
+  bool get isLastMessage =>
+      widget.chatController.initialMessageList.last.id == widget.message.id;
+
+  ConfigurationsInheritedWidget get chatListConfig =>
+      context.mounted && ConfigurationsInheritedWidget.of(context) != null
+          ? ConfigurationsInheritedWidget.of(context)!
+          : const ConfigurationsInheritedWidget(
+              chatBackgroundConfig: ChatBackgroundConfiguration(),
+              child: SizedBox.shrink(),
+            );
 }
