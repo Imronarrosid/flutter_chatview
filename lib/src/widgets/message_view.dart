@@ -233,6 +233,7 @@ class _MessageViewState extends State<MessageView>
                   );
                 } else if (widget.message.messageType.isVoice) {
                   return VoiceMessageView(
+                    chatController: widget.controller!,
                     screenWidth: widget.chatViewRenderBox?.size.width ??
                         MediaQuery.of(context).size.width,
                     message: widget.message,
