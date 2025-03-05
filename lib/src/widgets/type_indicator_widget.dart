@@ -270,7 +270,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
       margin: chatBubbleConfig?.margin ?? const EdgeInsets.fromLTRB(5, 0, 6, 2),
       decoration: BoxDecoration(
         borderRadius: chatBubbleConfig?.borderRadius ??
-            BorderRadius.circular(replyBorderRadius2),
+            BorderRadius.circular(10),
         color: chatBubbleConfig?.color ?? Colors.grey.shade500,
       ),
       child: Padding(
