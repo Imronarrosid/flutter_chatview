@@ -100,7 +100,7 @@ class _TextMessageViewState extends State<TextMessageView> {
               ),
           margin: _margin ??
               EdgeInsets.fromLTRB(5, 0, 6,
-                  widget.message.reaction.reactions.isNotEmpty ? 15 : 2),
+                  widget.message.reaction.reactions.isNotEmpty ? 15 : 0),
           decoration: BoxDecoration(
             color: widget.highlightMessage ? widget.highlightColor : _color,
             borderRadius: _borderRadius(textMessage),

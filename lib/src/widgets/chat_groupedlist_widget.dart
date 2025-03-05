@@ -21,12 +21,14 @@
  */
 import 'package:chatview/chatview.dart';
 import 'package:chatview/src/extensions/extensions.dart';
+import 'package:chatview/src/utils/constants/constants.dart';
 import 'package:chatview/src/widgets/suggestions/suggestion_list.dart';
 import 'package:chatview/src/widgets/type_indicator_widget.dart';
 import 'package:flutter/material.dart';
 
 import 'chat_bubble_widget.dart';
 import 'chat_group_header.dart';
+import 'profile_circle.dart';
 
 class ChatGroupedListWidget extends StatefulWidget {
   const ChatGroupedListWidget({
@@ -93,6 +95,8 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
 
   double chatTextFieldHeight = 0;
 
+  ChatUser? currentUser;
+
   @override
   void initState() {
     super.initState();
@@ -142,6 +146,8 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
     if (chatViewIW != null) {
       featureActiveConfig = chatViewIW!.featureActiveConfig;
       chatController = chatViewIW!.chatController;
+
+      currentUser = chatController?.currentUser;
     }
     _initializeAnimation();
   }
@@ -314,43 +320,48 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
                             .enableScrollToRepliedMsg ??
                         false;
 
-                    return Column(
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        if (newIndex == 0)
-                          ValueListenableBuilder(
-                              valueListenable: chatController!.isLoadMore,
-                              builder: (context, value, _) {
-                                if (value) {
-                                  return Center(
-                                    child: chatBackgroundConfig.loadingWidget ??
-                                        const CircularProgressIndicator(),
-                                  );
-                                } else {
-                                  return const SizedBox.shrink();
-                                }
-                              }),
-                        newIndex == 0 ||
-                                messages[newIndex].createdAt.day !=
-                                    messages[newIndex - 1].createdAt.day
-                            ? _groupSeparator(messages[newIndex].createdAt)
-                            : const SizedBox.shrink(),
-                        ChatBubbleWidget(
-                          key: message.key,
-                          imageListNotifier: widget.imageListNotifier,
-                          chatViewRenderBox: widget.chatViewRenderBox,
-                          message: message,
-                          slideAnimation: _slideAnimation,
-                          onLongPress: (yCoordinate, xCoordinate) =>
-                              widget.onChatBubbleLongPress(
-                            yCoordinate,
-                            xCoordinate,
-                            message,
+                        buildAvatarWidget(newIndex, messages, chatController!),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              if (newIndex == 0)
+                                ValueListenableBuilder(
+                                    valueListenable: chatController!.isLoadMore,
+                                    builder: (context, value, _) {
+                                      if (value) {
+                                        return Center(
+                                          child: chatBackgroundConfig
+                                                  .loadingWidget ??
+                                              const CircularProgressIndicator(),
+                                        );
+                                      } else {
+                                        return const SizedBox.shrink();
+                                      }
+                                    }),
+                              buildGroupSeparator(newIndex, messages),
+                              ChatBubbleWidget(
+                                key: message.key,
+                                imageListNotifier: widget.imageListNotifier,
+                                chatViewRenderBox: widget.chatViewRenderBox,
+                                message: message,
+                                slideAnimation: _slideAnimation,
+                                onLongPress: (yCoordinate, xCoordinate) =>
+                                    widget.onChatBubbleLongPress(
+                                  yCoordinate,
+                                  xCoordinate,
+                                  message,
+                                ),
+                                onSwipe: widget.assignReplyMessage,
+                                shouldHighlight: state == message.id,
+                                onReplyTap: enableScrollToRepliedMsg
+                                    ? (replyId) => _onReplyTap(replyId, value)
+                                    : null,
+                              ),
+                            ],
                           ),
-                          onSwipe: widget.assignReplyMessage,
-                          shouldHighlight: state == message.id,
-                          onReplyTap: enableScrollToRepliedMsg
-                              ? (replyId) => _onReplyTap(replyId, value)
-                              : null,
                         ),
                       ],
                     );
@@ -397,6 +408,79 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
     }
   }
 
+  Widget buildGroupSeparator(int newIndex, List<Message> messages) {
+    // Check if it's the first message or if the day is different from the previous message
+    final isFirstMessage = newIndex == 0;
+    final isDifferentDay = !isFirstMessage &&
+        messages[newIndex].createdAt.day !=
+            messages[newIndex - 1].createdAt.day;
+
+    // Show the date separator if it's the first message or a different day
+    if (isFirstMessage || isDifferentDay) {
+      return _groupSeparator(messages[newIndex].createdAt);
+    } else {
+      return const SizedBox.shrink();
+    }
+  }
+
+// Helper function to safely get the next message
+  Message? getNextMessage(List<Message> messages, int currentIndex) {
+    final nextIndex = currentIndex + 1;
+    if (nextIndex < messages.length) {
+      return messages[nextIndex];
+    }
+    return null;
+  }
+
+// Actual widget rendering
+  Widget buildAvatarWidget(
+      int newIndex, List<Message> messages, ChatController chatController) {
+    final messagedUser =
+        chatController.getUserFromId(messages[newIndex].sentBy);
+    bool isMessageBySender = messages[newIndex].sentBy == currentUser?.id;
+
+    final currentMessage = messages[newIndex];
+    final nextMessage = getNextMessage(messages, newIndex);
+    final isLastMessage = newIndex == messages.length - 1;
+    final isNotCurrentUser =
+        chatController.currentUser.id != currentMessage.sentBy;
+
+    final profileCircleConfig = chatListConfig.profileCircleConfig;
+
+    final radius = (profileCircleConfig?.circleRadius ?? 16) * 2;
+
+    // Check if we should show the avatar container
+    bool shouldShowAvatar = false;
+
+    if (isNotCurrentUser) {
+      if (isLastMessage) {
+        shouldShowAvatar = true;
+      } else if (nextMessage != null) {
+        final isDifferentSender = currentMessage.sentBy != nextMessage.sentBy;
+        final isDifferentDay =
+            currentMessage.createdAt.day != nextMessage.createdAt.day;
+
+        if (isDifferentSender || (isDifferentDay && isNotCurrentUser)) {
+          shouldShowAvatar = true;
+        }
+      }
+    }
+
+    return shouldShowAvatar
+        ? Padding(
+            padding: const EdgeInsets.only(left: 6, bottom: 10),
+            child: (!isMessageBySender &&
+                    (featureActiveConfig?.enableOtherUserProfileAvatar ?? true))
+                ? profileCircle(messagedUser, messages[newIndex])
+                : const SizedBox.shrink(),
+          )
+        : SizedBox(
+            width: (!isMessageBySender &&
+                    (featureActiveConfig?.enableOtherUserProfileAvatar ?? true))
+                ? radius + 6
+                : 0,
+          );
+  }
   // /// return DateTime by checking lastMatchedDate and message created DateTime
   // DateTime _groupBy(
   //   Message message,
@@ -412,6 +496,25 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
   //       ? lastMatchedDate
   //       : message.createdAt;
   // }
+  ProfileCircle profileCircle(ChatUser? messagedUser, Message message) {
+    final profileCircleConfig = chatListConfig.profileCircleConfig;
+    return ProfileCircle(
+      bottomPadding: message.reaction.reactions.isNotEmpty
+          ? profileCircleConfig?.bottomPadding ?? 15
+          : profileCircleConfig?.bottomPadding ?? 2,
+      profileCirclePadding: profileCircleConfig?.padding,
+      imageUrl: messagedUser?.profilePhoto,
+      imageType: messagedUser?.imageType,
+      defaultAvatarImage: messagedUser?.defaultAvatarImage ?? profileImage,
+      networkImageProgressIndicatorBuilder:
+          messagedUser?.networkImageProgressIndicatorBuilder,
+      assetImageErrorBuilder: messagedUser?.assetImageErrorBuilder,
+      networkImageErrorBuilder: messagedUser?.networkImageErrorBuilder,
+      circleRadius: profileCircleConfig?.circleRadius,
+      onTap: () => _onAvatarTap(messagedUser),
+      onLongPress: () => _onAvatarLongPress(messagedUser),
+    );
+  }
 
   Widget _groupSeparator(DateTime createdAt) {
     return featureActiveConfig?.enableChatSeparator ?? false
@@ -496,6 +599,20 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
   //     }
   //   }
   // }
+
+  void _onAvatarTap(ChatUser? user) {
+    if (chatListConfig.profileCircleConfig?.onAvatarTap != null &&
+        user != null) {
+      chatListConfig.profileCircleConfig?.onAvatarTap!(user);
+    }
+  }
+
+  void _onAvatarLongPress(ChatUser? user) {
+    if (chatListConfig.profileCircleConfig?.onAvatarLongPress != null &&
+        user != null) {
+      chatListConfig.profileCircleConfig?.onAvatarLongPress!(user);
+    }
+  }
 }
 
 class _GroupSeparatorBuilder extends StatelessWidget {

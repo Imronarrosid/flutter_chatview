@@ -26,7 +26,6 @@ import 'package:flutter/material.dart';
 import '../../chatview.dart';
 import 'message_time_widget.dart';
 import 'message_view.dart';
-import 'profile_circle.dart';
 import 'reply_message_widget.dart';
 import 'swipe_to_reply.dart';
 
@@ -124,45 +123,11 @@ class _ChatBubbleWidgetState extends State<ChatBubbleWidget> {
   Widget _chatBubbleWidget(ChatUser? messagedUser) {
     final chatBubbleConfig = chatListConfig.chatBubbleConfig;
     return Container(
-      padding: chatBubbleConfig?.padding ?? const EdgeInsets.only(left: 5.0),
+      padding: chatBubbleConfig?.padding ?? const EdgeInsets.only(left: 0),
       margin: chatBubbleConfig?.margin ?? const EdgeInsets.only(bottom: 10),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment:
-            isMessageBySender ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isMessageBySender &&
-              (featureActiveConfig?.enableOtherUserProfileAvatar ?? true))
-            profileCircle(messagedUser),
-          Expanded(
-            child: _messagesWidgetColumn(messagedUser),
-          ),
-          if (isMessageBySender &&
-              (featureActiveConfig?.enableCurrentUserProfileAvatar ?? true))
-            profileCircle(messagedUser),
-        ],
-      ),
-    );
-  }
-
-  ProfileCircle profileCircle(ChatUser? messagedUser) {
-    final profileCircleConfig = chatListConfig.profileCircleConfig;
-    return ProfileCircle(
-      bottomPadding: widget.message.reaction.reactions.isNotEmpty
-          ? profileCircleConfig?.bottomPadding ?? 15
-          : profileCircleConfig?.bottomPadding ?? 2,
-      profileCirclePadding: profileCircleConfig?.padding,
-      imageUrl: messagedUser?.profilePhoto,
-      imageType: messagedUser?.imageType,
-      defaultAvatarImage: messagedUser?.defaultAvatarImage ?? profileImage,
-      networkImageProgressIndicatorBuilder:
-          messagedUser?.networkImageProgressIndicatorBuilder,
-      assetImageErrorBuilder: messagedUser?.assetImageErrorBuilder,
-      networkImageErrorBuilder: messagedUser?.networkImageErrorBuilder,
-      circleRadius: profileCircleConfig?.circleRadius,
-      onTap: () => _onAvatarTap(messagedUser),
-      onLongPress: () => _onAvatarLongPress(messagedUser),
+      alignment:
+          isMessageBySender ? Alignment.centerRight : Alignment.centerLeft,
+      child: _messagesWidgetColumn(messagedUser),
     );
   }
 
@@ -188,20 +153,6 @@ class _ChatBubbleWidgetState extends State<ChatBubbleWidget> {
           widget.message.message, widget.message.sentBy);
     }
     widget.onSwipe(widget.message);
-  }
-
-  void _onAvatarTap(ChatUser? user) {
-    if (chatListConfig.profileCircleConfig?.onAvatarTap != null &&
-        user != null) {
-      chatListConfig.profileCircleConfig?.onAvatarTap!(user);
-    }
-  }
-
-  void _onAvatarLongPress(ChatUser? user) {
-    if (chatListConfig.profileCircleConfig?.onAvatarLongPress != null &&
-        user != null) {
-      chatListConfig.profileCircleConfig?.onAvatarLongPress!(user);
-    }
   }
 
   Widget _messagesWidgetColumn(ChatUser? messagedUser) {

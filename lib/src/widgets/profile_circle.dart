@@ -82,7 +82,7 @@ class ProfileCircle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: profileCirclePadding ??
-          EdgeInsets.only(left: 6.0, right: 4, bottom: bottomPadding),
+          EdgeInsets.only(left: 0, right: 0, bottom: bottomPadding),
       child: InkWell(
         onLongPress: onLongPress,
         onTap: onTap,
