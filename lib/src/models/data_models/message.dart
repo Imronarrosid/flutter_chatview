@@ -33,6 +33,9 @@ class Message {
   /// Provides actual message it will be text or image/audio file path.
   final String message;
 
+  /// Provides caption for image messages.
+  final String? caption;
+
   /// Provides message created date time.
   final DateTime createdAt;
 
@@ -57,6 +60,7 @@ class Message {
   Message({
     this.id = '',
     required this.message,
+    this.caption,
     required this.createdAt,
     required this.sentBy,
     this.replyMessage = const ReplyMessage(),
@@ -93,6 +97,7 @@ class Message {
   factory Message.fromJson(Map<String, dynamic> json) => Message(
         id: json['id']?.toString() ?? '',
         message: json['message']?.toString() ?? '',
+        caption: json['caption']?.toString(),
         createdAt:
             DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now(),
         sentBy: json['sentBy']?.toString() ?? '',
@@ -115,6 +120,7 @@ class Message {
   Map<String, dynamic> toJson() => {
         'id': id,
         'message': message,
+        'caption': caption,
         'createdAt': createdAt.toIso8601String(),
         'sentBy': sentBy,
         'reply_message': replyMessage.toJson(),
@@ -128,6 +134,7 @@ class Message {
     String? id,
     GlobalKey? key,
     String? message,
+    String? caption,
     DateTime? createdAt,
     String? sentBy,
     ReplyMessage? replyMessage,
@@ -140,6 +147,7 @@ class Message {
     return Message(
       id: id ?? this.id,
       message: message ?? this.message,
+      caption: caption ?? this.caption,
       createdAt: createdAt ?? this.createdAt,
       sentBy: sentBy ?? this.sentBy,
       messageType: messageType ?? this.messageType,

@@ -26,8 +26,10 @@ typedef StringCallback = void Function(String);
 typedef StringMessageCallBack = void Function(
   String message,
   ReplyMessage replyMessage,
-  MessageType messageType,
-);
+  MessageType messageType, {
+  String? path,
+  String? caption,
+});
 typedef ReplyMessageWithReturnWidget = Widget Function(
   ReplyMessage? replyMessage,
 );

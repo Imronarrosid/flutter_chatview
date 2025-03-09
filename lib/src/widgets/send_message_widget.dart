@@ -19,12 +19,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io' if (kIsWeb) 'dart:html';
 
 import 'package:chatview/chatview.dart';
+import 'package:chatview/src/conditional/conditional.dart';
 import 'package:chatview/src/extensions/extensions.dart';
 import 'package:chatview/src/utils/package_strings.dart';
 import 'package:chatview/src/widgets/chatui_textfield.dart';
+import 'package:chatview/src/widgets/preview_media_screen.dart';
 import 'package:chatview/src/widgets/reply_message_view.dart';
 import 'package:chatview/src/widgets/scroll_to_bottom_button.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -42,6 +46,9 @@ class SendMessageWidget extends StatefulWidget {
     this.onReplyCloseCallback,
     this.messageConfig,
     this.replyMessageBuilder,
+    this.imageHeaders,
+    this.imageProviderBuilder,
+    this.chatBackgroundConfig,
   }) : super(key: key);
 
   /// Provides call back when user tap on send button on text field.
@@ -64,6 +71,20 @@ class SendMessageWidget extends StatefulWidget {
 
   /// Provides a callback for the view when replying to message
   final CustomViewForReplyMessage? replyMessageBuilder;
+
+  final ChatBackgroundConfiguration? chatBackgroundConfig;
+
+  final Map<String, String>? imageHeaders;
+
+  /// This feature allows you to use a custom image provider.
+  /// This is useful if you want to manage image loading yourself, or if you need to cache images.
+  /// You can also use the `cached_network_image` feature, but when it comes to caching, you might want to decide on a per-message basis.
+  /// Plus, by using this provider, you can choose whether or not to send specific headers based on the URL.
+  final ImageProvider Function({
+    required String uri,
+    required Map<String, String>? imageHeaders,
+    required Conditional conditional,
+  })? imageProviderBuilder;
 
   @override
   State<SendMessageWidget> createState() => SendMessageWidgetState();
@@ -184,10 +205,7 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
                                           child: Container(
                                             margin: const EdgeInsets.only(
                                                 bottom: 2),
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 4,
-                                              horizontal: 6,
-                                            ),
+                                           
                                             decoration: BoxDecoration(
                                               color: widget.sendMessageConfig
                                                       ?.replyDialogColor ??
@@ -286,8 +304,27 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
   void _onImageSelected(String imagePath, String error) {
     debugPrint('Call in Send Message Widget');
     if (imagePath.isNotEmpty) {
-      widget.onSendTap.call(imagePath, replyMessage, MessageType.image);
-      _assignRepliedMessage();
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              fullscreenDialog: true,
+              builder: (context) => ImageSharingPage(
+                    sendMessageConfiguration: widget.sendMessageConfig,
+                    chatBackgroundConfig: widget.chatBackgroundConfig,
+                    imageUri: imagePath,
+                    imageHeaders: widget.imageHeaders,
+                    imageProviderBuilder: widget.imageProviderBuilder,
+                    otherUser: chatViewIW!.chatController.otherUsers.first,
+                    onSend: (imagePath, caption) {
+                      widget.onSendTap.call(
+                        '',
+                        replyMessage,
+                        MessageType.image,
+                        path: imagePath,
+                        caption: caption.isNotEmpty ? caption : null,
+                      );
+                    },
+                  )));
     }
   }
 

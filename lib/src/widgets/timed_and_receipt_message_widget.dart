@@ -70,9 +70,12 @@ class _TimedAndReceiptMessageWidgetState
                       intl.DateFormat('hh:mm${(is24HoursFormat) ? ' a' : ''}')
                           .format(widget.message.createdAt),
                       style: TextStyle(
-                        color: widget.message.messageType == MessageType.image
-                            ? Colors.white
-                            : Colors.black45,
+                        color:
+                            widget.message.messageType == MessageType.image &&
+                                    (widget.message.caption?.trim().isEmpty ??
+                                        true)
+                                ? Colors.white
+                                : Colors.black45,
                         fontSize: 13.5,
                       ),
                     ),

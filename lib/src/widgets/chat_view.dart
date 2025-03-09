@@ -324,7 +324,7 @@ class _ChatViewState extends State<ChatView>
                                         sendMessageConfig:
                                             widget.sendMessageConfig,
                                         onSendTap: (message, replyMessage,
-                                            messageType) {
+                                            messageType, {path, caption}) {
                                           if (chatViewContext.suggestionsConfig
                                                   ?.autoDismissOnSelection ??
                                               true) {
@@ -332,7 +332,7 @@ class _ChatViewState extends State<ChatView>
                                                 .removeReplySuggestions();
                                           }
                                           _onSendTap(message, replyMessage,
-                                              messageType);
+                                              messageType, path: path, caption: caption);
                                         },
                                         onReplyCallback: (reply) =>
                                             replyMessage.value = reply,
@@ -341,6 +341,8 @@ class _ChatViewState extends State<ChatView>
                                         messageConfig: widget.messageConfig,
                                         replyMessageBuilder:
                                             widget.replyMessageBuilder,
+                                        chatBackgroundConfig:
+                                            widget.chatBackgroundConfig,
                                       ),
                                   ],
                                 ),
@@ -391,7 +393,7 @@ class _ChatViewState extends State<ChatView>
   }
 
   void _onCloseGalleryPressed(BuildContext context) {
-      chatController.showGallery.value = false;
+    chatController.showGallery.value = false;
     _galleryPageController?.dispose();
     _galleryPageController = null;
     _galleryPageController = PageController();
@@ -409,11 +411,13 @@ class _ChatViewState extends State<ChatView>
   void _onSendTap(
     String message,
     ReplyMessage replyMessage,
-    MessageType messageType,
-  ) {
+    MessageType messageType, {
+    String? path,
+    String? caption,
+  }) {
     if (widget.sendMessageBuilder == null) {
       if (widget.onSendTap != null) {
-        widget.onSendTap!(message, replyMessage, messageType);
+        widget.onSendTap!(message, replyMessage, messageType, path: path, caption: caption);
       }
       _assignReplyMessage();
     }

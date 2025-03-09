@@ -162,6 +162,12 @@ class ChatController {
     }
   }
 
+  /// Used to add an image message to the image list.
+  void addImageMessage(PreviewImage image) {
+    imageList.add(image);
+    _imageListNotifier.value = [...imageList];
+  }
+
   /// Used to add reply suggestions.
   void addReplySuggestions(List<SuggestionItemData> suggestions) {
     _replySuggestion.value = suggestions;

@@ -21,6 +21,7 @@
  */
 import 'package:chatview/chatview.dart';
 import 'package:chatview/src/widgets/timed_and_receipt_message_widget.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../conditional/conditional.dart';
@@ -77,6 +78,7 @@ class ImageMessageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment:
@@ -86,153 +88,263 @@ class ImageMessageView extends StatelessWidget {
           iconButton,
         Stack(
           children: [
-            ValueListenableBuilder<List<PreviewImage>>(
-                valueListenable: imageListNotifier,
-                builder: (context, snapshot, _) {
-                  return GestureDetector(
-                    onTap: () {
-                      imageMessageConfig?.onTap != null
-                          ? imageMessageConfig?.onTap!(message)
-                          : null;
+            Column(
+              crossAxisAlignment: isMessageBySender
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                ValueListenableBuilder<List<PreviewImage>>(
+                  valueListenable: imageListNotifier,
+                  builder: (context, snapshot, _) {
+                    return GestureDetector(
+                      onTap: () {
+                        imageMessageConfig?.onTap != null
+                            ? imageMessageConfig?.onTap!(message)
+                            : null;
 
-                      final initialPage = snapshot.indexWhere(
-                        (element) =>
-                            element.id == message.id &&
-                            element.uri == message.message,
-                      );
-                      // context.chatViewIW?.galleryInitialPage.value =
-                      //     initialPage;
+                        final initialPage = snapshot.indexWhere(
+                          (element) =>
+                              element.id == message.id &&
+                              element.uri == message.message,
+                        );
 
-                      chatController.galleryPageController.value =
-                          PageController(
-                        initialPage: initialPage,
-                      );
+                        chatController.galleryPageController.value =
+                            PageController(
+                          initialPage: initialPage,
+                        );
 
-                      chatController.showGallery.value = true;
-                    },
-                    child: Transform.scale(
-                      scale: highlightImage ? highlightScale : 1.0,
-                      alignment: isMessageBySender
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        padding: imageMessageConfig?.padding ?? EdgeInsets.zero,
-                        margin: imageMessageConfig?.margin ??
-                            EdgeInsets.only(
-                              top: 6,
-                              right: isMessageBySender ? 6 : 0,
-                              left: isMessageBySender ? 0 : 6,
-                              bottom: message.reaction.reactions.isNotEmpty
-                                  ? 15
-                                  : 0,
-                            ),
-                        height: imageMessageConfig?.height ?? 200,
-                        width: imageMessageConfig?.width ?? 150,
-                        child: ClipRRect(
-                          borderRadius: imageMessageConfig?.borderRadius ??
-                              BorderRadius.circular(14),
-                          child: TimedAndReceiptMessageWidget(
-                            chatController: chatController,
-                            isMessageBySender: isMessageBySender,
-                            message: message,
-                            inComingChatBubbleConfig: inComingChatBubbleConfig,
-                            outgoingChatBubbleConfig: outgoingChatBubbleConfig,
-                            imageMessageConfiguration: imageMessageConfig,
-                            padding: const EdgeInsets.only(
-                              left: 20,
-                              top: 20,
-                              bottom: 4,
-                              right: 6,
-                            ),
-                            decoration: const BoxDecoration(
-                                borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(50)),
-                                boxShadow: <BoxShadow>[
-                                  BoxShadow(
-                                      blurRadius: 16,
-                                      offset: Offset(5, 10),
-                                      color: Colors.black45),
-                                ]),
+                        chatController.showGallery.value = true;
+                      },
+                      child: Transform.scale(
+                        scale: highlightImage ? highlightScale : 1.0,
+                        alignment: isMessageBySender
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          padding:
+                              imageMessageConfig?.padding ?? EdgeInsets.zero,
+                          margin: imageMessageConfig?.margin ??
+                              EdgeInsets.only(
+                                top: 6,
+                                right: isMessageBySender ? 6 : 0,
+                                left: isMessageBySender ? 0 : 6,
+                                bottom: message.reaction.reactions.isNotEmpty
+                                    ? 15
+                                    : 0,
+                              ),
+                          child: Center(
                             child: Container(
-                              // height: double.infinity,
-                              color: imageMessageConfig?.unloadedColor ??
-                                  Colors.red,
-                              child: (() {
-                                return Image(
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  image: imageMessageConfig
-                                              ?.imageProviderBuilder !=
-                                          null
-                                      ? imageMessageConfig!
-                                          .imageProviderBuilder!(
-                                          uri: message.message,
-                                          imageHeaders:
-                                              imageMessageConfig?.imageHeaders,
-                                          conditional: Conditional(),
-                                        )
-                                      : Conditional().getProvider(
-                                          message.message,
-                                          headers:
-                                              imageMessageConfig?.imageHeaders,
-                                        ),
-                                  fit: BoxFit.cover,
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                    if (loadingProgress == null) {
-                                      return child;
-                                    }
-                                    return Center(
-                                      child: CircularProgressIndicator(
-                                        value: loadingProgress
-                                                    .expectedTotalBytes !=
-                                                null
-                                            ? loadingProgress
-                                                    .cumulativeBytesLoaded /
-                                                loadingProgress
-                                                    .expectedTotalBytes!
-                                            : null,
+                              width: imageMessageConfig?.width ?? 150,
+                              alignment: isMessageBySender
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: isMessageBySender
+                                    ? outgoingChatBubbleConfig?.color
+                                    : inComingChatBubbleConfig?.color,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius:
+                                        imageMessageConfig?.borderRadius ??
+                                            BorderRadius.circular(9),
+                                    child: (message.caption?.isEmpty ?? true)
+                                        ? TimedAndReceiptMessageWidget(
+                                            chatController: chatController,
+                                            isMessageBySender:
+                                                isMessageBySender,
+                                            message: message,
+                                            inComingChatBubbleConfig:
+                                                inComingChatBubbleConfig,
+                                            outgoingChatBubbleConfig:
+                                                outgoingChatBubbleConfig,
+                                            imageMessageConfiguration:
+                                                imageMessageConfig,
+                                            padding: const EdgeInsets.only(
+                                              left: 20,
+                                              top: 20,
+                                              bottom: 4,
+                                              right: 6,
+                                            ),
+                                            decoration: const BoxDecoration(
+                                                borderRadius: BorderRadius.only(
+                                                    topLeft:
+                                                        Radius.circular(50)),
+                                                boxShadow: <BoxShadow>[
+                                                  BoxShadow(
+                                                      blurRadius: 16,
+                                                      offset: Offset(5, 10),
+                                                      color: Colors.black45),
+                                                ]),
+                                            child: Container(
+                                              height:
+                                                  imageMessageConfig?.height ??
+                                                      200,
+                                              width:
+                                                  imageMessageConfig?.width ??
+                                                      150,
+                                              color: imageMessageConfig
+                                                      ?.unloadedColor ??
+                                                  Colors.red,
+                                              child: Image(
+                                                width: double.infinity,
+                                                height: double.infinity,
+                                                image: imageMessageConfig
+                                                            ?.imageProviderBuilder !=
+                                                        null
+                                                    ? imageMessageConfig!
+                                                        .imageProviderBuilder!(
+                                                        uri: message.message,
+                                                        imageHeaders:
+                                                            imageMessageConfig
+                                                                ?.imageHeaders,
+                                                        conditional:
+                                                            Conditional(),
+                                                      )
+                                                    : Conditional().getProvider(
+                                                        message.message,
+                                                        headers:
+                                                            imageMessageConfig
+                                                                ?.imageHeaders,
+                                                      ),
+                                                fit: BoxFit.cover,
+                                                loadingBuilder: (context, child,
+                                                    loadingProgress) {
+                                                  if (loadingProgress == null) {
+                                                    return child;
+                                                  }
+                                                  return Center(
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      value: loadingProgress
+                                                                  .expectedTotalBytes !=
+                                                              null
+                                                          ? loadingProgress
+                                                                  .cumulativeBytesLoaded /
+                                                              loadingProgress
+                                                                  .expectedTotalBytes!
+                                                          : null,
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          )
+                                        : Container(
+                                            height:
+                                                imageMessageConfig?.height ??
+                                                    200,
+                                            width: imageMessageConfig?.width ??
+                                                150,
+                                            color: imageMessageConfig
+                                                    ?.unloadedColor ??
+                                                Colors.red,
+                                            child: Image(
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                              image: imageMessageConfig
+                                                          ?.imageProviderBuilder !=
+                                                      null
+                                                  ? imageMessageConfig!
+                                                      .imageProviderBuilder!(
+                                                      uri: message.message,
+                                                      imageHeaders:
+                                                          imageMessageConfig
+                                                              ?.imageHeaders,
+                                                      conditional:
+                                                          Conditional(),
+                                                    )
+                                                  : Conditional().getProvider(
+                                                      message.message,
+                                                      headers:
+                                                          imageMessageConfig
+                                                              ?.imageHeaders,
+                                                    ),
+                                              fit: BoxFit.cover,
+                                              loadingBuilder: (context, child,
+                                                  loadingProgress) {
+                                                if (loadingProgress == null) {
+                                                  return child;
+                                                }
+                                                return Center(
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    value: loadingProgress
+                                                                .expectedTotalBytes !=
+                                                            null
+                                                        ? loadingProgress
+                                                                .cumulativeBytesLoaded /
+                                                            loadingProgress
+                                                                .expectedTotalBytes!
+                                                        : null,
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                  ),
+                                  if (message.caption?.isNotEmpty ?? false)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 8, right: 8),
+                                      child: SizedBox(
+                                        width: imageMessageConfig?.width ?? 150,
+                                        child: LayoutBuilder(
+                                            builder: (context, constraints) {
+                                          double aditionalPadding =
+                                              getLastLineWidth(
+                                            message.caption ?? '',
+                                            _textStyle ??
+                                                textTheme.bodyMedium!.copyWith(
+                                                    color: Colors.white,
+                                                    fontSize: 16),
+                                            constraints.maxWidth,
+                                          );
+                                          return TimedAndReceiptMessageWidget(
+                                              chatController: chatController,
+                                              isMessageBySender:
+                                                  isMessageBySender,
+                                              message: message,
+                                              inComingChatBubbleConfig:
+                                                  inComingChatBubbleConfig,
+                                              outgoingChatBubbleConfig:
+                                                  outgoingChatBubbleConfig,
+                                              padding: const EdgeInsets.only(
+                                                  bottom: 3),
+                                              child: Padding(
+                                                padding: EdgeInsets.only(
+                                                  bottom: aditionalPadding,
+                                                ),
+                                                child: Text(
+                                                  message.caption ?? '',
+                                                  textAlign: TextAlign.left,
+                                                  softWrap: true,
+                                                  style: _textStyle ??
+                                                      textTheme.bodyMedium!
+                                                          .copyWith(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 16),
+                                                ),
+                                              ));
+                                        }),
                                       ),
-                                    );
-                                  },
-                                );
-                                // } else if (imageUrl.fromMemory) {
-                                //   return Image.memory(
-                                //     base64Decode(imageUrl.substring(
-                                //         imageUrl.indexOf('base64') + 7)),
-                                //     fit: BoxFit.cover,
-                                //   );
-                                // } else {
-                                //   return Image.file(
-                                //     frameBuilder: (context, child, frame,
-                                //         wasSynchronouslyLoaded) {
-                                //       // If the image was loaded synchronously or the frame is not null (image loaded)
-                                //       if (wasSynchronouslyLoaded ||
-                                //           frame != null) {
-                                //         return child; // Return the image directly
-                                //       }
-
-                                //       // While the image is loading, show a placeholder with a fade-in animation
-                                //       return AnimatedOpacity(
-                                //         opacity: frame != null ? 1.0 : 0.0,
-                                //         duration:
-                                //             const Duration(milliseconds: 300),
-                                //         curve: Curves.easeOut,
-                                //         child: child,
-                                //       );
-                                //     },
-                                //     File(imageUrl),
-                                //     fit: BoxFit.cover,
-                                //   );
-                                // }
-                              }()),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  },
+                ),
+              ],
+            ),
             if (message.reaction.reactions.isNotEmpty)
               ReactionWidget(
                 isMessageBySender: isMessageBySender,
@@ -246,4 +358,52 @@ class ImageMessageView extends StatelessWidget {
       ],
     );
   }
+
+  double getLastLineWidth(String text, TextStyle style, double maxWidth) {
+    // Create a TextSpan with your text and style
+    final textSpan = TextSpan(
+      text: text,
+      style: style,
+    );
+
+    // Create a TextPainter
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+      maxLines: null, // Allow unlimited lines
+    );
+
+    // Layout the text with the given constraints
+    textPainter.layout(maxWidth: maxWidth);
+
+    // Get the number of lines
+    final lineMetrics = textPainter.computeLineMetrics();
+
+    // If there are no lines (empty text), return 0
+
+    // Get the last line's width
+    final lastLine = lineMetrics.last;
+
+    if (kDebugMode) {
+      final start = textPainter.getPositionForOffset(
+        Offset(0, lastLine.baseline - lastLine.height),
+      );
+
+      // Get the position where the last line ends
+      final end = textPainter.getPositionForOffset(
+        Offset(lastLine.width, lastLine.baseline),
+      );
+
+      // Extract the text of the last line
+      debugPrint(text.substring(start.offset, end.offset));
+    }
+    if (lastLine.width > maxWidth - 70) {
+      return 18;
+    }
+    return 4;
+  }
+
+  TextStyle? get _textStyle => isMessageBySender
+      ? outgoingChatBubbleConfig?.textStyle
+      : inComingChatBubbleConfig?.textStyle;
 }
