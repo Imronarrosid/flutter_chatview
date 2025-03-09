@@ -210,8 +210,8 @@ class ChatController {
       messageType: message.messageType,
       status: message.status,
     );
+      _messageListNotifier.value = [...initialMessageList];
     if (!messageStreamController.isClosed) {
-      _messageListNotifier.value = initialMessageList;
       messageStreamController.sink.add(initialMessageList);
     }
   }

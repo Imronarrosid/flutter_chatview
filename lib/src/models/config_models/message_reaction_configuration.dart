@@ -91,6 +91,8 @@ class ReactionsBottomSheetConfiguration {
     this.subtitle,
     this.subtitleTextStyle,
     this.removeReactedCurrentUserCallback,
+    this.bottomSheetDecoration,
+    this.emptyState,
   });
 
   /// Used for giving padding of bottom sheet.
@@ -128,4 +130,10 @@ class ReactionsBottomSheetConfiguration {
 
   /// Used for adding text below reacted current user username.
   final String? subtitle;
+
+  /// Used for giving decoration to bottom sheet.
+  final BoxDecoration? bottomSheetDecoration;
+
+  /// Widget to display when there are no reactions
+  final Widget? emptyState;
 }

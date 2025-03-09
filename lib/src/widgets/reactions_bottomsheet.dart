@@ -80,10 +80,19 @@ class _BottomSheetreactionViewState extends State<BottomSheetreactionView> {
             reaction.reactions.insert(0, reactionToMove);
           }
 
+          
+
           return Container(
             height: MediaQuery.of(context).size.height * 0.5,
+            width: MediaQuery.of(context).size.width,
+            alignment: Alignment.center,
+            decoration: widget.reactionsBottomSheetConfig?.bottomSheetDecoration??BoxDecoration(
             color: widget.reactionsBottomSheetConfig?.backgroundColor,
-            child: ListView.builder(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12))
+            ),
+            child: reaction.reactedUserIds.isEmpty
+                ? widget.reactionsBottomSheetConfig?.emptyState ?? const Text('No reactions')
+                : ListView.builder(
               padding: widget.reactionsBottomSheetConfig?.bottomSheetPadding ??
                   const EdgeInsets.only(
                     right: 12,
@@ -168,7 +177,7 @@ class _BottomSheetreactionViewState extends State<BottomSheetreactionView> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.4),
+                                            .withValues(alpha: 102),
                                       ),
                                 ),
                             ],
