@@ -70,11 +70,12 @@ extension ValidateString on String {
     return true;
   }
 
-  // bool get isUrl => Uri.tryParse(this)?.isAbsolute ?? false;
-  bool get isUrl {
+  bool get isUrl => Uri.tryParse(this)?.isAbsolute ?? false;
+  bool get isContainUrl {
     // var isUrlRegex = RegExp(r'https?://[^\s/$.?#].[^\s]*');
     var isUrlRegex =
-        RegExp(r'(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-&?=%.]+');
+        RegExp( r'(?:(?:https?:\/\/)|(?:www\.))(?:[a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}(?:\/[^\s]*)?',
+      caseSensitive: false,);
 
     return isUrlRegex.hasMatch(this);
   }

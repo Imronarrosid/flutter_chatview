@@ -46,7 +46,7 @@ class Message {
   final ReplyMessage replyMessage;
 
   /// Represents reaction on message.
-  final Reaction reaction;
+  final ReactionNotifier _reaction;
 
   /// Provides message type.
   final MessageType messageType;
@@ -68,9 +68,10 @@ class Message {
     this.messageType = MessageType.text,
     this.voiceMessageDuration,
     MessageStatus status = MessageStatus.pending,
-  })  : reaction = reaction ?? Reaction(reactions: [], reactedUserIds: []),
-        key = GlobalKey(),
+  })  : key = GlobalKey(),
         _status = ValueNotifier(status),
+        _reaction = ReactionNotifier(
+            reaction ?? Reaction(reactions: [], reactedUserIds: [])),
         assert(
           (messageType.isVoice
               ? ((defaultTargetPlatform == TargetPlatform.iOS ||
@@ -81,6 +82,7 @@ class Message {
 
   /// curret messageStatus
   MessageStatus get status => _status.value;
+  Reaction get reaction => _reaction.reaction!;
 
   /// For [MessageStatus] ValueNotfier which is used to for rebuilds
   /// when state changes.
@@ -88,10 +90,22 @@ class Message {
   /// rerender messages with new receipts.
   ValueNotifier<MessageStatus> get statusNotifier => _status;
 
+  /// For [Reaction] ValueNotfier which is used to for rebuilds
+  /// when state changes.
+  /// Using ValueNotfier to avoid usage of setState((){}) in order
+  /// rerender messages with new receipts.
+  ReactionNotifier get reactionNotifier => _reaction;
+
   /// This setter can be used to update message receipts, after which the configured
   /// builders will be updated.
   set setStatus(MessageStatus messageStatus) {
     _status.value = messageStatus;
+  }
+
+  /// This setter can be used to update message receipts, after which the configured
+  /// builders will be updated.
+  set setReaction(Reaction messageReaction) {
+    _reaction.value = messageReaction;
   }
 
   factory Message.fromJson(Map<String, dynamic> json) => Message(
@@ -124,7 +138,7 @@ class Message {
         'createdAt': createdAt.toIso8601String(),
         'sentBy': sentBy,
         'reply_message': replyMessage.toJson(),
-        'reaction': reaction.toJson(),
+        'reaction': _reaction.value.toJson(),
         'message_type': messageType.name,
         'voice_message_duration': voiceMessageDuration?.inMicroseconds,
         'status': status.name,

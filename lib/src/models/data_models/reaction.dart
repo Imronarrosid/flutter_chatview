@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class Reaction {
   Reaction({
     required this.reactions,
@@ -50,5 +52,29 @@ class Reaction {
       reactions: reactions ?? this.reactions,
       reactedUserIds: reactedUserIds ?? this.reactedUserIds,
     );
+  }
+}
+
+class ReactionNotifier extends ChangeNotifier {
+  final Reaction value;
+  Reaction? _reaction;
+
+  ReactionNotifier(this.value) : _reaction = value;
+
+  set value(Reaction? reaction) {
+    _reaction = reaction;
+    if (kDebugMode) {
+      print('reaction: ${reaction?.reactions}');
+      print('_reaction: ${_reaction?.reactions}');
+    }
+    notifyListeners();
+  }
+
+  Reaction? get reaction => _reaction;
+
+  @override
+  void dispose() {
+    _reaction = null;
+    super.dispose();
   }
 }

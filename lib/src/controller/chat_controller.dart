@@ -200,17 +200,7 @@ class ChatController {
       message.reaction.reactions.add(emoji);
       message.reaction.reactedUserIds.add(userId);
     }
-    initialMessageList[indexOfMessage] = Message(
-      id: messageId,
-      message: message.message,
-      createdAt: message.createdAt,
-      sentBy: message.sentBy,
-      replyMessage: message.replyMessage,
-      reaction: message.reaction,
-      messageType: message.messageType,
-      status: message.status,
-    );
-      _messageListNotifier.value = [...initialMessageList];
+    initialMessageList[indexOfMessage].setReaction = message.reaction;
     if (!messageStreamController.isClosed) {
       messageStreamController.sink.add(initialMessageList);
     }
