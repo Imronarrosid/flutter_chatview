@@ -24,11 +24,9 @@ import 'package:chatview/src/inherited_widgets/configurations_inherited_widgets.
 import 'package:chatview/src/widgets/timed_and_receipt_message_widget.dart';
 import 'package:flutter/material.dart';
 
-import 'package:chatview/src/extensions/extensions.dart';
-
 import '../utils/constants/constants.dart';
 import 'chat_view_inherited_widget.dart';
-import 'link_preview.dart';
+import 'highliight_link.dart';
 import 'reaction_widget.dart';
 
 class TextMessageView extends StatefulWidget {
@@ -83,36 +81,34 @@ class _TextMessageViewState extends State<TextMessageView> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final textMessage = widget.message.message;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          constraints: BoxConstraints(
-              maxWidth: widget.chatBubbleMaxWidth ??
-                  (widget.chatViewRenderBox?.size.width ??
-                          MediaQuery.of(context).size.width) *
-                      0.75),
-          padding: _padding ??
-              const EdgeInsets.only(
-                left: 10,
-                right: 10,
-                top: 10,
-              ),
-          margin: _margin ??
-              EdgeInsets.fromLTRB(5, 0, 6,
-                  widget.message.reaction.reactions.isNotEmpty ? 15 : 0),
-          decoration: BoxDecoration(
-            color: widget.highlightMessage ? widget.highlightColor : _color,
-            borderRadius: _borderRadius(textMessage),
-          ),
-          child: textMessage.isUrl
-              ? LinkPreview(
-                  linkPreviewConfig: _linkPreviewConfig,
-                  message: textMessage,
-                  messageStyle: _textStyle,
-                )
-              : LayoutBuilder(builder: (context, constraints) {
-                  double aditionalPadding = getLastLineWidth(
+    return ListenableBuilder(
+        listenable: widget.message.reactionNotifier,
+        builder: (context, _) {
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                constraints: BoxConstraints(
+                    maxWidth: widget.chatBubbleMaxWidth ??
+                        (widget.chatViewRenderBox?.size.width ??
+                                MediaQuery.of(context).size.width) *
+                            0.75),
+                padding: _padding ??
+                    const EdgeInsets.only(
+                      left: 8,
+                      right: 8,
+                      top: 8,
+                    ),
+                margin: _margin ??
+                    EdgeInsets.fromLTRB(5, 0, 6,
+                        widget.message.reaction.reactions.isNotEmpty ? 15 : 0),
+                decoration: BoxDecoration(
+                  color:
+                      widget.highlightMessage ? widget.highlightColor : _color,
+                  borderRadius: _borderRadius(textMessage),
+                ),
+                child: LayoutBuilder(builder: (context, constraints) {
+                  double aditionalPadding = getAditionalPadding(
                     widget.message.message,
                     _textStyle ??
                         textTheme.bodyMedium!
@@ -129,10 +125,20 @@ class _TextMessageViewState extends State<TextMessageView> {
                     child: Padding(
                       padding: EdgeInsets.only(
                           bottom: aditionalPadding,
-                          right: _isNeedRightPadding() ? 65 : 0),
-                      child: Text(
-                        textMessage,
-                        style: _textStyle ??
+                          right: getLastLineWidth(
+                                    widget.message.message,
+                                    _textStyle ??
+                                        textTheme.bodyMedium!.copyWith(
+                                            color: Colors.white, fontSize: 16),
+                                    constraints.maxWidth,
+                                  ) >
+                                  constraints.maxWidth - 80
+                              ? 65
+                              : 0),
+                      child: HighlihtLink(
+                        linkPreviewConfig: _linkPreviewConfig,
+                        message: textMessage,
+                        messageStyle: _textStyle ??
                             textTheme.bodyMedium!.copyWith(
                               color: Colors.white,
                               fontSize: 16,
@@ -141,16 +147,17 @@ class _TextMessageViewState extends State<TextMessageView> {
                     ),
                   );
                 }),
-        ),
-        if (widget.message.reaction.reactions.isNotEmpty)
-          ReactionWidget(
-            key: widget.key,
-            isMessageBySender: widget.isMessageBySender,
-            message: widget.message,
-            messageReactionConfig: widget.messageReactionConfig,
-          ),
-      ],
-    );
+              ),
+              if (widget.message.reaction.reactions.isNotEmpty)
+                ReactionWidget(
+                  key: widget.key,
+                  isMessageBySender: widget.isMessageBySender,
+                  message: widget.message,
+                  messageReactionConfig: widget.messageReactionConfig,
+                ),
+            ],
+          );
+        });
   }
 
   bool _isNeedRightPadding() {
@@ -163,6 +170,13 @@ class _TextMessageViewState extends State<TextMessageView> {
       }
     }
     return isNeedPadding;
+  }
+
+  double getAditionalPadding(String text, TextStyle style, double maxWidth) {
+    if (getLastLineWidth(text, style, maxWidth) > maxWidth - 80) {
+      return 16;
+    }
+    return 10;
   }
 
   double getLastLineWidth(String text, TextStyle style, double maxWidth) {
@@ -189,10 +203,8 @@ class _TextMessageViewState extends State<TextMessageView> {
 
     // Get the last line's width
     final lastLine = lineMetrics.last;
-    if (lastLine.width > maxWidth - 80) {
-      return 16;
-    }
-    return 10;
+
+    return lastLine.width;
   }
 
   Widget getReceipt() {

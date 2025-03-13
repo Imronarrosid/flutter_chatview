@@ -25,6 +25,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../conditional/conditional.dart';
+import 'highliight_link.dart';
 import 'reaction_widget.dart';
 import 'share_icon.dart';
 
@@ -305,32 +306,34 @@ class ImageMessageView extends StatelessWidget {
                                             constraints.maxWidth,
                                           );
                                           return TimedAndReceiptMessageWidget(
-                                              chatController: chatController,
-                                              isMessageBySender:
-                                                  isMessageBySender,
-                                              message: message,
-                                              inComingChatBubbleConfig:
-                                                  inComingChatBubbleConfig,
-                                              outgoingChatBubbleConfig:
-                                                  outgoingChatBubbleConfig,
-                                              padding: const EdgeInsets.only(
-                                                  bottom: 3),
-                                              child: Padding(
-                                                padding: EdgeInsets.only(
-                                                  bottom: aditionalPadding,
-                                                ),
-                                                child: Text(
-                                                  message.caption ?? '',
-                                                  textAlign: TextAlign.left,
-                                                  softWrap: true,
-                                                  style: _textStyle ??
-                                                      textTheme.bodyMedium!
-                                                          .copyWith(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize: 16),
-                                                ),
-                                              ));
+                                            chatController: chatController,
+                                            isMessageBySender:
+                                                isMessageBySender,
+                                            message: message,
+                                            inComingChatBubbleConfig:
+                                                inComingChatBubbleConfig,
+                                            outgoingChatBubbleConfig:
+                                                outgoingChatBubbleConfig,
+                                            padding: const EdgeInsets.only(
+                                                bottom: 3),
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                bottom: aditionalPadding,
+                                              ),
+                                              child: HighlihtLink(
+                                                showPreview: false,
+                                                linkPreviewConfig:
+                                                    _linkPreviewConfig,
+                                                message: message.caption ?? '',
+                                                messageStyle: _textStyle ??
+                                                    textTheme.bodyMedium!
+                                                        .copyWith(
+                                                      color: Colors.white,
+                                                      fontSize: 16,
+                                                    ),
+                                              ),
+                                            ),
+                                          );
                                         }),
                                       ),
                                     ),
@@ -406,4 +409,8 @@ class ImageMessageView extends StatelessWidget {
   TextStyle? get _textStyle => isMessageBySender
       ? outgoingChatBubbleConfig?.textStyle
       : inComingChatBubbleConfig?.textStyle;
+
+  LinkPreviewConfiguration? get _linkPreviewConfig => isMessageBySender
+      ? outgoingChatBubbleConfig?.linkPreviewConfig
+      : inComingChatBubbleConfig?.linkPreviewConfig;
 }
