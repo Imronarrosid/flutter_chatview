@@ -131,8 +131,8 @@ class _TextMessageViewState extends State<TextMessageView> {
                                         textTheme.bodyMedium!.copyWith(
                                             color: Colors.white, fontSize: 16),
                                     constraints.maxWidth,
-                                  ) >
-                                  constraints.maxWidth - 80
+                                  ) <
+                                  120
                               ? 65
                               : 0),
                       child: HighlihtLink(
