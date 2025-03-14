@@ -108,13 +108,13 @@ class _TextMessageViewState extends State<TextMessageView> {
                   borderRadius: _borderRadius(textMessage),
                 ),
                 child: LayoutBuilder(builder: (context, constraints) {
-                  double aditionalPadding = getAditionalPadding(
+                  (double right, double bottom) aditionalPadding =
+                      _getAdditionalPadding(
                     widget.message.message,
-                    _textStyle ??
-                        textTheme.bodyMedium!
-                            .copyWith(color: Colors.white, fontSize: 16),
+                    _textStyle ?? textTheme.bodyMedium!,
                     constraints.maxWidth,
                   );
+
                   return TimedAndReceiptMessageWidget(
                     chatController: widget.chatController,
                     isMessageBySender: widget.isMessageBySender,
@@ -124,26 +124,12 @@ class _TextMessageViewState extends State<TextMessageView> {
                     padding: const EdgeInsets.only(bottom: 3),
                     child: Padding(
                       padding: EdgeInsets.only(
-                          bottom: aditionalPadding,
-                          right: getLastLineWidth(
-                                    widget.message.message,
-                                    _textStyle ??
-                                        textTheme.bodyMedium!.copyWith(
-                                            color: Colors.white, fontSize: 16),
-                                    constraints.maxWidth,
-                                  ) <
-                                  120
-                              ? 65
-                              : 0),
+                          bottom: aditionalPadding.$2,
+                          right: aditionalPadding.$1),
                       child: HighlihtLink(
-                        linkPreviewConfig: _linkPreviewConfig,
-                        message: textMessage,
-                        messageStyle: _textStyle ??
-                            textTheme.bodyMedium!.copyWith(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                      ),
+                          linkPreviewConfig: _linkPreviewConfig,
+                          message: textMessage,
+                          messageStyle: _textStyle ?? textTheme.bodyMedium),
                     ),
                   );
                 }),
@@ -160,26 +146,8 @@ class _TextMessageViewState extends State<TextMessageView> {
         });
   }
 
-  bool _isNeedRightPadding() {
-    bool isNeedPadding = false;
-    for (var element in widget.message.message.split('\n')) {
-      if (element.length < 37) {
-        isNeedPadding = true;
-      } else {
-        isNeedPadding = false;
-      }
-    }
-    return isNeedPadding;
-  }
-
-  double getAditionalPadding(String text, TextStyle style, double maxWidth) {
-    if (getLastLineWidth(text, style, maxWidth) > maxWidth - 80) {
-      return 16;
-    }
-    return 10;
-  }
-
-  double getLastLineWidth(String text, TextStyle style, double maxWidth) {
+  (double right, double bottom) _getAdditionalPadding(
+      String text, TextStyle style, double maxWidth) {
     // Create a TextSpan with your text and style
     final textSpan = TextSpan(
       text: text,
@@ -188,6 +156,7 @@ class _TextMessageViewState extends State<TextMessageView> {
 
     // Create a TextPainter
     final textPainter = TextPainter(
+      textAlign: TextAlign.left,
       text: textSpan,
       textDirection: TextDirection.ltr,
       maxLines: null, // Allow unlimited lines
@@ -198,13 +167,41 @@ class _TextMessageViewState extends State<TextMessageView> {
 
     // Get the number of lines
     final lineMetrics = textPainter.computeLineMetrics();
-
     // If there are no lines (empty text), return 0
 
     // Get the last line's width
     final lastLine = lineMetrics.last;
 
-    return lastLine.width;
+    // if (kDebugMode) {
+    //   final start = textPainter.getPositionForOffset(
+    //     Offset(0, lastLine.baseline - lastLine.width),
+    //   );
+
+    //   // Get the position where the last line ends
+    //   final end = textPainter.getPositionForOffset(
+    //     Offset(lastLine.width, lastLine.baseline),
+    //   );
+
+    //   // Extract and print the text of the last line
+    //   final lastLineText = text.substring(start.offset, end.offset);
+    //   print(
+    //       'style: ${style.fontSize} Last line width: ${lastLine.width} text: $lastLineText mxw $maxWidth ');
+    // }
+
+    double rightPadding = 0;
+    double bottomPadding =
+        lastLine.width >= maxWidth - 80 || lastLine.width >= 130 ? 18 : 8;
+
+    for (var line in lineMetrics) {
+      if (line.width <= 130) {
+        rightPadding = 65;
+      } else {
+        rightPadding = 0;
+        break;
+      }
+    }
+
+    return (rightPadding, bottomPadding);
   }
 
   Widget getReceipt() {
