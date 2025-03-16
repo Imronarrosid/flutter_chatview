@@ -93,12 +93,6 @@ class _TextMessageViewState extends State<TextMessageView> {
                         (widget.chatViewRenderBox?.size.width ??
                                 MediaQuery.of(context).size.width) *
                             0.75),
-                padding: _padding ??
-                    const EdgeInsets.only(
-                      left: 8,
-                      right: 8,
-                      top: 8,
-                    ),
                 margin: _margin ??
                     EdgeInsets.fromLTRB(5, 0, 6,
                         widget.message.reaction.reactions.isNotEmpty ? 15 : 0),
@@ -121,16 +115,17 @@ class _TextMessageViewState extends State<TextMessageView> {
                     message: widget.message,
                     inComingChatBubbleConfig: widget.inComingChatBubbleConfig,
                     outgoingChatBubbleConfig: widget.outgoingChatBubbleConfig,
-                    padding: const EdgeInsets.only(bottom: 3),
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                          bottom: aditionalPadding.$2,
-                          right: aditionalPadding.$1),
-                      child: HighlihtLink(
-                          linkPreviewConfig: _linkPreviewConfig,
-                          message: textMessage,
-                          messageStyle: _textStyle ?? textTheme.bodyMedium),
-                    ),
+                    messagePadding: _padding ??
+                        const EdgeInsets.only(
+                          left: 8,
+                          right: 8,
+                          top: 8,
+                          bottom: 8,
+                        ),
+                    child: HighlihtLink(
+                        linkPreviewConfig: _linkPreviewConfig,
+                        message: textMessage,
+                        messageStyle: _textStyle ?? textTheme.bodyMedium),
                   );
                 }),
               ),

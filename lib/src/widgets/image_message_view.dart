@@ -172,13 +172,13 @@ class ImageMessageView extends StatelessWidget {
                                                       outgoingChatBubbleConfig,
                                                   imageMessageConfiguration:
                                                       imageMessageConfig,
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                    left: 20,
-                                                    top: 20,
-                                                    bottom: 4,
-                                                    right: 6,
-                                                  ),
+                                                  // messagePadding:
+                                                  //     const EdgeInsets.only(
+                                                  //   left: 20,
+                                                  //   top: 20,
+                                                  //   bottom: 4,
+                                                  //   right: 6,
+                                                  // ),
                                                   decoration: const BoxDecoration(
                                                       borderRadius:
                                                           BorderRadius.only(
@@ -194,179 +194,55 @@ class ImageMessageView extends StatelessWidget {
                                                                 Colors.black45),
                                                       ]),
                                                   child: Container(
-                                                    height: imageMessageConfig
-                                                            ?.height ??
-                                                        200,
-                                                    width: imageMessageConfig
-                                                            ?.width ??
-                                                        150,
                                                     color: imageMessageConfig
                                                             ?.unloadedColor ??
-                                                        Colors.red,
-                                                    child: Image(
-                                                      width: double.infinity,
-                                                      height: double.infinity,
-                                                      image: imageMessageConfig
-                                                                  ?.imageProviderBuilder !=
-                                                              null
-                                                          ? imageMessageConfig!
-                                                              .imageProviderBuilder!(
-                                                              uri: message
-                                                                  .message,
-                                                              imageHeaders:
-                                                                  imageMessageConfig
-                                                                      ?.imageHeaders,
-                                                              conditional:
-                                                                  Conditional(),
-                                                            )
-                                                          : Conditional()
-                                                              .getProvider(
-                                                              message.message,
-                                                              headers:
-                                                                  imageMessageConfig
-                                                                      ?.imageHeaders,
-                                                            ),
-                                                      fit: BoxFit.cover,
-                                                      loadingBuilder: (context,
-                                                          child,
-                                                          loadingProgress) {
-                                                        if (loadingProgress ==
-                                                            null) {
-                                                          return child;
-                                                        }
-                                                        return Center(
-                                                          child:
-                                                              CircularProgressIndicator(
-                                                            value: loadingProgress
-                                                                        .expectedTotalBytes !=
-                                                                    null
-                                                                ? loadingProgress
-                                                                        .cumulativeBytesLoaded /
-                                                                    loadingProgress
-                                                                        .expectedTotalBytes!
-                                                                : null,
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
+                                                        Colors.grey,
+                                                    child: _imageView(),
                                                   ),
                                                 )
-                                              : Container(
-                                                  height: imageMessageConfig
-                                                          ?.height ??
-                                                      200,
-                                                  width: imageMessageConfig
-                                                          ?.width ??
-                                                      150,
-                                                  color: imageMessageConfig
-                                                          ?.unloadedColor ??
-                                                      Colors.red,
-                                                  child: Image(
-                                                    width: double.infinity,
-                                                    height: double.infinity,
-                                                    image: imageMessageConfig
-                                                                ?.imageProviderBuilder !=
-                                                            null
-                                                        ? imageMessageConfig!
-                                                            .imageProviderBuilder!(
-                                                            uri:
-                                                                message.message,
-                                                            imageHeaders:
-                                                                imageMessageConfig
-                                                                    ?.imageHeaders,
-                                                            conditional:
-                                                                Conditional(),
-                                                          )
-                                                        : Conditional()
-                                                            .getProvider(
-                                                            message.message,
-                                                            headers:
-                                                                imageMessageConfig
-                                                                    ?.imageHeaders,
-                                                          ),
-                                                    fit: BoxFit.cover,
-                                                    loadingBuilder: (context,
-                                                        child,
-                                                        loadingProgress) {
-                                                      if (loadingProgress ==
-                                                          null) {
-                                                        return child;
-                                                      }
-                                                      return Center(
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                          value: loadingProgress
-                                                                      .expectedTotalBytes !=
-                                                                  null
-                                                              ? loadingProgress
-                                                                      .cumulativeBytesLoaded /
-                                                                  loadingProgress
-                                                                      .expectedTotalBytes!
-                                                              : null,
-                                                        ),
-                                                      );
-                                                    },
+                                              : Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                    left: 3,
+                                                    right: 3,
+                                                    top: 3,
                                                   ),
+                                                  child: _imageView(),
                                                 ),
                                         ),
                                         if (message.caption?.isNotEmpty ??
                                             false)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 8, right: 8),
-                                            child: SizedBox(
-                                              width:
-                                                  imageMessageConfig?.width ??
-                                                      150,
-                                              child: LayoutBuilder(builder:
-                                                  (context, constraints) {
-                                                double aditionalPadding =
-                                                    getLastLineWidth(
-                                                  message.caption ?? '',
-                                                  _textStyle ??
-                                                      textTheme.bodyMedium!
-                                                          .copyWith(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize: 16),
-                                                  constraints.maxWidth,
-                                                );
-                                                return TimedAndReceiptMessageWidget(
-                                                  chatController:
-                                                      chatController,
-                                                  isMessageBySender:
-                                                      isMessageBySender,
-                                                  message: message,
-                                                  inComingChatBubbleConfig:
-                                                      inComingChatBubbleConfig,
-                                                  outgoingChatBubbleConfig:
-                                                      outgoingChatBubbleConfig,
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          bottom: 3),
-                                                  child: Padding(
-                                                    padding: EdgeInsets.only(
-                                                      bottom: aditionalPadding,
-                                                    ),
-                                                    child: HighlihtLink(
-                                                      showPreview: false,
-                                                      linkPreviewConfig:
-                                                          _linkPreviewConfig,
-                                                      message:
-                                                          message.caption ?? '',
-                                                      messageStyle:
-                                                          _textStyle ??
-                                                              textTheme
-                                                                  .bodyMedium!
-                                                                  .copyWith(
-                                                                color: Colors
-                                                                    .white,
-                                                                fontSize: 16,
-                                                              ),
-                                                    ),
+                                          SizedBox(
+                                            width: imageMessageConfig?.width ??
+                                                150,
+                                            child: TimedAndReceiptMessageWidget(
+                                              chatController: chatController,
+                                              isMessageBySender:
+                                                  isMessageBySender,
+                                              message: message,
+                                              inComingChatBubbleConfig:
+                                                  inComingChatBubbleConfig,
+                                              outgoingChatBubbleConfig:
+                                                  outgoingChatBubbleConfig,
+                                              messagePadding: _padding ??
+                                                  const EdgeInsets.only(
+                                                    left: 6,
+                                                    right: 6,
+                                                    top: 2,
+                                                    bottom: 6,
                                                   ),
-                                                );
-                                              }),
+                                              child: HighlihtLink(
+                                                showPreview: false,
+                                                linkPreviewConfig:
+                                                    _linkPreviewConfig,
+                                                message: message.caption ?? '',
+                                                messageStyle: _textStyle ??
+                                                    textTheme.bodyMedium!
+                                                        .copyWith(
+                                                      color: Colors.white,
+                                                      fontSize: 16,
+                                                    ),
+                                              ),
                                             ),
                                           ),
                                       ],
@@ -392,6 +268,48 @@ class ImageMessageView extends StatelessWidget {
         if (!isMessageBySender && !(imageMessageConfig?.hideShareIcon ?? false))
           iconButton,
       ],
+    );
+  }
+
+  ClipRRect _imageView() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        height: imageMessageConfig?.height ?? 200,
+        width: imageMessageConfig?.width ?? 150,
+        decoration: BoxDecoration(
+          color: imageMessageConfig?.unloadedColor ?? Colors.grey,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Image(
+          width: double.infinity,
+          height: double.infinity,
+          image: imageMessageConfig?.imageProviderBuilder != null
+              ? imageMessageConfig!.imageProviderBuilder!(
+                  uri: message.message,
+                  imageHeaders: imageMessageConfig?.imageHeaders,
+                  conditional: Conditional(),
+                )
+              : Conditional().getProvider(
+                  message.message,
+                  headers: imageMessageConfig?.imageHeaders,
+                ),
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -431,13 +349,18 @@ class ImageMessageView extends StatelessWidget {
       );
 
       // Extract the text of the last line
-      debugPrint(text.substring(start.offset, end.offset));
+      debugPrint(
+          '${text.substring(start.offset, end.offset)}$maxWidth lsw ${lastLine.width}');
     }
-    if (lastLine.width > maxWidth - 70) {
+    if (lastLine.width > maxWidth - 60) {
       return 18;
     }
-    return 4;
+    return 8;
   }
+
+  EdgeInsetsGeometry? get _padding => isMessageBySender
+      ? outgoingChatBubbleConfig?.padding
+      : inComingChatBubbleConfig?.padding;
 
   TextStyle? get _textStyle => isMessageBySender
       ? outgoingChatBubbleConfig?.textStyle

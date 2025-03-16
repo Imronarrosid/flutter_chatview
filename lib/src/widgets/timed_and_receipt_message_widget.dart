@@ -1,6 +1,7 @@
 import 'package:chatview/chatview.dart';
 import 'package:chatview/src/inherited_widgets/configurations_inherited_widgets.dart';
 import 'package:chatview/src/utils/constants/constants.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'chat_view_inherited_widget.dart';
 
@@ -19,7 +20,7 @@ class TimedAndReceiptMessageWidget extends StatefulWidget {
 
   final ChatBubble? inComingChatBubbleConfig;
 
-  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? messagePadding;
 
   final BoxDecoration? decoration;
 
@@ -33,7 +34,7 @@ class TimedAndReceiptMessageWidget extends StatefulWidget {
     this.inComingChatBubbleConfig,
     required this.isMessageBySender,
     required this.chatController,
-    this.padding,
+    this.messagePadding,
     this.decoration,
     this.imageMessageConfiguration,
   });
@@ -45,47 +46,62 @@ class TimedAndReceiptMessageWidget extends StatefulWidget {
 
 class _TimedAndReceiptMessageWidgetState
     extends State<TimedAndReceiptMessageWidget> {
+  late final AdditionalPadding additionalPadding = AdditionalPadding();
+
   @override
   Widget build(BuildContext context) {
     bool is24HoursFormat = MediaQuery.of(context).alwaysUse24HourFormat;
 
-    return Stack(
-      children: [
-        widget.child,
-        Positioned(
-          bottom: 0,
-          right: 0,
-          child: Container(
-            padding: widget.padding ?? const EdgeInsets.only(left: 20, top: 20),
-            decoration: widget.decoration ?? const BoxDecoration(),
-            child: Row(
-              children: [
-                widget.imageMessageConfiguration?.messageTimeBuilder?.call(
-                      widget.message.createdAt,
-                    ) ??
-                    _bubbleConfig?.messageTimeBuilder?.call(
-                      widget.message.createdAt,
-                    ) ??
-                    Text(
-                      intl.DateFormat('hh:mm${(is24HoursFormat) ? ' a' : ''}')
-                          .format(widget.message.createdAt),
-                      style: TextStyle(
-                        color:
-                            widget.message.messageType == MessageType.image &&
-                                    (widget.message.caption?.trim().isEmpty ??
-                                        true)
-                                ? Colors.white
-                                : Colors.black45,
-                        fontSize: 13.5,
+    final textTheme = Theme.of(context).textTheme;
+    return LayoutBuilder(builder: (context, constraints) {
+      final EdgeInsets padding = _padding as EdgeInsets;
+      final String caption2 = widget.message.caption ?? '';
+      _getAdditionalPadding(
+        widget.message.caption ?? widget.message.message,
+        _textStyle ?? textTheme.bodyMedium!,
+        constraints.maxWidth - (padding.left + padding.right),
+      );
+
+      return Stack(
+        children: [
+          Padding(
+            padding: _calculateFinalPadding(padding, caption2),
+            child: widget.child,
+          ),
+          Positioned(
+            bottom: 0,
+            right: 4,
+            child: Container(
+              decoration: widget.decoration ?? const BoxDecoration(),
+              child: Row(
+                children: [
+                  widget.imageMessageConfiguration?.messageTimeBuilder?.call(
+                        widget.message.createdAt,
+                      ) ??
+                      _bubbleConfig?.messageTimeBuilder?.call(
+                        widget.message.createdAt,
+                      ) ??
+                      Text(
+                        intl.DateFormat('hh:mm${(is24HoursFormat) ? ' a' : ''}')
+                            .format(widget.message.createdAt),
+                        style: TextStyle(
+                          color:
+                              widget.message.messageType == MessageType.image &&
+                                      (widget.message.caption?.trim().isEmpty ??
+                                          true)
+                                  ? Colors.white
+                                  : Colors.black45,
+                          fontSize: 13.5,
+                        ),
                       ),
-                    ),
-                if (widget.isMessageBySender) getReceipt(),
-              ],
+                  if (widget.isMessageBySender) getReceipt(),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
   Widget getReceipt() {
@@ -128,6 +144,67 @@ class _TimedAndReceiptMessageWidgetState
     return const SizedBox();
   }
 
+  void _getAdditionalPadding(String text, TextStyle style, double maxWidth) {
+    // Create a TextSpan with your text and style
+    final textSpan = TextSpan(
+      text: text,
+      style: style,
+    );
+
+    // Create a TextPainter
+    final textPainter = TextPainter(
+      textAlign: TextAlign.left,
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+      maxLines: null, // Allow unlimited lines
+    );
+
+    // Layout the text with the given constraints
+    textPainter.layout(maxWidth: maxWidth);
+
+    // Get the number of lines
+    final lineMetrics = textPainter.computeLineMetrics();
+    // If there are no lines (empty text), return 0
+
+    // Get the last line's width
+    final lastLine = lineMetrics.last;
+
+    if (kDebugMode) {
+      final start = textPainter.getPositionForOffset(
+        Offset(0, lastLine.baseline - lastLine.height),
+      );
+
+      // Get the position where the last line ends
+      final end = textPainter.getPositionForOffset(
+        Offset(lastLine.width, lastLine.baseline),
+      );
+
+      // Extract and print the text of the last line
+      final lastLineText = text.substring(start.offset, end.offset);
+      print(
+          'style: ${style.fontSize}\n Last line width: ${lastLine.width}\n text: $lastLineText \n mxw $maxWidth \n\n');
+    }
+
+    double rightPadding = 0;
+    double bottomPadding = 0;
+    bottomPadding =
+        lastLine.width >= maxWidth - 80 || lastLine.width >= 130 ? 8 : 0;
+
+    for (var line in lineMetrics) {
+      if (line.width <= 130) {
+        rightPadding = 65;
+      } else {
+        rightPadding = 0;
+        break;
+      }
+    }
+    additionalPadding.update(rightPadding, bottomPadding);
+  }
+
+  TextStyle? get _textStyle => widget.isMessageBySender
+      ? widget.outgoingChatBubbleConfig?.textStyle
+      : widget.inComingChatBubbleConfig?.textStyle;
+
   bool get isLastMessage =>
       widget.chatController.initialMessageList.last.id == widget.message.id;
 
@@ -142,4 +219,37 @@ class _TimedAndReceiptMessageWidgetState
   ChatBubble? get _bubbleConfig => widget.isMessageBySender
       ? widget.outgoingChatBubbleConfig
       : widget.inComingChatBubbleConfig;
+
+  EdgeInsetsGeometry get _padding =>
+      widget.messagePadding ?? const EdgeInsets.only(right: 10, bottom: 10);
+
+  EdgeInsets _calculateFinalPadding(EdgeInsets padding, String caption) {
+    final bool isImageWithoutCaption =
+        caption.isEmpty && widget.message.messageType.isImage;
+
+    final bool isVoiceMessage = widget.message.messageType.isVoice;
+
+    return EdgeInsets.only(
+      right: additionalPadding.right +
+          (isImageWithoutCaption || isVoiceMessage ? 0 : padding.right),
+      bottom: additionalPadding.bottom +
+          (isImageWithoutCaption || isVoiceMessage ? 0 : padding.bottom),
+      left: padding.left,
+      top: padding.top,
+    );
+  }
+}
+
+/// Represents additional padding values for the chat bubble
+class AdditionalPadding {
+  double _right = 0;
+  double _bottom = 0;
+
+  double get right => _right;
+  double get bottom => _bottom;
+
+  void update(double right, double bottom) {
+    _right = right;
+    _bottom = bottom;
+  }
 }

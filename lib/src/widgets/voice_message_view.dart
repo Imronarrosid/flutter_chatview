@@ -160,7 +160,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
                   message: widget.message,
                   inComingChatBubbleConfig: widget.inComingChatBubbleConfig,
                   outgoingChatBubbleConfig: widget.outgoingChatBubbleConfig,
-                  padding: const EdgeInsets.only(bottom: 3),
+                  messagePadding: const EdgeInsets.only(bottom: 3),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
