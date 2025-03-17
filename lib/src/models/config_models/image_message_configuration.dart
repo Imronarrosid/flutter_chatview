@@ -42,7 +42,9 @@ class ImageMessageConfiguration {
   final double? width;
 
   /// Used for giving padding of image message.
-  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? imagePadding;
+
+  final EdgeInsetsGeometry? captionPadding;
 
   /// Used for giving margin of image message.
   final EdgeInsetsGeometry? margin;
@@ -74,7 +76,7 @@ class ImageMessageConfiguration {
     this.onTap,
     this.height,
     this.width,
-    this.padding,
+    this.imagePadding,
     this.margin,
     this.borderRadius,
     this.unloadedColor,
@@ -82,6 +84,7 @@ class ImageMessageConfiguration {
     this.imageProviderBuilder,
     this.imageHeaders,
     this.messageTimeBuilder,
+    this.captionPadding,
   });
 }
 

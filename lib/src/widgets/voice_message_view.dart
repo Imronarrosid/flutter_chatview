@@ -146,8 +146,8 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
                           ? widget.outgoingChatBubbleConfig?.color
                           : widget.inComingChatBubbleConfig?.color,
                     ),
-                padding: widget.config?.padding ??
-                    const EdgeInsets.symmetric(horizontal: 8),
+                // padding: widget.config?.padding ??
+                //     const EdgeInsets.symmetric(horizontal: 8),
                 margin: widget.config?.margin ??
                     EdgeInsets.symmetric(
                       horizontal: 8,
@@ -160,7 +160,8 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
                   message: widget.message,
                   inComingChatBubbleConfig: widget.inComingChatBubbleConfig,
                   outgoingChatBubbleConfig: widget.outgoingChatBubbleConfig,
-                  messagePadding: const EdgeInsets.only(bottom: 3),
+                  messagePadding:
+                      widget.config?.waveformPadding ?? const EdgeInsets.all(8),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -246,8 +247,6 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
         playerController: controller,
         waveformType: WaveformType.fitWidth,
         playerWaveStyle: widget.config?.playerWaveStyle ?? playerWaveStyle,
-        padding: widget.config?.waveformPadding ??
-            const EdgeInsets.only(top: 10, right: 10),
         margin: widget.config?.waveformMargin,
         animationCurve: widget.config?.animationCurve ?? Curves.easeIn,
         animationDuration: widget.config?.animationDuration ??
@@ -255,27 +254,20 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
         enableSeekGesture: widget.config?.enableSeekGesture ?? true,
       );
     } else {
-      return Padding(
-        padding: widget.config?.waveformPadding ??
-            const EdgeInsets.only(
-              right: 10,
-              top: 10,
-            ),
-        child: SizedBox(
-          width: widget.screenWidth * 0.30,
-          height: 35,
-          child: UnconstrainedBox(
-            child: SizedBox.fromSize(
-              size: Size(widget.screenWidth * 0.30, 2),
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 4,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: widget.config?.unDownoadedWaveColor ?? Colors.white,
-                  ),
+      return SizedBox(
+        width: widget.screenWidth * 0.30,
+        height: 35,
+        child: UnconstrainedBox(
+          child: SizedBox.fromSize(
+            size: Size(widget.screenWidth * 0.30, 2),
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: 4,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: widget.config?.unDownoadedWaveColor ?? Colors.white,
                 ),
               ),
             ),

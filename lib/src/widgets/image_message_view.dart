@@ -125,8 +125,6 @@ class ImageMessageView extends StatelessWidget {
                                   ? Alignment.centerRight
                                   : Alignment.centerLeft,
                               child: Container(
-                                padding: imageMessageConfig?.padding ??
-                                    EdgeInsets.zero,
                                 margin: imageMessageConfig?.margin ??
                                     EdgeInsets.only(
                                       top: 6,
@@ -143,7 +141,10 @@ class ImageMessageView extends StatelessWidget {
                                     alignment: isMessageBySender
                                         ? Alignment.centerRight
                                         : Alignment.centerLeft,
-                                    padding: const EdgeInsets.all(3),
+                                    padding: _isNoCaption
+                                        ? imageMessageConfig?.imagePadding ??
+                                            const EdgeInsets.all(3)
+                                        : EdgeInsets.zero,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(12),
                                       color: isMessageBySender
@@ -154,13 +155,13 @@ class ImageMessageView extends StatelessWidget {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        ClipRRect(
-                                          borderRadius: imageMessageConfig
-                                                  ?.borderRadius ??
-                                              BorderRadius.circular(9),
-                                          child: (message.caption?.isEmpty ??
-                                                  true)
-                                              ? TimedAndReceiptMessageWidget(
+                                        (_isNoCaption)
+                                            ? ClipRRect(
+                                                borderRadius: imageMessageConfig
+                                                        ?.borderRadius ??
+                                                    BorderRadius.circular(9),
+                                                child:
+                                                    TimedAndReceiptMessageWidget(
                                                   chatController:
                                                       chatController,
                                                   isMessageBySender:
@@ -172,13 +173,8 @@ class ImageMessageView extends StatelessWidget {
                                                       outgoingChatBubbleConfig,
                                                   imageMessageConfiguration:
                                                       imageMessageConfig,
-                                                  // messagePadding:
-                                                  //     const EdgeInsets.only(
-                                                  //   left: 20,
-                                                  //   top: 20,
-                                                  //   bottom: 4,
-                                                  //   right: 6,
-                                                  // ),
+                                                  messagePadding:
+                                                      const EdgeInsets.all(0),
                                                   decoration: const BoxDecoration(
                                                       borderRadius:
                                                           BorderRadius.only(
@@ -193,23 +189,17 @@ class ImageMessageView extends StatelessWidget {
                                                             color:
                                                                 Colors.black45),
                                                       ]),
-                                                  child: Container(
-                                                    color: imageMessageConfig
-                                                            ?.unloadedColor ??
-                                                        Colors.grey,
-                                                    child: _imageView(),
-                                                  ),
-                                                )
-                                              : Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                    left: 3,
-                                                    right: 3,
-                                                    top: 3,
-                                                  ),
                                                   child: _imageView(),
                                                 ),
-                                        ),
+                                              )
+                                            : Padding(
+                                                padding: const EdgeInsets.only(
+                                                  left: 3,
+                                                  right: 3,
+                                                  top: 3,
+                                                ),
+                                                child: _imageView(),
+                                              ),
                                         if (message.caption?.isNotEmpty ??
                                             false)
                                           SizedBox(
@@ -273,7 +263,8 @@ class ImageMessageView extends StatelessWidget {
 
   ClipRRect _imageView() {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius:
+          imageMessageConfig?.borderRadius ?? BorderRadius.circular(9),
       child: Container(
         height: imageMessageConfig?.height ?? 200,
         width: imageMessageConfig?.width ?? 150,
@@ -369,4 +360,6 @@ class ImageMessageView extends StatelessWidget {
   LinkPreviewConfiguration? get _linkPreviewConfig => isMessageBySender
       ? outgoingChatBubbleConfig?.linkPreviewConfig
       : inComingChatBubbleConfig?.linkPreviewConfig;
+
+  bool get _isNoCaption => message.caption?.isEmpty ?? true;
 }

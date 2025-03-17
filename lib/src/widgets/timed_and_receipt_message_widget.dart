@@ -221,7 +221,7 @@ class _TimedAndReceiptMessageWidgetState
       : widget.inComingChatBubbleConfig;
 
   EdgeInsetsGeometry get _padding =>
-      widget.messagePadding ?? const EdgeInsets.only(right: 10, bottom: 10);
+      widget.messagePadding ?? const EdgeInsets.all(0);
 
   EdgeInsets _calculateFinalPadding(EdgeInsets padding, String caption) {
     final bool isImageWithoutCaption =
@@ -230,10 +230,14 @@ class _TimedAndReceiptMessageWidgetState
     final bool isVoiceMessage = widget.message.messageType.isVoice;
 
     return EdgeInsets.only(
-      right: additionalPadding.right +
-          (isImageWithoutCaption || isVoiceMessage ? 0 : padding.right),
-      bottom: additionalPadding.bottom +
-          (isImageWithoutCaption || isVoiceMessage ? 0 : padding.bottom),
+      right: padding.right +
+          (isImageWithoutCaption || isVoiceMessage
+              ? 0
+              : additionalPadding.right),
+      bottom: padding.bottom +
+          (isImageWithoutCaption || isVoiceMessage
+              ? 0
+              : additionalPadding.bottom),
       left: padding.left,
       top: padding.top,
     );
