@@ -19,8 +19,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io' if (kIsWeb) 'dart:html';
 
 import 'package:chatview/chatview.dart';
@@ -49,6 +47,7 @@ class SendMessageWidget extends StatefulWidget {
     this.imageHeaders,
     this.imageProviderBuilder,
     this.chatBackgroundConfig,
+    this.mediaPreviewSendMessageConfig,
   }) : super(key: key);
 
   /// Provides call back when user tap on send button on text field.
@@ -56,6 +55,9 @@ class SendMessageWidget extends StatefulWidget {
 
   /// Provides configuration for text field appearance.
   final SendMessageConfiguration? sendMessageConfig;
+
+  /// Provides configuration for text field appearance on MediaPreview.
+  final MediaPreviewConfig? mediaPreviewSendMessageConfig;
 
   /// Allow user to set custom text field.
   final ReplyMessageWithReturnWidget? sendMessageBuilder;
@@ -205,7 +207,6 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
                                           child: Container(
                                             margin: const EdgeInsets.only(
                                                 bottom: 2),
-                                           
                                             decoration: BoxDecoration(
                                               color: widget.sendMessageConfig
                                                       ?.replyDialogColor ??
@@ -308,8 +309,8 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
           context,
           MaterialPageRoute(
               fullscreenDialog: true,
-              builder: (context) => ImageSharingPage(
-                    sendMessageConfiguration: widget.sendMessageConfig,
+              builder: (context) => MediaPreviewScreen(
+                    mediaPreviewConfig: widget.mediaPreviewSendMessageConfig,
                     chatBackgroundConfig: widget.chatBackgroundConfig,
                     imageUri: imagePath,
                     imageHeaders: widget.imageHeaders,

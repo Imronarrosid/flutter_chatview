@@ -67,6 +67,7 @@ class ChatView extends StatefulWidget {
     this.replySuggestionsConfig,
     this.scrollToBottomButtonConfig,
     this.imageProviderBuilder,
+    this.mediaPreviewConfig,
   })  : chatBackgroundConfig =
             chatBackgroundConfig ?? const ChatBackgroundConfiguration(),
         chatViewStateConfig =
@@ -128,6 +129,9 @@ class ChatView extends StatefulWidget {
 
   /// Provides configuration of default text field in chat.
   final SendMessageConfiguration? sendMessageConfig;
+
+  /// Provides configuration of default text field in MediaPreview.
+  final MediaPreviewConfig? mediaPreviewConfig;
 
   /// Provides current state of chat.
   final ChatViewState chatViewState;
@@ -323,8 +327,11 @@ class _ChatViewState extends State<ChatView>
                                             widget.sendMessageBuilder,
                                         sendMessageConfig:
                                             widget.sendMessageConfig,
-                                        onSendTap: (message, replyMessage,
-                                            messageType, {path, caption}) {
+                                        mediaPreviewSendMessageConfig: widget
+                                            .mediaPreviewConfig,
+                                        onSendTap:
+                                            (message, replyMessage, messageType,
+                                                {path, caption}) {
                                           if (chatViewContext.suggestionsConfig
                                                   ?.autoDismissOnSelection ??
                                               true) {
@@ -332,7 +339,8 @@ class _ChatViewState extends State<ChatView>
                                                 .removeReplySuggestions();
                                           }
                                           _onSendTap(message, replyMessage,
-                                              messageType, path: path, caption: caption);
+                                              messageType,
+                                              path: path, caption: caption);
                                         },
                                         onReplyCallback: (reply) =>
                                             replyMessage.value = reply,
@@ -417,7 +425,8 @@ class _ChatViewState extends State<ChatView>
   }) {
     if (widget.sendMessageBuilder == null) {
       if (widget.onSendTap != null) {
-        widget.onSendTap!(message, replyMessage, messageType, path: path, caption: caption);
+        widget.onSendTap!(message, replyMessage, messageType,
+            path: path, caption: caption);
       }
       _assignReplyMessage();
     }

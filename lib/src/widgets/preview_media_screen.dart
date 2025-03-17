@@ -6,15 +6,14 @@ import 'package:chatview/src/utils/package_strings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-class ImageSharingPage extends StatefulWidget {
-  const ImageSharingPage({
+class MediaPreviewScreen extends StatefulWidget {
+  const MediaPreviewScreen({
     Key? key,
     this.imageProviderBuilder,
     this.imageHeaders,
     required this.imageUri,
     required this.chatBackgroundConfig,
-    this.textFieldConfig,
-    this.sendMessageConfiguration,
+    this.mediaPreviewConfig,
     required this.otherUser,
     required this.onSend,
   }) : super(key: key);
@@ -22,11 +21,11 @@ class ImageSharingPage extends StatefulWidget {
   final ChatUser otherUser;
   final Function(String imagePath, String caption) onSend;
 
-  final TextFieldConfiguration? textFieldConfig;
+  // final TextFieldConfiguration? textFieldConfig;
   final Map<String, String>? imageHeaders;
 
   final ChatBackgroundConfiguration? chatBackgroundConfig;
-  final SendMessageConfiguration? sendMessageConfiguration;
+  final MediaPreviewConfig? mediaPreviewConfig;
 
   /// This feature allows you to use a custom image provider.
   /// This is useful if you want to manage image loading yourself, or if you need to cache images.
@@ -39,10 +38,10 @@ class ImageSharingPage extends StatefulWidget {
   })? imageProviderBuilder;
 
   @override
-  State<ImageSharingPage> createState() => _ImageSharingPageState();
+  State<MediaPreviewScreen> createState() => _MediaPreviewScreenState();
 }
 
-class _ImageSharingPageState extends State<ImageSharingPage> {
+class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
   final TextEditingController _controller = TextEditingController();
   @override
   Widget build(BuildContext context) {
@@ -54,38 +53,34 @@ class _ImageSharingPageState extends State<ImageSharingPage> {
           // Image container - takes most of the screen
           GestureDetector(
             onVerticalDragEnd: (_) {},
-            child: Container(
-              // margin: const EdgeInsets.symmetric(vertical: 20.0),
-              decoration: BoxDecoration(),
-              child: Center(
-                child: Image(
-                  width: double.infinity,
-                  height: double.infinity,
-                  image: widget.imageProviderBuilder != null
-                      ? widget.imageProviderBuilder!(
-                          uri: widget.imageUri,
-                          imageHeaders: widget.imageHeaders,
-                          conditional: Conditional(),
-                        )
-                      : Conditional().getProvider(
-                          widget.imageUri,
-                          headers: widget.imageHeaders,
-                        ),
-                  fit: BoxFit.contain,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) {
-                      return child;
-                    }
-                    return Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
+            child: Center(
+              child: Image(
+                width: double.infinity,
+                height: double.infinity,
+                image: widget.imageProviderBuilder != null
+                    ? widget.imageProviderBuilder!(
+                        uri: widget.imageUri,
+                        imageHeaders: widget.imageHeaders,
+                        conditional: Conditional(),
+                      )
+                    : Conditional().getProvider(
+                        widget.imageUri,
+                        headers: widget.imageHeaders,
                       ),
-                    );
-                  },
-                ),
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child;
+                  }
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -98,7 +93,12 @@ class _ImageSharingPageState extends State<ImageSharingPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    _buildCircularButton(Icons.close, onTap: () {
+                    _buildCircularButton(
+                        widget.mediaPreviewConfig?.closeIcon ??
+                            const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                            ), onTap: () {
                       Navigator.pop(context);
                     }),
                     // const SizedBox(width: 20),
@@ -120,16 +120,19 @@ class _ImageSharingPageState extends State<ImageSharingPage> {
             right: 20,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(30),
+                color: widget.mediaPreviewConfig?.textFieldBackgroundColor ??
+                    Colors.grey[900],
+                borderRadius:
+                    widget.mediaPreviewConfig?.textFieldConfig?.borderRadius ??
+                        BorderRadius.circular(30),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(left: 12.0),
-                    child: widget.sendMessageConfiguration
-                            ?.imagePickerIconsConfig?.galleryImagePickerIcon ??
+                    child: widget.mediaPreviewConfig?.imagePickerIconsConfig
+                            ?.galleryImagePickerIcon ??
                         const Icon(
                           Icons.photo,
                           size: 24,
@@ -148,20 +151,22 @@ class _ImageSharingPageState extends State<ImageSharingPage> {
                       controller: _controller,
                       minLines: 1,
                       maxLines: 4,
-                      scrollPadding: EdgeInsets.all(0),
-                      style: widget.textFieldConfig?.textStyle ??
+                      style: widget
+                              .mediaPreviewConfig?.textFieldConfig?.textStyle ??
                           const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                          fillColor: Colors.grey[900],
-                          hintStyle: widget.textFieldConfig?.hintStyle ??
-                              const TextStyle(color: Colors.white60),
-                          contentPadding: EdgeInsets.zero,
-                          hintText: widget.textFieldConfig?.hintText ??
-                              PackageStrings.message,
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                            borderRadius: BorderRadius.circular(30),
-                          )),
+                        hintStyle: widget.mediaPreviewConfig?.textFieldConfig
+                                ?.hintStyle ??
+                            const TextStyle(color: Colors.white60),
+                        contentPadding: EdgeInsets.zero,
+                        hintText: widget.mediaPreviewConfig?.textFieldConfig
+                                ?.hintText ??
+                            PackageStrings.message,
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
                     ),
                   )),
                   // const Expanded(
@@ -186,35 +191,37 @@ class _ImageSharingPageState extends State<ImageSharingPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    widget.otherUser.name,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                widget.mediaPreviewConfig?.receiverNameWidget ??
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[900],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        widget.otherUser.name,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
                 Container(
-                  width: 50,
-                  height: 50,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF1DB954), // Spotify green color
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    color: widget.mediaPreviewConfig?.defaultSendButtonColor ??
+                        Theme.of(context).colorScheme.primary,
                   ),
                   child: IconButton(
-                    icon: const Icon(
-                      Icons.navigate_next,
-                      color: Colors.black,
-                      size: 30,
-                    ),
+                    padding: EdgeInsets.zero,
+                    icon: widget.mediaPreviewConfig?.sendButtonIcon ??
+                        const Icon(
+                          Icons.send,
+                          color: Colors.white,
+                          size: 24,
+                        ),
                     onPressed: () {
                       widget.onSend(widget.imageUri, _controller.text.trim());
                       Navigator.pop(context);
@@ -229,28 +236,22 @@ class _ImageSharingPageState extends State<ImageSharingPage> {
     );
   }
 
-  Widget _buildCircularButton(IconData icon, {required VoidCallback onTap}) {
+  Widget _buildCircularButton(Widget icon, {required VoidCallback onTap}) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 45,
-          height: 45,
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            size: 24,
-            color: Colors.white,
-          ),
+      padding: const EdgeInsets.all(8),
+      child: IconButton(
+        style: IconButton.styleFrom(
+          padding: EdgeInsets.zero,
+          backgroundColor:
+              widget.mediaPreviewConfig?.closeIconColor ?? Colors.grey[900],
         ),
+        icon: icon,
+        onPressed: onTap,
       ),
     );
   }
 
+  // ignore: unused_element
   Widget _buildFeatureButton(String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
