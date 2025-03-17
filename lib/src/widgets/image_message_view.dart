@@ -70,7 +70,7 @@ class ImageMessageView extends StatelessWidget {
 
   final ChatBubble? inComingChatBubbleConfig;
 
-  String get imageUrl => message.message;
+  String get imageUrl => message.mediaPath;
 
   Widget get iconButton => ShareIcon(
         shareIconConfig: imageMessageConfig?.shareIconConfig,
@@ -109,7 +109,7 @@ class ImageMessageView extends StatelessWidget {
                               final initialPage = snapshot.indexWhere(
                                 (element) =>
                                     element.id == message.id &&
-                                    element.uri == message.message,
+                                    element.uri == message.mediaPath,
                               );
 
                               chatController.galleryPageController.value =
@@ -200,8 +200,7 @@ class ImageMessageView extends StatelessWidget {
                                                 ),
                                                 child: _imageView(),
                                               ),
-                                        if (message.caption?.isNotEmpty ??
-                                            false)
+                                        if (message.text.isNotEmpty)
                                           SizedBox(
                                             width: imageMessageConfig?.width ??
                                                 150,
@@ -225,7 +224,7 @@ class ImageMessageView extends StatelessWidget {
                                                 showPreview: false,
                                                 linkPreviewConfig:
                                                     _linkPreviewConfig,
-                                                message: message.caption ?? '',
+                                                message: message.text,
                                                 messageStyle: _textStyle ??
                                                     textTheme.bodyMedium!
                                                         .copyWith(
@@ -277,12 +276,12 @@ class ImageMessageView extends StatelessWidget {
           height: double.infinity,
           image: imageMessageConfig?.imageProviderBuilder != null
               ? imageMessageConfig!.imageProviderBuilder!(
-                  uri: message.message,
+                  uri: message.mediaPath,
                   imageHeaders: imageMessageConfig?.imageHeaders,
                   conditional: Conditional(),
                 )
               : Conditional().getProvider(
-                  message.message,
+                  message.mediaPath,
                   headers: imageMessageConfig?.imageHeaders,
                 ),
           fit: BoxFit.cover,
@@ -361,5 +360,5 @@ class ImageMessageView extends StatelessWidget {
       ? outgoingChatBubbleConfig?.linkPreviewConfig
       : inComingChatBubbleConfig?.linkPreviewConfig;
 
-  bool get _isNoCaption => message.caption?.isEmpty ?? true;
+  bool get _isNoCaption => message.text.isEmpty;
 }

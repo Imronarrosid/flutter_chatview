@@ -161,7 +161,7 @@ class _MessageViewState extends State<MessageView>
   }
 
   Widget get _messageView {
-    final message = widget.message.message;
+    final message = widget.message.mediaPath;
     final emojiMessageConfiguration = messageConfig?.emojiMessageConfig;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,

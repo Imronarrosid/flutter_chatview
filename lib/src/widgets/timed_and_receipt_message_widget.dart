@@ -55,10 +55,9 @@ class _TimedAndReceiptMessageWidgetState
     final textTheme = Theme.of(context).textTheme;
     return LayoutBuilder(builder: (context, constraints) {
       final EdgeInsets padding = _padding as EdgeInsets;
-      final String caption2 = widget.message.caption ?? '';
+      final String caption2 = widget.message.text;
       _getAdditionalPadding(
-        widget.message.caption ??
-            (widget.message.messageType.isImage ? "" : widget.message.message),
+        caption2,
         (_textStyle ?? textTheme.bodyMedium!.copyWith(fontSize: 14))
             .merge(DefaultTextStyle.of(context).style),
         constraints.maxWidth - (padding.left + padding.right),
@@ -91,8 +90,7 @@ class _TimedAndReceiptMessageWidgetState
                         style: TextStyle(
                           color:
                               widget.message.messageType == MessageType.image &&
-                                      (widget.message.caption?.trim().isEmpty ??
-                                          true)
+                                      (widget.message.text.trim().isEmpty)
                                   ? Colors.white
                                   : Colors.black45,
                           fontSize: 13.5,
@@ -149,6 +147,11 @@ class _TimedAndReceiptMessageWidgetState
   }
 
   void _getAdditionalPadding(String text, TextStyle style, double maxWidth) {
+    if (text.isEmpty &&
+        (widget.message.messageType.isImage ||
+            widget.message.messageType.isVoice)) {
+      return;
+    }
     // Create a TextSpan with your text and style
     final textSpan = TextSpan(
       text: text,

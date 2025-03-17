@@ -23,12 +23,11 @@ import 'package:chatview/chatview.dart';
 import 'package:flutter/material.dart';
 
 typedef StringCallback = void Function(String);
-typedef StringMessageCallBack = void Function(
-  String message,
-  ReplyMessage replyMessage,
-  MessageType messageType, {
-  String? path,
-  String? caption,
+typedef StringMessageCallBack = void Function({
+  required ReplyMessage replyMessage,
+  required MessageType messageType,
+  required String mediaPath,
+  required String text,
 });
 typedef ReplyMessageWithReturnWidget = Widget Function(
   ReplyMessage? replyMessage,

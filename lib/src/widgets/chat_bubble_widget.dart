@@ -138,7 +138,7 @@ class _ChatBubbleWidgetState extends State<ChatBubbleWidget> {
     }
     if (chatListConfig.swipeToReplyConfig?.onRightSwipe != null) {
       chatListConfig.swipeToReplyConfig?.onRightSwipe!(
-          widget.message.message, widget.message.sentBy);
+          widget.message.mediaPath, widget.message.sentBy);
     }
     widget.onSwipe(widget.message);
   }
@@ -150,7 +150,7 @@ class _ChatBubbleWidgetState extends State<ChatBubbleWidget> {
     }
     if (chatListConfig.swipeToReplyConfig?.onLeftSwipe != null) {
       chatListConfig.swipeToReplyConfig?.onLeftSwipe!(
-          widget.message.message, widget.message.sentBy);
+          widget.message.mediaPath, widget.message.sentBy);
     }
     widget.onSwipe(widget.message);
   }

@@ -154,7 +154,7 @@ class ChatController {
       imageList.add(
         PreviewImage(
           id: message.id,
-          uri: message.message,
+          uri: message.mediaPath,
           createdAt: message.createdAt.millisecondsSinceEpoch,
         ),
       );
@@ -248,7 +248,7 @@ class ChatController {
           ...previousValue,
           PreviewImage(
             id: element.id,
-            uri: element.message,
+            uri: element.mediaPath,
             createdAt: element.createdAt.millisecondsSinceEpoch,
           ),
         ];

@@ -72,11 +72,11 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
   void initState() {
     super.initState();
 
-    if (!widget.message.message.startsWith('https')) {
+    if (!widget.message.mediaPath.startsWith('https')) {
       // downloadFile(widget.message.message, widget.message.message);
       controller = PlayerController()
         ..preparePlayer(
-          path: widget.message.message,
+          path: widget.message.mediaPath,
           noOfSamples: widget.config?.playerWaveStyle
                   ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
               playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
@@ -278,7 +278,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
   }
 
   Future<void> _downloadFile() async {
-    String? path = await downloadFile(widget.message.message, widget.message.id,
+    String? path = await downloadFile(widget.message.mediaPath, widget.message.id,
         (received, total) {
       _downloadProgress.value = (received / total * 100);
     });

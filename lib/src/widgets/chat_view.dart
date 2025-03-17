@@ -327,20 +327,25 @@ class _ChatViewState extends State<ChatView>
                                             widget.sendMessageBuilder,
                                         sendMessageConfig:
                                             widget.sendMessageConfig,
-                                        mediaPreviewSendMessageConfig: widget
-                                            .mediaPreviewConfig,
-                                        onSendTap:
-                                            (message, replyMessage, messageType,
-                                                {path, caption}) {
+                                        mediaPreviewSendMessageConfig:
+                                            widget.mediaPreviewConfig,
+                                        onSendTap: (
+                                            {required String mediaPath,
+                                            required ReplyMessage replyMessage,
+                                            required MessageType messageType,
+                                            required String text}) {
                                           if (chatViewContext.suggestionsConfig
                                                   ?.autoDismissOnSelection ??
                                               true) {
                                             chatController
                                                 .removeReplySuggestions();
                                           }
-                                          _onSendTap(message, replyMessage,
-                                              messageType,
-                                              path: path, caption: caption);
+                                          _onSendTap(
+                                            mediaPath: mediaPath,
+                                            replyMessage: replyMessage,
+                                            messageType: messageType,
+                                            text: text,
+                                          );
                                         },
                                         onReplyCallback: (reply) =>
                                             replyMessage.value = reply,
@@ -416,17 +421,19 @@ class _ChatViewState extends State<ChatView>
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
   }
 
-  void _onSendTap(
-    String message,
-    ReplyMessage replyMessage,
-    MessageType messageType, {
-    String? path,
-    String? caption,
+  void _onSendTap({
+    required String mediaPath,
+    required ReplyMessage replyMessage,
+    required MessageType messageType,
+    required String text,
   }) {
     if (widget.sendMessageBuilder == null) {
       if (widget.onSendTap != null) {
-        widget.onSendTap!(message, replyMessage, messageType,
-            path: path, caption: caption);
+        widget.onSendTap!(
+            mediaPath: mediaPath,
+            replyMessage: replyMessage,
+            messageType: messageType,
+            text: text);
       }
       _assignReplyMessage();
     }

@@ -297,7 +297,12 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
 
   void _onRecordingComplete(String? path) {
     if (path != null) {
-      widget.onSendTap.call(path, replyMessage, MessageType.voice);
+      widget.onSendTap.call(
+        mediaPath: path,
+        replyMessage: replyMessage,
+        messageType: MessageType.voice,
+        text: '',
+      );
       _assignRepliedMessage();
     }
   }
@@ -306,26 +311,27 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
     debugPrint('Call in Send Message Widget');
     if (imagePath.isNotEmpty) {
       Navigator.push(
-          context,
-          MaterialPageRoute(
-              fullscreenDialog: true,
-              builder: (context) => MediaPreviewScreen(
-                    mediaPreviewConfig: widget.mediaPreviewSendMessageConfig,
-                    chatBackgroundConfig: widget.chatBackgroundConfig,
-                    imageUri: imagePath,
-                    imageHeaders: widget.imageHeaders,
-                    imageProviderBuilder: widget.imageProviderBuilder,
-                    otherUser: chatViewIW!.chatController.otherUsers.first,
-                    onSend: (imagePath, caption) {
-                      widget.onSendTap.call(
-                        '',
-                        replyMessage,
-                        MessageType.image,
-                        path: imagePath,
-                        caption: caption.isNotEmpty ? caption : null,
-                      );
-                    },
-                  )));
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => MediaPreviewScreen(
+            mediaPreviewConfig: widget.mediaPreviewSendMessageConfig,
+            chatBackgroundConfig: widget.chatBackgroundConfig,
+            imageUri: imagePath,
+            imageHeaders: widget.imageHeaders,
+            imageProviderBuilder: widget.imageProviderBuilder,
+            otherUser: chatViewIW!.chatController.otherUsers.first,
+            onSend: (imagePath, caption) {
+              widget.onSendTap.call(
+                mediaPath: imagePath,
+                replyMessage: replyMessage,
+                messageType: MessageType.image,
+                text: caption.isNotEmpty ? caption : '',
+              );
+            },
+          ),
+        ),
+      );
     }
   }
 
@@ -341,9 +347,10 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
     if (messageText.isEmpty) return;
 
     widget.onSendTap.call(
-      messageText.trim(),
-      replyMessage,
-      MessageType.text,
+      mediaPath: '',
+      replyMessage: replyMessage,
+      messageType: MessageType.text,
+      text: messageText,
     );
     _assignRepliedMessage();
   }
@@ -351,7 +358,7 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
   void assignReplyMessage(Message message) {
     if (currentUser != null) {
       _replyMessage.value = ReplyMessage(
-        message: message.message,
+        message: message.text,
         replyBy: currentUser!.id,
         replyTo: message.sentBy,
         messageType: message.messageType,
