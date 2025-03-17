@@ -48,8 +48,6 @@ class _TimedAndReceiptMessageWidgetState
     extends State<TimedAndReceiptMessageWidget> {
   late final AdditionalPadding additionalPadding = AdditionalPadding();
 
-  double lastLineWidth = 0;
-
   @override
   Widget build(BuildContext context) {
     bool is24HoursFormat = MediaQuery.of(context).alwaysUse24HourFormat;
@@ -62,7 +60,7 @@ class _TimedAndReceiptMessageWidgetState
         widget.message.caption ??
             (widget.message.messageType.isImage ? "" : widget.message.message),
         (_textStyle ?? textTheme.bodyMedium!.copyWith(fontSize: 14))
-        .merge(DefaultTextStyle.of(context).style),
+            .merge(DefaultTextStyle.of(context).style),
         constraints.maxWidth - (padding.left + padding.right),
       );
 
@@ -105,11 +103,6 @@ class _TimedAndReceiptMessageWidgetState
               ),
             ),
           ),
-          Container(
-            color: Colors.black.withAlpha(50),
-            width: lastLineWidth,
-            child: Text(lastLineWidth.ceil().toString()),
-          )
         ],
       );
     });
@@ -204,7 +197,6 @@ class _TimedAndReceiptMessageWidgetState
     double bottomPadding = 0;
     bottomPadding =
         lastLine.width >= maxWidth - 80 || lastLine.width >= 130 ? 8 : 0;
-    lastLineWidth = lastLine.width;
     for (var line in lineMetrics) {
       if (line.width <= 130) {
         rightPadding = 65;
