@@ -48,6 +48,8 @@ class _TimedAndReceiptMessageWidgetState
     extends State<TimedAndReceiptMessageWidget> {
   late final AdditionalPadding additionalPadding = AdditionalPadding();
 
+  double lastLineWidth = 0;
+
   @override
   Widget build(BuildContext context) {
     bool is24HoursFormat = MediaQuery.of(context).alwaysUse24HourFormat;
@@ -57,8 +59,10 @@ class _TimedAndReceiptMessageWidgetState
       final EdgeInsets padding = _padding as EdgeInsets;
       final String caption2 = widget.message.caption ?? '';
       _getAdditionalPadding(
-        widget.message.caption ?? widget.message.message,
-        _textStyle ?? textTheme.bodyMedium!,
+        widget.message.caption ??
+            (widget.message.messageType.isImage ? "" : widget.message.message),
+        (_textStyle ?? textTheme.bodyMedium!.copyWith(fontSize: 14))
+        .merge(DefaultTextStyle.of(context).style),
         constraints.maxWidth - (padding.left + padding.right),
       );
 
@@ -66,7 +70,9 @@ class _TimedAndReceiptMessageWidgetState
         children: [
           Padding(
             padding: _calculateFinalPadding(padding, caption2),
-            child: widget.child,
+            child: Container(
+                constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+                child: widget.child),
           ),
           Positioned(
             bottom: 0,
@@ -99,6 +105,11 @@ class _TimedAndReceiptMessageWidgetState
               ),
             ),
           ),
+          Container(
+            color: Colors.black.withAlpha(50),
+            width: lastLineWidth,
+            child: Text(lastLineWidth.ceil().toString()),
+          )
         ],
       );
     });
@@ -149,11 +160,15 @@ class _TimedAndReceiptMessageWidgetState
     final textSpan = TextSpan(
       text: text,
       style: style,
+      // style: style.merge(
+      //     TextTheme.of(context).bodyMedium!.copyWith(fontSize: style.fontSize)),
     );
 
     // Create a TextPainter
     final textPainter = TextPainter(
+      textWidthBasis: TextWidthBasis.parent,
       textAlign: TextAlign.left,
+      strutStyle: StrutStyle(fontSize: style.fontSize),
       text: textSpan,
       textDirection: TextDirection.ltr,
       maxLines: null, // Allow unlimited lines
@@ -161,7 +176,6 @@ class _TimedAndReceiptMessageWidgetState
 
     // Layout the text with the given constraints
     textPainter.layout(maxWidth: maxWidth);
-
     // Get the number of lines
     final lineMetrics = textPainter.computeLineMetrics();
     // If there are no lines (empty text), return 0
@@ -181,15 +195,16 @@ class _TimedAndReceiptMessageWidgetState
 
       // Extract and print the text of the last line
       final lastLineText = text.substring(start.offset, end.offset);
+      print('fulltext $text ${text.split('\n').length} ');
       print(
-          'style: ${style.fontSize}\n Last line width: ${lastLine.width}\n text: $lastLineText \n mxw $maxWidth \n\n');
+          'n ${text.contains('\n')}\n lines ${lineMetrics.length}\n style: ${style.fontSize}\n Last line width: ${lastLine.width}\n text: $lastLineText \n mxw $maxWidth \n\n');
     }
 
     double rightPadding = 0;
     double bottomPadding = 0;
     bottomPadding =
         lastLine.width >= maxWidth - 80 || lastLine.width >= 130 ? 8 : 0;
-
+    lastLineWidth = lastLine.width;
     for (var line in lineMetrics) {
       if (line.width <= 130) {
         rightPadding = 65;
