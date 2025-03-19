@@ -24,6 +24,7 @@ import 'package:chatview/src/utils/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 import '../../chatview.dart';
+import '../conditional/conditional.dart';
 import 'message_time_widget.dart';
 import 'message_view.dart';
 import 'reply_message_widget.dart';
@@ -40,6 +41,8 @@ class ChatBubbleWidget extends StatefulWidget {
     this.shouldHighlight = false,
     this.chatViewRenderBox,
     required this.imageListNotifier,
+    this.imageHeaders,
+    this.imageProviderBuilder,
   }) : super(key: key);
 
   /// Represent current instance of message.
@@ -64,12 +67,28 @@ class ChatBubbleWidget extends StatefulWidget {
 
   final ValueNotifier<List<PreviewImage>> imageListNotifier;
 
+  // final TextFieldConfiguration? textFieldConfig;
+  final Map<String, String>? imageHeaders;
+
+  /// This feature allows you to use a custom image provider.
+  /// This is useful if you want to manage image loading yourself, or if you need to cache images.
+  /// You can also use the `cached_network_image` feature, but when it comes to caching, you might want to decide on a per-message basis.
+  /// Plus, by using this provider, you can choose whether or not to send specific headers based on the URL.
+  final ImageProvider Function({
+    required String uri,
+    required Map<String, String>? imageHeaders,
+    required Conditional conditional,
+  })? imageProviderBuilder;
+
   @override
   State<ChatBubbleWidget> createState() => _ChatBubbleWidgetState();
 }
 
 class _ChatBubbleWidgetState extends State<ChatBubbleWidget> {
-  String get replyMessage => widget.message.replyMessage.message;
+  String get replyMessage =>
+      widget.message.replyMessage.messageType == MessageType.image
+          ? widget.message.replyMessage.mediaPath
+          : widget.message.replyMessage.text;
 
   bool get isMessageBySender => widget.message.sentBy == currentUser?.id;
 
@@ -179,6 +198,8 @@ class _ChatBubbleWidgetState extends State<ChatBubbleWidget> {
               ? chatListConfig.repliedMessageConfig!
                   .repliedMessageWidgetBuilder!(widget.message.replyMessage)
               : ReplyMessageWidget(
+                  imageHeaders: widget.imageHeaders,
+                  imageProviderBuilder: widget.imageProviderBuilder,
                   message: widget.message,
                   repliedMessageConfig: chatListConfig.repliedMessageConfig,
                   onTap: () => widget.onReplyTap

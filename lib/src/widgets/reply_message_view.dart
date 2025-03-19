@@ -21,12 +21,14 @@
  */
 
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:chatview/src/conditional/conditional.dart';
 import 'package:flutter/material.dart';
 
 import '../models/models.dart';
 import '../utils/package_strings.dart';
 import '../values/enumeration.dart';
 import '../values/typedefs.dart';
+import 'image_provider_widget.dart';
 
 class ReplyMessageView extends StatelessWidget {
   const ReplyMessageView({
@@ -34,6 +36,8 @@ class ReplyMessageView extends StatelessWidget {
     required this.message,
     this.customMessageReplyViewBuilder,
     this.sendMessageConfig,
+    this.imageHeaders,
+    this.imageProviderBuilder,
   });
 
   final ReplyMessage message;
@@ -41,53 +45,99 @@ class ReplyMessageView extends StatelessWidget {
   final CustomMessageReplyViewBuilder? customMessageReplyViewBuilder;
   final SendMessageConfiguration? sendMessageConfig;
 
+  // final TextFieldConfiguration? textFieldConfig;
+  final Map<String, String>? imageHeaders;
+
+  /// This feature allows you to use a custom image provider.
+  /// This is useful if you want to manage image loading yourself, or if you need to cache images.
+  /// You can also use the `cached_network_image` feature, but when it comes to caching, you might want to decide on a per-message basis.
+  /// Plus, by using this provider, you can choose whether or not to send specific headers based on the URL.
+  final ImageProvider Function({
+    required String uri,
+    required Map<String, String>? imageHeaders,
+    required Conditional conditional,
+  })? imageProviderBuilder;
+
   @override
   Widget build(BuildContext context) {
     return switch (message.messageType) {
       MessageType.voice => Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4.0, bottom: 4.0),
+            child: Row(
+                children: [
+                  Icon(
+                    Icons.mic,
+                    color: sendMessageConfig?.micIconColor,
+                  ),
+                  const SizedBox(width: 4),
+                  if (message.voiceMessageDuration != null)
+                    Text(
+                      message.voiceMessageDuration!.toHHMMSS(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: sendMessageConfig?.replyMessageColor ?? Colors.black,
+                      ),
+                    ),
+                ],
+              ),
+          ),
+        ],
+      ),
+      MessageType.image => Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Icon(
-              Icons.mic,
-              color: sendMessageConfig?.micIconColor,
+            Padding(
+              padding: const EdgeInsets.only(left: 6.0, bottom: 6.0),
+              child: Icon(
+                Icons.photo,
+                size: 20,
+                color: sendMessageConfig?.replyMessageColor ??
+                    Colors.grey.shade700,
+              ),
             ),
-            const SizedBox(width: 4),
-            if (message.voiceMessageDuration != null)
-              Text(
-                message.voiceMessageDuration!.toHHMMSS(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6.0),
+              child: Text(
+                PackageStrings.photo,
                 style: TextStyle(
-                  fontSize: 12,
                   color: sendMessageConfig?.replyMessageColor ?? Colors.black,
                 ),
               ),
-          ],
-        ),
-      MessageType.image => Row(
-          children: [
-            Icon(
-              Icons.photo,
-              size: 20,
-              color:
-                  sendMessageConfig?.replyMessageColor ?? Colors.grey.shade700,
             ),
-            Text(
-              PackageStrings.photo,
-              style: TextStyle(
-                color: sendMessageConfig?.replyMessageColor ?? Colors.black,
-              ),
+            const Spacer(),
+
+            ImageProviderWidget(
+              width: 40,
+              height: 55,
+              fit: BoxFit.cover,
+              imageUri: message.mediaPath,
+              imageHeaders: imageHeaders,
+              imageProviderBuilder: imageProviderBuilder,
             ),
+            // Image.file(
+            //   File(message.mediaPath),
+            //   width: 40,
+            //   height: 55,
+            //   fit: BoxFit.cover,
+            // )
           ],
         ),
       MessageType.custom when customMessageReplyViewBuilder != null =>
         customMessageReplyViewBuilder!(message),
-      MessageType.custom || MessageType.text => Text(
-          message.message,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 12,
-            color: sendMessageConfig?.replyMessageColor ?? Colors.black,
+      MessageType.custom || MessageType.text => Padding(
+        padding: const EdgeInsets.all(6.0),
+        child: Text(
+            message.text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              color: sendMessageConfig?.replyMessageColor ?? Colors.black,
+            ),
           ),
-        ),
+      ),
     };
   }
 }

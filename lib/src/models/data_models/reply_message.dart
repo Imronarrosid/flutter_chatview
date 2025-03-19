@@ -23,7 +23,7 @@ import '../../values/enumeration.dart';
 
 class ReplyMessage {
   /// Provides reply message.
-  final String message;
+  final String mediaPath;
 
   /// Provides user id of who replied message.
   final String replyBy;
@@ -38,9 +38,12 @@ class ReplyMessage {
   /// Id of message, it replies to.
   final String messageId;
 
+  final String text;
+
   const ReplyMessage({
     this.messageId = '',
-    this.message = '',
+    this.mediaPath = '',
+    this.text = '',
     this.replyTo = '',
     this.replyBy = '',
     this.messageType = MessageType.text,
@@ -48,7 +51,8 @@ class ReplyMessage {
   });
 
   factory ReplyMessage.fromJson(Map<String, dynamic> json) => ReplyMessage(
-        message: json['message']?.toString() ?? '',
+        mediaPath: json['mediaPath']?.toString() ?? '',
+        text: json['text']?.toString() ?? '',
         replyBy: json['replyBy']?.toString() ?? '',
         replyTo: json['replyTo']?.toString() ?? '',
         messageType: MessageType.tryParse(json['message_type']?.toString()) ??
@@ -61,7 +65,8 @@ class ReplyMessage {
       );
 
   Map<String, dynamic> toJson() => {
-        'message': message,
+        'mediaPath': mediaPath,
+        'text': text,
         'replyBy': replyBy,
         'replyTo': replyTo,
         'message_type': messageType.name,
@@ -71,7 +76,8 @@ class ReplyMessage {
 
   ReplyMessage copyWith({
     String? messageId,
-    String? message,
+    String? mediaPath,
+    String? text,
     String? replyTo,
     String? replyBy,
     MessageType? messageType,
@@ -80,7 +86,8 @@ class ReplyMessage {
   }) {
     return ReplyMessage(
       messageId: messageId ?? this.messageId,
-      message: message ?? this.message,
+      mediaPath: mediaPath ?? this.mediaPath,
+      text: text ?? this.text,
       replyTo: replyTo ?? this.replyTo,
       replyBy: replyBy ?? this.replyBy,
       messageType: messageType ?? this.messageType,

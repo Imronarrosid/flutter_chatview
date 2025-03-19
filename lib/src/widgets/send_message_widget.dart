@@ -180,7 +180,8 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
                                 builder: (_, state, child) {
                                   final replyTitle =
                                       "${PackageStrings.replyTo} $_replyTo";
-                                  if (state.message.isNotEmpty) {
+                                  if (state.mediaPath.isNotEmpty ||
+                                      state.text.isNotEmpty) {
                                     return widget.replyMessageBuilder
                                             ?.call(context, state) ??
                                         Container(
@@ -204,68 +205,114 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
                                             leftPadding,
                                             30,
                                           ),
-                                          child: Container(
-                                            margin: const EdgeInsets.only(
-                                                bottom: 2),
-                                            decoration: BoxDecoration(
-                                              color: widget.sendMessageConfig
-                                                      ?.replyDialogColor ??
-                                                  Colors.grey.shade200,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Expanded(
-                                                      child: Text(
-                                                        replyTitle,
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        style: TextStyle(
-                                                          color: widget
-                                                                  .sendMessageConfig
-                                                                  ?.replyTitleColor ??
-                                                              Colors.deepPurple,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          letterSpacing: 0.25,
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(5),
+                                            child: Container(
+                                              height: 55,
+                                              margin: const EdgeInsets.only(
+                                                  bottom: 2),
+                                              decoration: BoxDecoration(
+                                                color: widget.sendMessageConfig
+                                                        ?.replyDialogColor ??
+                                                    Colors.grey.shade200,
+                                              ),
+                                              child: Stack(
+                                                children: [
+                                                  Align(
+                                                    alignment:
+                                                        Alignment.bottomLeft,
+                                                    child: ReplyMessageView(
+                                                      message: state,
+                                                      customMessageReplyViewBuilder:
+                                                          widget.messageConfig
+                                                              ?.customMessageReplyViewBuilder,
+                                                      sendMessageConfig: widget
+                                                          .sendMessageConfig,
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 6.0,
+                                                        vertical: 4),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Text(
+                                                          replyTitle,
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style: TextStyle(
+                                                            color: widget
+                                                                    .sendMessageConfig
+                                                                    ?.replyTitleColor ??
+                                                                Colors
+                                                                    .deepPurple,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            letterSpacing: 0.25,
+                                                          ),
                                                         ),
-                                                      ),
+                                                        const Spacer(),
+                                                        Material(
+                                                          color:
+                                                              Colors.grey[200],
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        30),
+                                                          ),
+                                                          child: InkWell(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        30),
+                                                            onTap: onCloseTap,
+                                                            child: Container(
+                                                              constraints:
+                                                                  const BoxConstraints(
+                                                                maxHeight: 16,
+                                                                minHeight: 14,
+                                                                maxWidth: 16,
+                                                                minWidth: 14,
+                                                              ),
+                                                              // style: IconButton
+                                                              //     .styleFrom(
+                                                              //   backgroundColor:
+                                                              //       Colors.amber,
+                                                              //   padding:
+                                                              //       EdgeInsets.zero,
+                                                              //   fixedSize:
+                                                              //       Size(16, 16),
+                                                              // ),
+                                                              padding:
+                                                                  EdgeInsets
+                                                                      .zero,
+                                                              child: Icon(
+                                                                Icons.close,
+                                                                color: widget
+                                                                        .sendMessageConfig
+                                                                        ?.closeIconColor ??
+                                                                    Colors
+                                                                        .black26,
+                                                                size: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                    IconButton(
-                                                      constraints:
-                                                          const BoxConstraints(),
-                                                      padding: EdgeInsets.zero,
-                                                      icon: Icon(
-                                                        Icons.close,
-                                                        color: widget
-                                                                .sendMessageConfig
-                                                                ?.closeIconColor ??
-                                                            Colors.black,
-                                                        size: 16,
-                                                      ),
-                                                      onPressed: onCloseTap,
-                                                    ),
-                                                  ],
-                                                ),
-                                                ReplyMessageView(
-                                                  message: state,
-                                                  customMessageReplyViewBuilder:
-                                                      widget.messageConfig
-                                                          ?.customMessageReplyViewBuilder,
-                                                  sendMessageConfig:
-                                                      widget.sendMessageConfig,
-                                                ),
-                                              ],
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         );
@@ -336,7 +383,9 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
   }
 
   void _assignRepliedMessage() {
-    if (replyMessage.message.isNotEmpty) {
+    if (replyMessage.text.isNotEmpty ||
+        (replyMessage.messageType == MessageType.image &&
+            replyMessage.mediaPath.isNotEmpty)) {
       _replyMessage.value = const ReplyMessage();
     }
   }
@@ -358,7 +407,8 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
   void assignReplyMessage(Message message) {
     if (currentUser != null) {
       _replyMessage.value = ReplyMessage(
-        message: message.text,
+        mediaPath: message.mediaPath,
+        text: message.text,
         replyBy: currentUser!.id,
         replyTo: message.sentBy,
         messageType: message.messageType,

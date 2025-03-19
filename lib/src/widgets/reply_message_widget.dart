@@ -19,15 +19,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import 'dart:io';
+
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:chatview/src/extensions/extensions.dart';
 import 'package:flutter/material.dart';
 
+import '../conditional/conditional.dart';
 import '../models/data_models/message.dart';
 import '../models/config_models/replied_message_configuration.dart';
 import '../utils/constants/constants.dart';
 import '../utils/package_strings.dart';
 import 'chat_view_inherited_widget.dart';
+import 'image_provider_widget.dart';
 import 'vertical_line.dart';
 
 class ReplyMessageWidget extends StatelessWidget {
@@ -36,6 +40,8 @@ class ReplyMessageWidget extends StatelessWidget {
     required this.message,
     this.repliedMessageConfig,
     this.onTap,
+    this.imageHeaders,
+    this.imageProviderBuilder,
   }) : super(key: key);
 
   /// Provides message instance of chat.
@@ -48,13 +54,28 @@ class ReplyMessageWidget extends StatelessWidget {
   /// Provides call back when user taps on replied message.
   final VoidCallback? onTap;
 
+  // final TextFieldConfiguration? textFieldConfig;
+  final Map<String, String>? imageHeaders;
+
+  /// This feature allows you to use a custom image provider.
+  /// This is useful if you want to manage image loading yourself, or if you need to cache images.
+  /// You can also use the `cached_network_image` feature, but when it comes to caching, you might want to decide on a per-message basis.
+  /// Plus, by using this provider, you can choose whether or not to send specific headers based on the URL.
+  final ImageProvider Function({
+    required String uri,
+    required Map<String, String>? imageHeaders,
+    required Conditional conditional,
+  })? imageProviderBuilder;
+
   @override
   Widget build(BuildContext context) {
     final chatController = ChatViewInheritedWidget.of(context)?.chatController;
     final currentUser = chatController?.currentUser;
     final replyBySender = message.replyMessage.replyBy == currentUser?.id;
     final textTheme = Theme.of(context).textTheme;
-    final replyMessage = message.replyMessage.message;
+    final replyMessage = message.replyMessage.messageType.isImage
+        ? message.replyMessage.mediaPath
+        : message.replyMessage.text;
     final messagedUser =
         chatController?.getUserFromId(message.replyMessage.replyBy);
     final replyBy = replyBySender ? PackageStrings.you : messagedUser?.name;
@@ -96,23 +117,34 @@ class ReplyMessageWidget extends StatelessWidget {
                     child: Opacity(
                       opacity: repliedMessageConfig?.opacity ?? 0.8,
                       child: message.replyMessage.messageType.isImage
-                          ? Container(
-                              height: repliedMessageConfig
-                                      ?.repliedImageMessageHeight ??
-                                  100,
-                              width: repliedMessageConfig
-                                      ?.repliedImageMessageWidth ??
-                                  80,
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  image: NetworkImage(replyMessage),
-                                  fit: BoxFit.fill,
+                          ? ClipRRect(
+                                  borderRadius:
+                                      repliedMessageConfig?.borderRadius ??
+                                          BorderRadius.circular(14),
+                            child: Container(
+                                height: repliedMessageConfig
+                                        ?.repliedImageMessageHeight ??
+                                    100,
+                                width: repliedMessageConfig
+                                        ?.repliedImageMessageWidth ??
+                                    80,
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                      repliedMessageConfig?.borderRadius ??
+                                          BorderRadius.circular(14),
+                                  // image: DecorationImage(
+                                  //   image: FileImage(File(replyMessage)),
+                                  //   fit: BoxFit.fill,
+                                  // ),
                                 ),
-                                borderRadius:
-                                    repliedMessageConfig?.borderRadius ??
-                                        BorderRadius.circular(14),
+                                child: ImageProviderWidget(
+                                  fit: BoxFit.cover,
+                                  imageUri: replyMessage,
+                                  imageHeaders: imageHeaders,
+                                  imageProviderBuilder: imageProviderBuilder,
+                                ),
                               ),
-                            )
+                          )
                           : Container(
                               constraints: BoxConstraints(
                                 maxWidth: repliedMessageConfig?.maxWidth ?? 280,

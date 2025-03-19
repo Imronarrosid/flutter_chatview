@@ -68,6 +68,7 @@ class ChatView extends StatefulWidget {
     this.scrollToBottomButtonConfig,
     this.imageProviderBuilder,
     this.mediaPreviewConfig,
+    this.imageHeaders,
   })  : chatBackgroundConfig =
             chatBackgroundConfig ?? const ChatBackgroundConfiguration(),
         chatViewStateConfig =
@@ -159,6 +160,9 @@ class ChatView extends StatefulWidget {
 
   /// Provides a configuration for scroll to bottom button config
   final ScrollToBottomButtonConfig? scrollToBottomButtonConfig;
+
+  // final TextFieldConfiguration? textFieldConfig;
+  final Map<String, String>? imageHeaders;
 
   /// This feature allows you to use a custom image provider.
   /// This is useful if you want to manage image loading yourself, or if you need to cache images.
@@ -304,6 +308,9 @@ class _ChatViewState extends State<ChatView>
                                         valueListenable: replyMessage,
                                         builder: (_, state, child) {
                                           return ChatListWidget(
+                                            imageHeaders: widget.imageHeaders,
+                                            imageProviderBuilder:
+                                                widget.imageProviderBuilder,
                                             chatViewRenderBox:
                                                 chatViewRenderBox,
                                             replyMessage: state,
@@ -443,7 +450,7 @@ class _ChatViewState extends State<ChatView>
   void replyMessageViewClose() => _sendMessageKey.currentState?.onCloseTap();
 
   void _assignReplyMessage() {
-    if (replyMessage.value.message.isNotEmpty) {
+    if (replyMessage.value.mediaPath.isNotEmpty) {
       replyMessage.value = const ReplyMessage();
     }
   }

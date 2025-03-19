@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:chatview/chatview.dart';
 import 'package:chatview/src/conditional/conditional.dart';
 import 'package:chatview/src/utils/package_strings.dart';
+import 'package:chatview/src/widgets/image_provider_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -54,33 +55,10 @@ class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
           GestureDetector(
             onVerticalDragEnd: (_) {},
             child: Center(
-              child: Image(
-                width: double.infinity,
-                height: double.infinity,
-                image: widget.imageProviderBuilder != null
-                    ? widget.imageProviderBuilder!(
-                        uri: widget.imageUri,
-                        imageHeaders: widget.imageHeaders,
-                        conditional: Conditional(),
-                      )
-                    : Conditional().getProvider(
-                        widget.imageUri,
-                        headers: widget.imageHeaders,
-                      ),
-                fit: BoxFit.contain,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) {
-                    return child;
-                  }
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  );
-                },
+              child: ImageProviderWidget(
+                imageUri: widget.imageUri,
+                imageHeaders: widget.imageHeaders,
+                imageProviderBuilder: widget.imageProviderBuilder,
               ),
             ),
           ),

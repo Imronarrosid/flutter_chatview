@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 import 'package:chatview/chatview.dart';
+import 'package:chatview/src/conditional/conditional.dart';
 import 'package:chatview/src/extensions/extensions.dart';
 import 'package:chatview/src/utils/constants/constants.dart';
 import 'package:chatview/src/widgets/suggestions/suggestion_list.dart';
@@ -42,6 +43,8 @@ class ChatGroupedListWidget extends StatefulWidget {
     required this.isEnableSwipeToSeeTime,
     this.chatViewRenderBox,
     required this.imageListNotifier,
+    this.imageHeaders,
+    this.imageProviderBuilder,
   }) : super(key: key);
 
   /// Allow user to swipe to see time while reaction pop is not open.
@@ -69,6 +72,19 @@ class ChatGroupedListWidget extends StatefulWidget {
   final RenderBox? chatViewRenderBox;
 
   final ValueNotifier<List<PreviewImage>> imageListNotifier;
+
+  // final TextFieldConfiguration? textFieldConfig;
+  final Map<String, String>? imageHeaders;
+
+  /// This feature allows you to use a custom image provider.
+  /// This is useful if you want to manage image loading yourself, or if you need to cache images.
+  /// You can also use the `cached_network_image` feature, but when it comes to caching, you might want to decide on a per-message basis.
+  /// Plus, by using this provider, you can choose whether or not to send specific headers based on the URL.
+  final ImageProvider Function({
+    required String uri,
+    required Map<String, String>? imageHeaders,
+    required Conditional conditional,
+  })? imageProviderBuilder;
 
   @override
   State<ChatGroupedListWidget> createState() => _ChatGroupedListWidgetState();
