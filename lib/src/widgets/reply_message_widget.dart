@@ -19,8 +19,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import 'dart:io';
-
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:chatview/src/extensions/extensions.dart';
 import 'package:flutter/material.dart';
@@ -118,10 +116,10 @@ class ReplyMessageWidget extends StatelessWidget {
                       opacity: repliedMessageConfig?.opacity ?? 0.8,
                       child: message.replyMessage.messageType.isImage
                           ? ClipRRect(
-                                  borderRadius:
-                                      repliedMessageConfig?.borderRadius ??
-                                          BorderRadius.circular(14),
-                            child: Container(
+                              borderRadius:
+                                  repliedMessageConfig?.borderRadius ??
+                                      BorderRadius.circular(14),
+                              child: Container(
                                 height: repliedMessageConfig
                                         ?.repliedImageMessageHeight ??
                                     100,
@@ -144,7 +142,7 @@ class ReplyMessageWidget extends StatelessWidget {
                                   imageProviderBuilder: imageProviderBuilder,
                                 ),
                               ),
-                          )
+                            )
                           : Container(
                               constraints: BoxConstraints(
                                 maxWidth: repliedMessageConfig?.maxWidth ?? 280,

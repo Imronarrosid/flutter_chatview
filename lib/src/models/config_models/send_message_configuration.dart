@@ -24,6 +24,7 @@ import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'reply_message_view_configuration.dart';
 
 import '../../values/enumeration.dart';
 import '../../values/typedefs.dart';
@@ -37,18 +38,6 @@ class SendMessageConfiguration {
 
   /// Provides ability to give custom send button.
   final Widget? sendButtonIcon;
-
-  /// Used to give reply dialog color.
-  final Color? replyDialogColor;
-
-  /// Used to give color to title of reply pop-up.
-  final Color? replyTitleColor;
-
-  /// Used to give color to reply message.
-  final Color? replyMessageColor;
-
-  /// Used to give color to close icon in reply pop-up.
-  final Color? closeIconColor;
 
   /// Provides configuration of image picker functionality.
   final ImagePickerIconsConfiguration? imagePickerIconsConfig;
@@ -68,14 +57,15 @@ class SendMessageConfiguration {
   /// Enable/disable send image from camera. Enabled by default.
   final bool enableCameraImagePicker;
 
-  /// Color of mic icon when replying to some voice message.
-  final Color? micIconColor;
 
   /// Styling configuration for recorder widget.
   final VoiceRecordingConfiguration? voiceRecordingConfiguration;
 
   /// Configuration for cancel voice recording
   final CancelRecordConfiguration? cancelRecordConfiguration;
+
+  /// Configuration for customizing the reply message view appearance.
+  final ReplyMessageViewConfiguration? replyMessageConfiguration;
 
   const SendMessageConfiguration({
     this.textFieldConfig,
@@ -84,17 +74,44 @@ class SendMessageConfiguration {
     this.imagePickerConfiguration,
     this.defaultSendButtonColor,
     this.sendButtonIcon,
-    this.replyDialogColor,
-    this.replyTitleColor,
-    this.replyMessageColor,
-    this.closeIconColor,
     this.allowRecordingVoice = true,
     this.enableCameraImagePicker = true,
     this.enableGalleryImagePicker = true,
     this.voiceRecordingConfiguration,
-    this.micIconColor,
     this.cancelRecordConfiguration,
+    this.replyMessageConfiguration,
   });
+
+  /// Creates a copy of this configuration with the given fields replaced with new values.
+  SendMessageConfiguration copyWith({
+    Color? textFieldBackgroundColor,
+    Color? defaultSendButtonColor,
+    Widget? sendButtonIcon,
+    ImagePickerIconsConfiguration? imagePickerIconsConfig,
+    ImagePickerConfiguration? imagePickerConfiguration,
+    TextFieldConfiguration? textFieldConfig,
+    bool? allowRecordingVoice,
+    bool? enableGalleryImagePicker,
+    bool? enableCameraImagePicker,
+    VoiceRecordingConfiguration? voiceRecordingConfiguration,
+    CancelRecordConfiguration? cancelRecordConfiguration,
+    ReplyMessageViewConfiguration? replyMessageConfiguration,
+  }) {
+    return SendMessageConfiguration(
+      textFieldConfig: textFieldConfig ?? this.textFieldConfig,
+      textFieldBackgroundColor: textFieldBackgroundColor ?? this.textFieldBackgroundColor,
+      imagePickerIconsConfig: imagePickerIconsConfig ?? this.imagePickerIconsConfig,
+      imagePickerConfiguration: imagePickerConfiguration ?? this.imagePickerConfiguration,
+      defaultSendButtonColor: defaultSendButtonColor ?? this.defaultSendButtonColor,
+      sendButtonIcon: sendButtonIcon ?? this.sendButtonIcon,
+      allowRecordingVoice: allowRecordingVoice ?? this.allowRecordingVoice,
+      enableCameraImagePicker: enableCameraImagePicker ?? this.enableCameraImagePicker,
+      enableGalleryImagePicker: enableGalleryImagePicker ?? this.enableGalleryImagePicker,
+      voiceRecordingConfiguration: voiceRecordingConfiguration ?? this.voiceRecordingConfiguration,
+      cancelRecordConfiguration: cancelRecordConfiguration ?? this.cancelRecordConfiguration,
+      replyMessageConfiguration: replyMessageConfiguration ?? this.replyMessageConfiguration,
+    );
+  }
 }
 
 class ImagePickerIconsConfiguration {

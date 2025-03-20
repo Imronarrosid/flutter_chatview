@@ -205,113 +205,122 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
                                             leftPadding,
                                             30,
                                           ),
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(5),
-                                            child: Container(
-                                              height: 55,
-                                              margin: const EdgeInsets.only(
-                                                  bottom: 2),
-                                              decoration: BoxDecoration(
-                                                color: widget.sendMessageConfig
-                                                        ?.replyDialogColor ??
-                                                    Colors.grey.shade200,
-                                              ),
-                                              child: Stack(
-                                                children: [
-                                                  Align(
-                                                    alignment:
-                                                        Alignment.bottomLeft,
-                                                    child: ReplyMessageView(
-                                                      message: state,
-                                                      customMessageReplyViewBuilder:
-                                                          widget.messageConfig
-                                                              ?.customMessageReplyViewBuilder,
-                                                      sendMessageConfig: widget
-                                                          .sendMessageConfig,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom: 2.0),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(5),
+                                              child: Container(
+                                                height: 55,
+                                                decoration: BoxDecoration(
+                                                  color: widget
+                                                          .sendMessageConfig
+                                                          ?.replyMessageConfiguration
+                                                          ?.replyDialogColor ??
+                                                      Colors.grey.shade200,
+                                                ),
+                                                child: Stack(
+                                                  children: [
+                                                    Align(
+                                                      alignment:
+                                                          Alignment.bottomLeft,
+                                                      child: ReplyMessageView(
+                                                        message: state,
+                                                        customMessageReplyViewBuilder:
+                                                            widget.messageConfig
+                                                                ?.customMessageReplyViewBuilder,
+                                                        sendMessageConfig: widget
+                                                            .sendMessageConfig,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  Padding(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 6.0,
-                                                        vertical: 4),
-                                                    child: Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        Text(
-                                                          replyTitle,
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          style: TextStyle(
-                                                            color: widget
-                                                                    .sendMessageConfig
-                                                                    ?.replyTitleColor ??
-                                                                Colors
-                                                                    .deepPurple,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            letterSpacing: 0.25,
+                                                    Padding(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 6.0,
+                                                          vertical: 4),
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          Text(
+                                                            replyTitle,
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style: TextStyle(
+                                                              color: widget
+                                                                      .sendMessageConfig
+                                                                      ?.replyMessageConfiguration
+                                                                      ?.replyTitleColor ??
+                                                                  Colors
+                                                                      .deepPurple,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              letterSpacing:
+                                                                  0.25,
+                                                            ),
                                                           ),
-                                                        ),
-                                                        const Spacer(),
-                                                        Material(
-                                                          color:
-                                                              Colors.grey[200],
-                                                          shape:
-                                                              RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        30),
-                                                          ),
-                                                          child: InkWell(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        30),
-                                                            onTap: onCloseTap,
-                                                            child: Container(
-                                                              constraints:
-                                                                  const BoxConstraints(
-                                                                maxHeight: 16,
-                                                                minHeight: 14,
-                                                                maxWidth: 16,
-                                                                minWidth: 14,
-                                                              ),
-                                                              // style: IconButton
-                                                              //     .styleFrom(
-                                                              //   backgroundColor:
-                                                              //       Colors.amber,
-                                                              //   padding:
-                                                              //       EdgeInsets.zero,
-                                                              //   fixedSize:
-                                                              //       Size(16, 16),
-                                                              // ),
-                                                              padding:
-                                                                  EdgeInsets
-                                                                      .zero,
-                                                              child: Icon(
-                                                                Icons.close,
-                                                                color: widget
-                                                                        .sendMessageConfig
-                                                                        ?.closeIconColor ??
-                                                                    Colors
-                                                                        .black26,
-                                                                size: 16,
+                                                          const Spacer(),
+                                                          Material(
+                                                            color: Colors
+                                                                .grey[200],
+                                                            shape:
+                                                                RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          30),
+                                                            ),
+                                                            child: InkWell(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          30),
+                                                              onTap: onCloseTap,
+                                                              child: Container(
+                                                                constraints:
+                                                                    const BoxConstraints(
+                                                                  maxHeight: 16,
+                                                                  minHeight: 14,
+                                                                  maxWidth: 16,
+                                                                  minWidth: 14,
+                                                                ),
+                                                                // style: IconButton
+                                                                //     .styleFrom(
+                                                                //   backgroundColor:
+                                                                //       Colors.amber,
+                                                                //   padding:
+                                                                //       EdgeInsets.zero,
+                                                                //   fixedSize:
+                                                                //       Size(16, 16),
+                                                                // ),
+                                                                padding:
+                                                                    EdgeInsets
+                                                                        .zero,
+                                                                child: Icon(
+                                                                  Icons.close,
+                                                                  color: widget
+                                                                          .sendMessageConfig
+                                                                          ?.replyMessageConfiguration
+                                                                          ?.closeIconColor ??
+                                                                      Colors
+                                                                          .black26,
+                                                                  size: 16,
+                                                                ),
                                                               ),
                                                             ),
                                                           ),
-                                                        ),
-                                                      ],
+                                                        ],
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                           ),

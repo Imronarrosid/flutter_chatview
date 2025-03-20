@@ -62,47 +62,55 @@ class ReplyMessageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return switch (message.messageType) {
       MessageType.voice => Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4.0, bottom: 4.0),
-            child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 4.0, bottom: 4.0),
+              child: Row(
                 children: [
-                  Icon(
-                    Icons.mic,
-                    color: sendMessageConfig?.micIconColor,
-                  ),
+                  sendMessageConfig?.replyMessageConfiguration?.micIcon ??
+                      Icon(
+                        Icons.mic,
+                        color: sendMessageConfig
+                            ?.replyMessageConfiguration?.micIconColor,
+                      ),
                   const SizedBox(width: 4),
                   if (message.voiceMessageDuration != null)
                     Text(
                       message.voiceMessageDuration!.toHHMMSS(),
                       style: TextStyle(
                         fontSize: 12,
-                        color: sendMessageConfig?.replyMessageColor ?? Colors.black,
+                        color: sendMessageConfig?.replyMessageConfiguration
+                                ?.replyMessageColor ??
+                            Colors.black,
                       ),
                     ),
                 ],
               ),
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
       MessageType.image => Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Padding(
               padding: const EdgeInsets.only(left: 6.0, bottom: 6.0),
-              child: Icon(
-                Icons.photo,
-                size: 20,
-                color: sendMessageConfig?.replyMessageColor ??
-                    Colors.grey.shade700,
-              ),
+              child: sendMessageConfig?.replyMessageConfiguration?.imageIcon ??
+                  Icon(
+                    Icons.photo,
+                    size: 20,
+                    color: sendMessageConfig
+                            ?.replyMessageConfiguration?.replyMessageColor ??
+                        Colors.grey.shade700,
+                  ),
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: 6.0),
               child: Text(
                 PackageStrings.photo,
                 style: TextStyle(
-                  color: sendMessageConfig?.replyMessageColor ?? Colors.black,
+                  color: sendMessageConfig
+                          ?.replyMessageConfiguration?.replyMessageColor ??
+                      Colors.black,
                 ),
               ),
             ),
@@ -127,17 +135,19 @@ class ReplyMessageView extends StatelessWidget {
       MessageType.custom when customMessageReplyViewBuilder != null =>
         customMessageReplyViewBuilder!(message),
       MessageType.custom || MessageType.text => Padding(
-        padding: const EdgeInsets.all(6.0),
-        child: Text(
+          padding: const EdgeInsets.all(6.0),
+          child: Text(
             message.text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 12,
-              color: sendMessageConfig?.replyMessageColor ?? Colors.black,
+              color: sendMessageConfig
+                      ?.replyMessageConfiguration?.replyMessageColor ??
+                  Colors.black,
             ),
           ),
-      ),
+        ),
     };
   }
 }

@@ -49,3 +49,4 @@ export 'config_models/scroll_to_bottom_button_config.dart';
 export 'config_models/voice_message_configuration.dart';
 export 'data_models/image_preview.dart';
 export 'config_models/media_preview_config.dart';
+export 'config_models/reply_message_view_configuration.dart';
