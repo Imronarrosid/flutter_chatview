@@ -40,7 +40,17 @@ class ReceiptsWidgetConfig {
   /// Whether to show receipts in all messages or not defaults to [ShowReceiptsIn.lastMessage]
   final ShowReceiptsIn showReceiptsIn;
 
+  /// Provide receipt widget width,
+  ///
+  final double width;
+
+  /// Provide receipt widget height,
+  ///
+  final double height;
+
   const ReceiptsWidgetConfig({
+    this.width = receiptWidth,
+    this.height = receiptHeight,
     this.receiptsBuilder,
     this.lastSeenAgoBuilder,
     this.showReceiptsIn = ShowReceiptsIn.lastMessage,

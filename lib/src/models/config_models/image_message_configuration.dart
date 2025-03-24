@@ -58,7 +58,8 @@ class ImageMessageConfiguration {
 
   final Map<String, String>? imageHeaders;
 
-  final CreatedAtWidget? messageTimeBuilder;
+  /// Used for giving text style of message time.
+  final TextStyle? messageTimeTextStyle;
 
   /// This feature allows you to use a custom image provider.
   /// This is useful if you want to manage image loading yourself, or if you need to cache images.
@@ -71,8 +72,8 @@ class ImageMessageConfiguration {
   })? imageProviderBuilder;
 
   const ImageMessageConfiguration({
-    this.hideShareIcon = false,
     this.shareIconConfig,
+    this.hideShareIcon = false,
     this.onTap,
     this.height,
     this.width,
@@ -83,7 +84,7 @@ class ImageMessageConfiguration {
     this.imageGalleryOptions = const ImageGalleryOptions(),
     this.imageProviderBuilder,
     this.imageHeaders,
-    this.messageTimeBuilder,
+    this.messageTimeTextStyle,
     this.captionPadding,
   });
 }

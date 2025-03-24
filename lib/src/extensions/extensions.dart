@@ -50,6 +50,7 @@ extension TimeDifference on DateTime {
   }
 
   String get getTimeFromDateTime => DateFormat.Hm().format(this);
+  String get getTimeFromDateTime12hr => DateFormat.jm().format(this);
 }
 
 /// Extension on String which implements different types string validations.

@@ -1,8 +1,9 @@
 import 'package:chatview/chatview.dart';
+import 'package:chatview/src/extensions/extensions.dart';
 import 'package:chatview/src/inherited_widgets/configurations_inherited_widgets.dart';
 import 'package:chatview/src/utils/constants/constants.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'chat_view_inherited_widget.dart';
 
 import 'package:intl/intl.dart' as intl;
@@ -48,6 +49,28 @@ class _TimedAndReceiptMessageWidgetState
     extends State<TimedAndReceiptMessageWidget> {
   late final AdditionalPadding additionalPadding = AdditionalPadding();
 
+  final GlobalKey _timestampsKey = GlobalKey();
+
+  double timestampsWidth = 0;
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) {
+        setState(() {
+          RenderBox renderBox =
+              _timestampsKey.currentContext!.findRenderObject() as RenderBox;
+
+          timestampsWidth = renderBox.size.width;
+
+          print('timestamps $timestampsWidth ${renderBox.size.height}');
+        });
+      },
+    );
+
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     bool is24HoursFormat = MediaQuery.of(context).alwaysUse24HourFormat;
@@ -61,6 +84,7 @@ class _TimedAndReceiptMessageWidgetState
         (_textStyle ?? textTheme.bodyMedium!.copyWith(fontSize: 14))
             .merge(DefaultTextStyle.of(context).style),
         constraints.maxWidth - (padding.left + padding.right),
+        is24HoursFormat,
       );
 
       return Stack(
@@ -75,27 +99,16 @@ class _TimedAndReceiptMessageWidgetState
             bottom: 0,
             right: 4,
             child: Container(
+              key: _timestampsKey,
               decoration: widget.decoration ?? const BoxDecoration(),
               child: Row(
                 children: [
-                  widget.imageMessageConfiguration?.messageTimeBuilder?.call(
-                        widget.message.createdAt,
-                      ) ??
-                      _bubbleConfig?.messageTimeBuilder?.call(
-                        widget.message.createdAt,
-                      ) ??
-                      Text(
-                        intl.DateFormat('hh:mm${(is24HoursFormat) ? ' a' : ''}')
-                            .format(widget.message.createdAt),
-                        style: TextStyle(
-                          color:
-                              widget.message.messageType == MessageType.image &&
-                                      (widget.message.text.trim().isEmpty)
-                                  ? Colors.white
-                                  : Colors.black45,
-                          fontSize: 13.5,
-                        ),
-                      ),
+                  Text(
+                    is24HoursFormat
+                        ? widget.message.createdAt.getTimeFromDateTime
+                        : widget.message.createdAt.getTimeFromDateTime12hr,
+                    style: _messageTimeStyle,
+                  ),
                   if (widget.isMessageBySender) getReceipt(),
                 ],
               ),
@@ -106,47 +119,101 @@ class _TimedAndReceiptMessageWidgetState
     });
   }
 
+  TextStyle get _messageTimeStyle =>
+      widget.imageMessageConfiguration?.messageTimeTextStyle ??
+      _bubbleConfig?.messageTimeTextStyle ??
+      TextStyle(
+        color: widget.message.messageType == MessageType.image &&
+                (widget.message.text.trim().isEmpty)
+            ? Colors.white
+            : Colors.black45,
+        fontSize: 13.5,
+      );
+
+  ReceiptsWidgetConfig? get receiptWidgetConfig => widget.isMessageBySender
+      ? chatListConfig
+          .chatBubbleConfig?.outgoingChatBubbleConfig?.receiptsWidgetConfig
+      : chatListConfig
+          .chatBubbleConfig?.inComingChatBubbleConfig?.receiptsWidgetConfig;
+
+  bool get showReceipts =>
+      ChatViewInheritedWidget.of(context)
+          ?.featureActiveConfig
+          .receiptsBuilderVisibility ??
+      true;
+
   Widget getReceipt() {
-    final showReceipts = chatListConfig.chatBubbleConfig
-            ?.outgoingChatBubbleConfig?.receiptsWidgetConfig?.showReceiptsIn ??
-        ShowReceiptsIn.lastMessage;
-    if (showReceipts == ShowReceiptsIn.all) {
-      return ValueListenableBuilder(
-        valueListenable: widget.message.statusNotifier,
-        builder: (context, value, child) {
-          if (ChatViewInheritedWidget.of(context)
-                  ?.featureActiveConfig
-                  .receiptsBuilderVisibility ??
-              true) {
-            return chatListConfig.chatBubbleConfig?.outgoingChatBubbleConfig
-                    ?.receiptsWidgetConfig?.receiptsBuilder
-                    ?.call(value) ??
-                sendMessageAnimationBuilder(value);
+    final showReceiptsIn =
+        receiptWidgetConfig?.showReceiptsIn ?? ShowReceiptsIn.lastMessage;
+    if (!showReceipts) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      alignment: Alignment.center,
+      width: receiptWidgetConfig?.width ?? 16,
+      height: receiptWidgetConfig?.height ?? 16,
+      child: Builder(
+        builder: (context) {
+          if (showReceiptsIn == ShowReceiptsIn.all) {
+            return ValueListenableBuilder(
+              valueListenable: widget.message.statusNotifier,
+              builder: (context, value, child) {
+                if (showReceipts) {
+                  return receiptWidgetConfig?.receiptsBuilder?.call(value) ??
+                      sendMessageAnimationBuilder(value);
+                }
+                return const SizedBox();
+              },
+            );
+          } else if (showReceiptsIn == ShowReceiptsIn.lastMessage &&
+              isLastMessage) {
+            return ValueListenableBuilder(
+                valueListenable: widget
+                    .chatController.initialMessageList.last.statusNotifier,
+                builder: (context, value, child) {
+                  if (showReceipts) {
+                    return receiptWidgetConfig?.receiptsBuilder?.call(value) ??
+                        sendMessageAnimationBuilder(value);
+                  }
+                  return sendMessageAnimationBuilder(value);
+                });
           }
           return const SizedBox();
         },
-      );
-    } else if (showReceipts == ShowReceiptsIn.lastMessage && isLastMessage) {
-      return ValueListenableBuilder(
-          valueListenable:
-              widget.chatController.initialMessageList.last.statusNotifier,
-          builder: (context, value, child) {
-            if (ChatViewInheritedWidget.of(context)
-                    ?.featureActiveConfig
-                    .receiptsBuilderVisibility ??
-                true) {
-              return chatListConfig.chatBubbleConfig?.outgoingChatBubbleConfig
-                      ?.receiptsWidgetConfig?.receiptsBuilder
-                      ?.call(value) ??
-                  sendMessageAnimationBuilder(value);
-            }
-            return sendMessageAnimationBuilder(value);
-          });
-    }
-    return const SizedBox();
+      ),
+    );
   }
 
-  void _getAdditionalPadding(String text, TextStyle style, double maxWidth) {
+  double _calculateMessageTimeWidth(double maxWidth) {
+    bool is24HoursFormat = MediaQuery.of(context).alwaysUse24HourFormat;
+    final messageTimeTextSpan = TextSpan(
+      text: is24HoursFormat
+          ? widget.message.createdAt.getTimeFromDateTime
+          : widget.message.createdAt.getTimeFromDateTime12hr,
+      style: _messageTimeStyle.merge(Theme.of(context)
+          .textTheme
+          .bodyMedium
+          ?.copyWith(fontSize: _messageTimeStyle.fontSize)),
+    );
+
+    final messageTimeTextPainter = TextPainter(
+      textWidthBasis: TextWidthBasis.parent,
+      textAlign: TextAlign.left,
+      strutStyle: StrutStyle(fontSize: _messageTimeStyle.fontSize),
+      text: messageTimeTextSpan,
+      textDirection: TextDirection.ltr,
+      maxLines: null,
+    );
+
+    messageTimeTextPainter.layout(maxWidth: maxWidth);
+    return (widget.isMessageBySender
+            ? receiptWidgetConfig?.width ?? receiptWidth
+            : 0) +
+        messageTimeTextPainter.width;
+  }
+
+  void _getAdditionalPadding(
+      String text, TextStyle style, double maxWidth, bool is24HoursFormat) {
     if (text.isEmpty &&
         (widget.message.messageType.isImage ||
             widget.message.messageType.isVoice)) {
@@ -156,8 +223,6 @@ class _TimedAndReceiptMessageWidgetState
     final textSpan = TextSpan(
       text: text,
       style: style,
-      // style: style.merge(
-      //     TextTheme.of(context).bodyMedium!.copyWith(fontSize: style.fontSize)),
     );
 
     // Create a TextPainter
@@ -172,37 +237,28 @@ class _TimedAndReceiptMessageWidgetState
 
     // Layout the text with the given constraints
     textPainter.layout(maxWidth: maxWidth);
+
     // Get the number of lines
     final lineMetrics = textPainter.computeLineMetrics();
     // If there are no lines (empty text), return 0
-
-    // Get the last line's width
-    final lastLine = lineMetrics.last;
-
-    if (kDebugMode) {
-      final start = textPainter.getPositionForOffset(
-        Offset(0, lastLine.baseline - lastLine.height),
-      );
-
-      // Get the position where the last line ends
-      final end = textPainter.getPositionForOffset(
-        Offset(lastLine.width, lastLine.baseline),
-      );
-
-      // Extract and print the text of the last line
-      final lastLineText = text.substring(start.offset, end.offset);
-      print('fulltext $text ${text.split('\n').length} ');
-      print(
-          'n ${text.contains('\n')}\n lines ${lineMetrics.length}\n style: ${style.fontSize}\n Last line width: ${lastLine.width}\n text: $lastLineText \n mxw $maxWidth \n\n');
+    if (lineMetrics.isEmpty) {
+      return;
     }
+
+    // Get the last line
+    final lastLine = lineMetrics.last;
 
     double rightPadding = 0;
     double bottomPadding = 0;
-    bottomPadding =
-        lastLine.width >= maxWidth - 80 || lastLine.width >= 130 ? 8 : 0;
+
+    double timestampsWidth = _calculateMessageTimeWidth(maxWidth) + 6;
+    bottomPadding = lastLine.width >= maxWidth - (timestampsWidth + 6) ||
+            lastLine.width >= 130
+        ? 8
+        : 0;
     for (var line in lineMetrics) {
       if (line.width <= 130) {
-        rightPadding = 65;
+        rightPadding = timestampsWidth;
       } else {
         rightPadding = 0;
         break;

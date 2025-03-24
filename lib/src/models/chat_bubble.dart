@@ -32,6 +32,9 @@ class ChatBubble {
   /// Used for giving text style of chat bubble.
   final TextStyle? textStyle;
 
+  /// Used for giving text style of message time.
+  final TextStyle? messageTimeTextStyle;
+
   /// Used for giving padding of chat bubble.
   final EdgeInsetsGeometry? padding;
 
@@ -52,13 +55,11 @@ class ChatBubble {
   /// time only
   final Function(Message message)? onMessageRead;
 
-  final CreatedAtWidget? messageTimeBuilder;
-
   const ChatBubble({
-    this.messageTimeBuilder,
     this.color,
     this.borderRadius,
     this.textStyle,
+    this.messageTimeTextStyle,
     this.padding,
     this.margin,
     this.linkPreviewConfig,

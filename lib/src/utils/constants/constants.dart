@@ -58,6 +58,8 @@ const double replyBorderRadius2 = 18;
 const double leftPadding3 = 12;
 const double textFieldBorderRadius = 27;
 const String defaultChatSeparatorDatePattern = 'MMM dd, yyyy';
+const double receiptWidth = 16;
+const double receiptHeight = 16;
 
 applicationDateFormatter(DateTime inputTime) {
   if (DateTime.now().difference(inputTime).inDays <= 3) {
