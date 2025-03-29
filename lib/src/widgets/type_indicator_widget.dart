@@ -85,6 +85,25 @@ class _TypingIndicatorState extends State<TypingIndicator>
       widget.typeIndicatorConfig?.flashingCircleBrightColor ??
       const Color(0xFFadacb0);
 
+  double get _textHeight {
+    const textSpan = TextSpan(
+      text: 'Dummy',
+      style: TextStyle(fontSize: 14,height: 1.43,),
+    );
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    double textHeight = textPainter.height;
+    return textHeight;
+  }
+
+  EdgeInsets get _padding =>
+      widget.chatBubbleConfig?.padding as EdgeInsets? ??
+      const EdgeInsets.all(8.0);
+  double get bubbleHeight => _padding.top + _padding.bottom + _textHeight-2.15;
+
   @override
   void initState() {
     super.initState();
@@ -105,7 +124,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
     ).drive(
       Tween<double>(
         begin: 0.0,
-        end: 60.0,
+        end: bubbleHeight,
       ),
     );
 
@@ -203,17 +222,19 @@ class _TypingIndicatorState extends State<TypingIndicator>
     return AnimatedBuilder(
       animation: _indicatorSpaceAnimation,
       builder: (context, child) {
-        return SizedBox(
+        return Container(
+          alignment: Alignment.topLeft,
           height: _indicatorSpaceAnimation.value,
           child: child,
         );
       },
       child: Stack(
+        alignment: Alignment.topLeft,
         children: [
           _buildAnimatedBubble(
             animation: _largeBubbleAnimation,
-            left: 5,
-            bottom: 12,
+            left: 6,
+            bottom: 0,
             bubble: _buildStatusBubble(),
           ),
         ],
@@ -264,17 +285,16 @@ class _TypingIndicatorState extends State<TypingIndicator>
 
   Widget _buildStatusBubble() {
     return Container(
-      padding: chatBubbleConfig?.padding ??
-          const EdgeInsets.fromLTRB(
-              leftPadding3, 0, leftPadding3, leftPadding3),
-      margin: chatBubbleConfig?.margin ?? const EdgeInsets.fromLTRB(5, 0, 6, 2),
+      height: bubbleHeight,
+      padding: EdgeInsets.only( bottom: _padding.bottom + 4),
+      margin: chatBubbleConfig?.margin ?? const EdgeInsets.fromLTRB(5, 0, 6, 0),
       decoration: BoxDecoration(
-        borderRadius: chatBubbleConfig?.borderRadius ??
-            BorderRadius.circular(10),
+        borderRadius:
+            chatBubbleConfig?.borderRadius ?? BorderRadius.circular(10),
         color: chatBubbleConfig?.color ?? Colors.grey.shade500,
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
             _bubbleJumpAnimation(2, 0),
