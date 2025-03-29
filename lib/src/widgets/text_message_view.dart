@@ -190,13 +190,9 @@ class _TextMessageViewState extends State<TextMessageView> {
 
   BorderRadiusGeometry _borderRadius(String message) => widget.isMessageBySender
       ? widget.outgoingChatBubbleConfig?.borderRadius ??
-          (message.length < 37
-              ? BorderRadius.circular(12)
-              : BorderRadius.circular(12))
+          BorderRadius.circular(10)
       : widget.inComingChatBubbleConfig?.borderRadius ??
-          (message.length < 29
-              ? BorderRadius.circular(12)
-              : BorderRadius.circular(12));
+          BorderRadius.circular(10);
 
   Color get _color => widget.isMessageBySender
       ? widget.outgoingChatBubbleConfig?.color ?? Colors.purple
