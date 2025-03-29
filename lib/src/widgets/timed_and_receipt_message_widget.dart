@@ -3,10 +3,8 @@ import 'package:chatview/src/extensions/extensions.dart';
 import 'package:chatview/src/inherited_widgets/configurations_inherited_widgets.dart';
 import 'package:chatview/src/utils/constants/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'chat_view_inherited_widget.dart';
 
-import 'package:intl/intl.dart' as intl;
 
 class TimedAndReceiptMessageWidget extends StatefulWidget {
   final Widget child;
@@ -49,27 +47,6 @@ class _TimedAndReceiptMessageWidgetState
     extends State<TimedAndReceiptMessageWidget> {
   late final AdditionalPadding additionalPadding = AdditionalPadding();
 
-  final GlobalKey _timestampsKey = GlobalKey();
-
-  double timestampsWidth = 0;
-
-  @override
-  void initState() {
-    WidgetsBinding.instance.addPostFrameCallback(
-      (timeStamp) {
-        setState(() {
-          RenderBox renderBox =
-              _timestampsKey.currentContext!.findRenderObject() as RenderBox;
-
-          timestampsWidth = renderBox.size.width;
-
-          print('timestamps $timestampsWidth ${renderBox.size.height}');
-        });
-      },
-    );
-
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +76,6 @@ class _TimedAndReceiptMessageWidgetState
             bottom: 0,
             right: 4,
             child: Container(
-              key: _timestampsKey,
               decoration: widget.decoration ?? const BoxDecoration(),
               child: Row(
                 children: [
