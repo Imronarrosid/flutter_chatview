@@ -515,6 +515,8 @@ class _ChatGroupedListWidgetState extends State<ChatGroupedListWidget>
   ProfileCircle profileCircle(ChatUser? messagedUser, Message message) {
     final profileCircleConfig = chatListConfig.profileCircleConfig;
     return ProfileCircle(
+      imageProviderBuilder:widget.imageProviderBuilder,
+      imageHeaders: widget.imageHeaders,
       bottomPadding: message.reaction.reactions.isNotEmpty
           ? profileCircleConfig?.bottomPadding ?? 15
           : profileCircleConfig?.bottomPadding ?? 2,

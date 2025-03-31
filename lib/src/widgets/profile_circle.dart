@@ -22,6 +22,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../conditional/conditional.dart';
 import '../utils/constants/constants.dart';
 import '../values/enumeration.dart';
 import '../values/typedefs.dart';
@@ -40,7 +41,7 @@ class ProfileCircle extends StatelessWidget {
     this.assetImageErrorBuilder,
     this.networkImageErrorBuilder,
     this.imageType = ImageType.network,
-    this.networkImageProgressIndicatorBuilder,
+    this.networkImageProgressIndicatorBuilder, this.imageHeaders, this.imageProviderBuilder,
   }) : super(key: key);
 
   /// Allow users to give  default bottom padding according to user case.
@@ -78,6 +79,19 @@ class ProfileCircle extends StatelessWidget {
   /// Progress indicator builder for network image
   final ImageLoadingBuilder? networkImageProgressIndicatorBuilder;
 
+   // final TextFieldConfiguration? textFieldConfig;
+  final Map<String, String>? imageHeaders;
+
+  /// This feature allows you to use a custom image provider.
+  /// This is useful if you want to manage image loading yourself, or if you need to cache images.
+  /// You can also use the `cached_network_image` feature, but when it comes to caching, you might want to decide on a per-message basis.
+  /// Plus, by using this provider, you can choose whether or not to send specific headers based on the URL.
+  final ImageProvider Function({
+    required String uri,
+    required Map<String, String>? imageHeaders,
+    required Conditional conditional,
+  })? imageProviderBuilder;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -87,6 +101,9 @@ class ProfileCircle extends StatelessWidget {
         onLongPress: onLongPress,
         onTap: onTap,
         child: ProfileImageWidget(
+          imageHeaders: 
+              imageHeaders,
+          imageProviderBuilder: imageProviderBuilder,
           circleRadius: circleRadius ?? 16,
           imageUrl: imageUrl,
           defaultAvatarImage: defaultAvatarImage,
