@@ -57,12 +57,17 @@ class SendMessageConfiguration {
   /// Enable/disable send image from camera. Enabled by default.
   final bool enableCameraImagePicker;
 
+  /// Enable/disable hold-to-record functionality. Disabled by default.
+  final bool enableHoldToRecord;
 
   /// Styling configuration for recorder widget.
   final VoiceRecordingConfiguration? voiceRecordingConfiguration;
 
   /// Configuration for cancel voice recording
   final CancelRecordConfiguration? cancelRecordConfiguration;
+
+  /// Configuration for hold-to-record functionality
+  final HoldToRecordConfiguration? holdToRecordConfiguration;
 
   /// Configuration for customizing the reply message view appearance.
   final ReplyMessageViewConfiguration? replyMessageConfiguration;
@@ -77,8 +82,10 @@ class SendMessageConfiguration {
     this.allowRecordingVoice = true,
     this.enableCameraImagePicker = true,
     this.enableGalleryImagePicker = true,
+    this.enableHoldToRecord = false,
     this.voiceRecordingConfiguration,
     this.cancelRecordConfiguration,
+    this.holdToRecordConfiguration,
     this.replyMessageConfiguration,
   });
 
@@ -93,8 +100,10 @@ class SendMessageConfiguration {
     bool? allowRecordingVoice,
     bool? enableGalleryImagePicker,
     bool? enableCameraImagePicker,
+    bool? enableHoldToRecord,
     VoiceRecordingConfiguration? voiceRecordingConfiguration,
     CancelRecordConfiguration? cancelRecordConfiguration,
+    HoldToRecordConfiguration? holdToRecordConfiguration,
     ReplyMessageViewConfiguration? replyMessageConfiguration,
   }) {
     return SendMessageConfiguration(
@@ -107,8 +116,10 @@ class SendMessageConfiguration {
       allowRecordingVoice: allowRecordingVoice ?? this.allowRecordingVoice,
       enableCameraImagePicker: enableCameraImagePicker ?? this.enableCameraImagePicker,
       enableGalleryImagePicker: enableGalleryImagePicker ?? this.enableGalleryImagePicker,
+      enableHoldToRecord: enableHoldToRecord ?? this.enableHoldToRecord,
       voiceRecordingConfiguration: voiceRecordingConfiguration ?? this.voiceRecordingConfiguration,
       cancelRecordConfiguration: cancelRecordConfiguration ?? this.cancelRecordConfiguration,
+      holdToRecordConfiguration: holdToRecordConfiguration ?? this.holdToRecordConfiguration,
       replyMessageConfiguration: replyMessageConfiguration ?? this.replyMessageConfiguration,
     );
   }
@@ -310,4 +321,63 @@ class CancelRecordConfiguration {
 
   /// Provides callback on voice record cancel
   final VoidCallBack? onCancel;
+}
+
+/// Configuration for hold-to-record functionality
+class HoldToRecordConfiguration {
+  /// Creates a configuration for hold-to-record functionality
+  const HoldToRecordConfiguration({
+    this.holdToRecordIcon,
+    this.holdToRecordIconColor,
+    this.recordingFeedbackColor,
+    this.cancelSwipeThreshold = 50.0,
+    this.lockRecordingAfterDuration,
+    this.showRecordingText = true,
+    this.recordingText = 'Recording...',
+    this.cancelText = 'Slide left to cancel',
+    this.releaseText = 'Release to send',
+    this.textStyle,
+    this.recordingTextColor,
+    this.cancelTextColor,
+    this.releaseTextColor,
+  });
+
+  /// Icon to display for hold-to-record button
+  final Widget? holdToRecordIcon;
+
+  /// Color for the hold-to-record icon
+  final Color? holdToRecordIconColor;
+
+  /// Color for recording feedback (e.g., background color when recording)
+  final Color? recordingFeedbackColor;
+
+  /// Threshold in pixels for swipe left to cancel
+  final double cancelSwipeThreshold;
+
+  /// Optional duration after which recording is locked and won't stop on release
+  final Duration? lockRecordingAfterDuration;
+
+  /// Whether to show recording text feedback
+  final bool showRecordingText;
+
+  /// Text to show when recording
+  final String recordingText;
+
+  /// Text to show for cancel instruction
+  final String cancelText;
+
+  /// Text to show for release instruction
+  final String releaseText;
+
+  /// Text style for the recording feedback text
+  final TextStyle? textStyle;
+
+  /// Color for the recording text
+  final Color? recordingTextColor;
+
+  /// Color for the cancel text
+  final Color? cancelTextColor;
+
+  /// Color for the release text
+  final Color? releaseTextColor;
 }

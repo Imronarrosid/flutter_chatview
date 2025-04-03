@@ -73,6 +73,13 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   RecorderController? controller;
 
   ValueNotifier<bool> isRecording = ValueNotifier(false);
+  
+  // Variables for hold-to-record feature
+  ValueNotifier<bool> isHoldingRecord = ValueNotifier(false);
+  ValueNotifier<double> horizontalDragOffset = ValueNotifier(0.0);
+  ValueNotifier<bool> isCancelling = ValueNotifier(false);
+  Timer? lockRecordingTimer;
+  bool isRecordingLocked = false;
 
   SendMessageConfiguration? get sendMessageConfig => widget.sendMessageConfig;
 
@@ -87,6 +94,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
 
   CancelRecordConfiguration? get cancelRecordConfiguration =>
       sendMessageConfig?.cancelRecordConfiguration;
+      
+  HoldToRecordConfiguration? get holdToRecordConfig =>
+      sendMessageConfig?.holdToRecordConfiguration;
 
   OutlineInputBorder get _outLineBorder => OutlineInputBorder(
         borderSide: const BorderSide(color: Colors.transparent),
@@ -118,6 +128,10 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     composingStatus.dispose();
     isRecording.dispose();
     _inputText.dispose();
+    isHoldingRecord.dispose();
+    horizontalDragOffset.dispose();
+    isCancelling.dispose();
+    lockRecordingTimer?.cancel();
     super.dispose();
   }
 
@@ -147,27 +161,64 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
             children: [
               if (isRecordingValue && controller != null && !kIsWeb)
                 Expanded(
-                  child: AudioWaveforms(
-                    size: const Size(double.maxFinite, 50),
-                    recorderController: controller!,
-                    margin: voiceRecordingConfig?.margin,
-                    padding: voiceRecordingConfig?.padding ??
-                        EdgeInsets.symmetric(
-                          horizontal: cancelRecordConfiguration == null ? 8 : 5,
+                  child: Stack(
+                    children: [
+                      AudioWaveforms(
+                        size: const Size(double.maxFinite, 50),
+                        recorderController: controller!,
+                        margin: voiceRecordingConfig?.margin,
+                        padding: voiceRecordingConfig?.padding ??
+                            EdgeInsets.symmetric(
+                              horizontal: cancelRecordConfiguration == null ? 8 : 5,
+                            ),
+                        decoration: voiceRecordingConfig?.decoration ??
+                            BoxDecoration(
+                              color: voiceRecordingConfig?.backgroundColor,
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                        waveStyle: voiceRecordingConfig?.waveStyle ??
+                            WaveStyle(
+                              extendWaveform: true,
+                              showMiddleLine: false,
+                              waveColor:
+                                  voiceRecordingConfig?.waveStyle?.waveColor ??
+                                      Colors.black,
+                            ),
+                      ),
+                      if (isHoldingRecord.value && holdToRecordConfig?.showRecordingText == true)
+                        ValueListenableBuilder<double>(
+                          valueListenable: horizontalDragOffset,
+                          builder: (context, offset, _) {
+                            final isCancellingValue = offset <= -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0);
+                            if (isCancellingValue != isCancelling.value) {
+                              isCancelling.value = isCancellingValue;
+                            }
+                            return Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 5,
+                              child: Center(
+                                child: Text(
+                                  isCancellingValue 
+                                    ? holdToRecordConfig?.releaseText ?? 'Release to cancel'
+                                    : isRecordingLocked
+                                        ? holdToRecordConfig?.releaseText ?? 'Release to send'
+                                        : holdToRecordConfig?.cancelText ?? 'Slide left to cancel',
+                                  style: holdToRecordConfig?.textStyle ?? 
+                                    TextStyle(
+                                      fontSize: 12,
+                                      color: isCancellingValue
+                                        ? holdToRecordConfig?.cancelTextColor ?? Colors.red
+                                        : isRecordingLocked
+                                            ? holdToRecordConfig?.releaseTextColor ?? Colors.green
+                                            : holdToRecordConfig?.recordingTextColor ?? Colors.grey[600],
+                                    ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                    decoration: voiceRecordingConfig?.decoration ??
-                        BoxDecoration(
-                          color: voiceRecordingConfig?.backgroundColor,
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                    waveStyle: voiceRecordingConfig?.waveStyle ??
-                        WaveStyle(
-                          extendWaveform: true,
-                          showMiddleLine: false,
-                          waveColor:
-                              voiceRecordingConfig?.waveStyle?.waveColor ??
-                                  Colors.black,
-                        ),
+                    ],
                   ),
                 )
               else
@@ -269,19 +320,36 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                         if ((sendMessageConfig?.allowRecordingVoice ?? false) &&
                             !kIsWeb &&
                             (Platform.isIOS || Platform.isAndroid))
-                          IconButton(
-                            onPressed: (textFieldConfig?.enabled ?? true)
-                                ? _recordOrStop
-                                : null,
-                            icon: (isRecordingValue
-                                    ? voiceRecordingConfig?.stopIcon
-                                    : voiceRecordingConfig?.micIcon) ??
-                                Icon(
-                                  isRecordingValue ? Icons.stop : Icons.mic,
-                                  color:
-                                      voiceRecordingConfig?.recorderIconColor,
+                          sendMessageConfig?.enableHoldToRecord == true
+                              ? GestureDetector(
+                                  onLongPressStart: (_) => _startRecording(),
+                                  onLongPressEnd: (_) => _stopRecording(),
+                                  onLongPressMoveUpdate: (details) {
+                                    horizontalDragOffset.value = details.offsetFromOrigin.dx;
+                                  },
+                                  child: IconButton(
+                                    onPressed: null,
+                                    icon: holdToRecordConfig?.holdToRecordIcon ??
+                                        Icon(
+                                          Icons.mic,
+                                          color: holdToRecordConfig?.holdToRecordIconColor ??
+                                              voiceRecordingConfig?.recorderIconColor,
+                                        ),
+                                  ),
+                                )
+                              : IconButton(
+                                  onPressed: (textFieldConfig?.enabled ?? true)
+                                      ? _recordOrStop
+                                      : null,
+                                  icon: (isRecordingValue
+                                          ? voiceRecordingConfig?.stopIcon
+                                          : voiceRecordingConfig?.micIcon) ??
+                                      Icon(
+                                        isRecordingValue ? Icons.stop : Icons.mic,
+                                        color:
+                                            voiceRecordingConfig?.recorderIconColor,
+                                      ),
                                 ),
-                          ),
                         if (isRecordingValue &&
                             cancelRecordConfiguration != null)
                           IconButton(
@@ -316,6 +384,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     final path = await controller?.stop();
     if (path == null) {
       isRecording.value = false;
+      isHoldingRecord.value = false;
+      isRecordingLocked = false;
       return;
     }
     final file = File(path);
@@ -325,6 +395,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     }
 
     isRecording.value = false;
+    isHoldingRecord.value = false;
+    isRecordingLocked = false;
   }
 
   Future<void> _recordOrStop() async {
@@ -347,6 +419,61 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       isRecording.value = false;
       widget.onRecordingComplete(path);
     }
+  }
+  
+  // Start recording for hold-to-record feature
+  Future<void> _startRecording() async {
+    assert(
+      defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.android,
+      "Voice messages are only supported with android and ios platform",
+    );
+    
+    if (isRecording.value) return;
+    
+    horizontalDragOffset.value = 0.0;
+    isCancelling.value = false;
+    isHoldingRecord.value = true;
+    isRecordingLocked = false;
+    
+    await controller?.record(
+      sampleRate: voiceRecordingConfig?.sampleRate,
+      bitRate: voiceRecordingConfig?.bitRate,
+      androidEncoder: voiceRecordingConfig?.androidEncoder,
+      iosEncoder: voiceRecordingConfig?.iosEncoder,
+      androidOutputFormat: voiceRecordingConfig?.androidOutputFormat,
+    );
+    isRecording.value = true;
+    
+    // Set up timer for locking recording if configured
+    if (holdToRecordConfig?.lockRecordingAfterDuration != null) {
+      lockRecordingTimer = Timer(
+        holdToRecordConfig!.lockRecordingAfterDuration!, 
+        () {
+          isRecordingLocked = true;
+        }
+      );
+    }
+  }
+  
+  // Stop recording for hold-to-record feature
+  Future<void> _stopRecording() async {
+    lockRecordingTimer?.cancel();
+    
+    if (!isRecording.value || !isHoldingRecord.value) return;
+    
+    isHoldingRecord.value = false;
+    
+    // Check if we should cancel based on horizontal drag
+    if (isCancelling.value) {
+      _cancelRecording();
+      return;
+    }
+    
+    final path = await controller?.stop();
+    isRecording.value = false;
+    isRecordingLocked = false;
+    widget.onRecordingComplete(path);
   }
 
   void _onIconPressed(
