@@ -331,15 +331,19 @@ class HoldToRecordConfiguration {
     this.holdToRecordIconColor,
     this.recordingFeedbackColor,
     this.cancelSwipeThreshold = 50.0,
+    this.lockSwipeThreshold = 50.0,
     this.lockRecordingAfterDuration,
     this.showRecordingText = true,
     this.recordingText = 'Recording...',
     this.cancelText = 'Slide left to cancel',
     this.releaseText = 'Release to send',
+    this.swipeUpText = 'Swipe up to lock',
+    this.lockedText = 'Recording locked',
     this.textStyle,
     this.recordingTextColor,
     this.cancelTextColor,
     this.releaseTextColor,
+    this.lockedTextColor,
   });
 
   /// Icon to display for hold-to-record button
@@ -353,6 +357,9 @@ class HoldToRecordConfiguration {
 
   /// Threshold in pixels for swipe left to cancel
   final double cancelSwipeThreshold;
+
+  /// Threshold in pixels for swipe up to lock recording
+  final double lockSwipeThreshold;
 
   /// Optional duration after which recording is locked and won't stop on release
   final Duration? lockRecordingAfterDuration;
@@ -369,6 +376,12 @@ class HoldToRecordConfiguration {
   /// Text to show for release instruction
   final String releaseText;
 
+  /// Text to show for swipe up to lock instruction
+  final String swipeUpText;
+
+  /// Text to show when recording is locked
+  final String lockedText;
+
   /// Text style for the recording feedback text
   final TextStyle? textStyle;
 
@@ -380,4 +393,7 @@ class HoldToRecordConfiguration {
 
   /// Color for the release text
   final Color? releaseTextColor;
+
+  /// Color for the locked text
+  final Color? lockedTextColor;
 }
