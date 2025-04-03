@@ -80,6 +80,12 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   ValueNotifier<bool> isCancelling = ValueNotifier(false);
   Timer? lockRecordingTimer;
   bool isRecordingLocked = false;
+  
+  // Variables for recording time counter and blinking mic
+  ValueNotifier<int> recordingDuration = ValueNotifier(0);
+  ValueNotifier<bool> showMicIcon = ValueNotifier(true);
+  Timer? recordingTimer;
+  Timer? blinkTimer;
 
   SendMessageConfiguration? get sendMessageConfig => widget.sendMessageConfig;
 
@@ -131,7 +137,11 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     isHoldingRecord.dispose();
     horizontalDragOffset.dispose();
     isCancelling.dispose();
+    recordingDuration.dispose();
+    showMicIcon.dispose();
     lockRecordingTimer?.cancel();
+    recordingTimer?.cancel();
+    blinkTimer?.cancel();
     super.dispose();
   }
 
@@ -140,6 +150,13 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       widget.sendMessageConfig?.textFieldConfig?.onMessageTyping
           ?.call(composingStatus.value);
     });
+  }
+  
+  // Format seconds to mm:ss
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -163,27 +180,52 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                 Expanded(
                   child: Stack(
                     children: [
-                      AudioWaveforms(
-                        size: const Size(double.maxFinite, 50),
-                        recorderController: controller!,
-                        margin: voiceRecordingConfig?.margin,
+                      Container(
+                        height: 50,
                         padding: voiceRecordingConfig?.padding ??
                             EdgeInsets.symmetric(
                               horizontal: cancelRecordConfiguration == null ? 8 : 5,
                             ),
+                        margin: voiceRecordingConfig?.margin,
                         decoration: voiceRecordingConfig?.decoration ??
                             BoxDecoration(
                               color: voiceRecordingConfig?.backgroundColor,
                               borderRadius: BorderRadius.circular(12.0),
                             ),
-                        waveStyle: voiceRecordingConfig?.waveStyle ??
-                            WaveStyle(
-                              extendWaveform: true,
-                              showMiddleLine: false,
-                              waveColor:
-                                  voiceRecordingConfig?.waveStyle?.waveColor ??
-                                      Colors.black,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            // Blinking mic icon
+                            ValueListenableBuilder<bool>(
+                              valueListenable: showMicIcon,
+                              builder: (context, visible, _) {
+                                return Opacity(
+                                  opacity: visible ? 1.0 : 0.3,
+                                  child: Icon(
+                                    Icons.mic,
+                                    color: voiceRecordingConfig?.recorderIconColor ?? Colors.red,
+                                    size: 24,
+                                  ),
+                                );
+                              },
                             ),
+                            const SizedBox(width: 12),
+                            // Time counter
+                            ValueListenableBuilder<int>(
+                              valueListenable: recordingDuration,
+                              builder: (context, duration, _) {
+                                return Text(
+                                  _formatDuration(duration),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: voiceRecordingConfig?.recorderIconColor ?? Colors.black,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                       if (isHoldingRecord.value && holdToRecordConfig?.showRecordingText == true)
                         ValueListenableBuilder<double>(
@@ -435,6 +477,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     isCancelling.value = false;
     isHoldingRecord.value = true;
     isRecordingLocked = false;
+    recordingDuration.value = 0;
+    showMicIcon.value = true;
     
     await controller?.record(
       sampleRate: voiceRecordingConfig?.sampleRate,
@@ -444,6 +488,16 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       androidOutputFormat: voiceRecordingConfig?.androidOutputFormat,
     );
     isRecording.value = true;
+    
+    // Start recording timer
+    recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      recordingDuration.value++;
+    });
+    
+    // Start blinking mic icon
+    blinkTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      showMicIcon.value = !showMicIcon.value;
+    });
     
     // Set up timer for locking recording if configured
     if (holdToRecordConfig?.lockRecordingAfterDuration != null) {
@@ -459,6 +513,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   // Stop recording for hold-to-record feature
   Future<void> _stopRecording() async {
     lockRecordingTimer?.cancel();
+    recordingTimer?.cancel();
+    blinkTimer?.cancel();
     
     if (!isRecording.value || !isHoldingRecord.value) return;
     
@@ -476,7 +532,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     widget.onRecordingComplete(path);
   }
 
-  void _onIconPressed(
+  Future<void> _onIconPressed(
     ImageSource imageSource, {
     ImagePickerConfiguration? config,
   }) async {
