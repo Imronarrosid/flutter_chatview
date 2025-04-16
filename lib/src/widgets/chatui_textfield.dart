@@ -555,6 +555,17 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
           defaultTargetPlatform == TargetPlatform.android,
       "Voice messages are only supported with android and ios platform",
     );
+    
+    // Cancel all timers
+    recordingTimer?.cancel();
+    blinkTimer?.cancel();
+    lockRecordingTimer?.cancel();
+    
+    // Reset timer variables
+    recordingTimer = null;
+    blinkTimer = null;
+    lockRecordingTimer = null;
+
     if (!isRecording.value) return;
     final path = await controller?.stop();
     if (path == null) {
@@ -606,6 +617,11 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
 
     if (isRecording.value) return;
 
+    // Cancel any existing timers first
+    recordingTimer?.cancel();
+    blinkTimer?.cancel();
+    lockRecordingTimer?.cancel();
+
     horizontalDragOffset.value = 0.0;
     verticalDragOffset.value = 0.0;
     isCancelling.value = false;
@@ -627,6 +643,10 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     );
     isRecording.value = true;
 
+    // Ensure timers are null before creating new ones
+    recordingTimer = null;
+    blinkTimer = null;
+
     // Start recording timer
     recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       recordingDuration.value++;
@@ -638,9 +658,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     });
 
     // Set up timer for locking recording if configured
+    lockRecordingTimer?.cancel();
     if (holdToRecordConfig?.lockRecordingAfterDuration != null) {
-      lockRecordingTimer =
-          Timer(holdToRecordConfig!.lockRecordingAfterDuration!, () {
+      lockRecordingTimer = Timer(holdToRecordConfig!.lockRecordingAfterDuration!, () {
         isRecordingLocked = true;
       });
     }
@@ -648,7 +668,16 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
 
   // Stop recording for hold-to-record feature
   Future<void> _stopRecording() async {
+    // Cancel all timers
+    recordingTimer?.cancel();
+    blinkTimer?.cancel();
     lockRecordingTimer?.cancel();
+    
+    // Reset timer variables
+    recordingTimer = null;
+    blinkTimer = null;
+    lockRecordingTimer = null;
+
     showLockIndicator.value = false;
 
     if (!isRecording.value || !isHoldingRecord.value) return;
@@ -681,10 +710,15 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   Future<void> _finishRecording() async {
     if (!isRecording.value) return;
     
-    // Stop all timers
+    // Cancel all timers
     recordingTimer?.cancel();
     blinkTimer?.cancel();
     lockRecordingTimer?.cancel();
+    
+    // Reset timer variables
+    recordingTimer = null;
+    blinkTimer = null;
+    lockRecordingTimer = null;
     
     final path = await controller?.stop();
     isRecording.value = false;
@@ -697,6 +731,10 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   // Add pause/resume recording function
   Future<void> _togglePauseRecording() async {
     if (isPaused) {
+      // Cancel existing timers before creating new ones
+      recordingTimer?.cancel();
+      blinkTimer?.cancel();
+
       await controller?.record(
         sampleRate: voiceRecordingConfig?.sampleRate,
         bitRate: voiceRecordingConfig?.bitRate,
@@ -704,18 +742,17 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
         iosEncoder: voiceRecordingConfig?.iosEncoder,
         androidOutputFormat: voiceRecordingConfig?.androidOutputFormat,
       );
-      // Resume timers
-      recordingTimer?.cancel();
+
+      // Create new timers
       recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         recordingDuration.value++;
       });
-      blinkTimer?.cancel();
       blinkTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
         showMicIcon.value = !showMicIcon.value;
       });
     } else {
       await controller?.pause();
-      // Pause timers
+      // Cancel timers when pausing
       recordingTimer?.cancel();
       blinkTimer?.cancel();
     }
