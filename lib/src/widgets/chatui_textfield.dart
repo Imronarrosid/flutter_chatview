@@ -88,6 +88,12 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   Timer? recordingTimer;
   Timer? blinkTimer;
 
+  // Add new variables for lock indicator
+  ValueNotifier<bool> showLockIndicator = ValueNotifier(false);
+  ValueNotifier<double> lockIndicatorOffset = ValueNotifier(0.0);
+  bool wasSwipedUp = false;
+  bool isPaused = false;
+
   SendMessageConfiguration? get sendMessageConfig => widget.sendMessageConfig;
 
   VoiceRecordingConfiguration? get voiceRecordingConfig =>
@@ -144,6 +150,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     lockRecordingTimer?.cancel();
     recordingTimer?.cancel();
     blinkTimer?.cancel();
+    showLockIndicator.dispose();
+    lockIndicatorOffset.dispose();
     super.dispose();
   }
 
@@ -415,35 +423,88 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                 !kIsWeb &&
                                 (Platform.isIOS || Platform.isAndroid))
                               sendMessageConfig?.enableHoldToRecord == true
-                                  ? GestureDetector(
-                                      onLongPressStart: (_) =>
-                                          _startRecording(),
-                                      onLongPressEnd: (_) => _stopRecording(),
-                                      onLongPressMoveUpdate: (details) {
-                                        horizontalDragOffset.value =
-                                            details.offsetFromOrigin.dx;
-                                        verticalDragOffset.value =
-                                            details.offsetFromOrigin.dy;
-                                        
-                                        // Check for swipe up to lock recording
-                                        if (verticalDragOffset.value <= -(holdToRecordConfig?.lockSwipeThreshold ?? 50.0) && !isRecordingLocked) {
-                                          isRecordingLocked = true;
-                                          // Cancel the auto-lock timer if it's running
-                                          lockRecordingTimer?.cancel();
-                                        }
-                                      },
-                                      child: IconButton(
-                                        onPressed: null,
-                                        icon: holdToRecordConfig
-                                                ?.holdToRecordIcon ??
-                                            Icon(
-                                              Icons.mic,
-                                              color: holdToRecordConfig
-                                                      ?.holdToRecordIconColor ??
-                                                  voiceRecordingConfig
-                                                      ?.recorderIconColor,
-                                            ),
-                                      ),
+                                  ? Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        // Lock/Pause indicator
+                                        ValueListenableBuilder<bool>(
+                                          valueListenable: showLockIndicator,
+                                          builder: (context, showLock, _) {
+                                            return ValueListenableBuilder<double>(
+                                              valueListenable: lockIndicatorOffset,
+                                              builder: (context, offset, _) {
+                                                return showLock
+                                                  ? Positioned(
+                                                      top: -45, // Changed from -35 to -45 to move it higher
+                                                      left: 0,
+                                                      right: 0,
+                                                      child: GestureDetector(
+                                                        onTap: isRecordingLocked ? _togglePauseRecording : null,
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(8),
+                                                          decoration: BoxDecoration(
+                                                            color: holdToRecordConfig?.recordingFeedbackColor ?? Colors.blue,
+                                                            shape: BoxShape.circle,
+                                                          ),
+                                                          child: Icon(
+                                                            wasSwipedUp || isRecordingLocked 
+                                                              ? (isPaused ? Icons.play_arrow : Icons.pause)
+                                                              : Icons.lock,
+                                                            size: 20,
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : const SizedBox.shrink();
+                                              },
+                                            );
+                                          },
+                                        ),
+                                        // Mic button with gesture detector
+                                        GestureDetector(
+                                          onLongPressStart: (_) {
+                                            _startRecording();
+                                          },
+                                          onLongPressEnd: (_) => _stopRecording(),
+                                          onLongPressMoveUpdate: (details) {
+                                            horizontalDragOffset.value = details.offsetFromOrigin.dx;
+                                            verticalDragOffset.value = details.offsetFromOrigin.dy;
+                                            
+                                            if (!isRecordingLocked) {
+                                              lockIndicatorOffset.value = verticalDragOffset.value;
+                                              
+                                              double swipeThreshold = holdToRecordConfig?.lockSwipeThreshold ?? 50.0;
+                                              
+                                              // Check for initial swipe up
+                                              if (verticalDragOffset.value <= -swipeThreshold) {
+                                                wasSwipedUp = true;
+                                              }
+                                              
+                                              // If swiped up and then down without releasing, cancel recording
+                                              if (wasSwipedUp && !isRecordingLocked && verticalDragOffset.value > -20) {
+                                                _cancelRecording();
+                                                return;
+                                              }
+                                            }
+                                          },
+                                          onLongPressCancel: () {
+                                            if (!isRecordingLocked) {
+                                              showLockIndicator.value = false;
+                                              _cancelRecording();
+                                            }
+                                          },
+                                          child: IconButton(
+                                            onPressed: null,
+                                            icon: holdToRecordConfig?.holdToRecordIcon ??
+                                                Icon(
+                                                  Icons.mic,
+                                                  color: holdToRecordConfig?.holdToRecordIconColor ??
+                                                      voiceRecordingConfig?.recorderIconColor,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
                                     )
                                   : IconButton(
                                       onPressed:
@@ -552,6 +613,10 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     isRecordingLocked = false;
     recordingDuration.value = 0;
     showMicIcon.value = true;
+    wasSwipedUp = false;
+    showLockIndicator.value = true;
+    lockIndicatorOffset.value = 0.0;
+    isPaused = false;
 
     await controller?.record(
       sampleRate: voiceRecordingConfig?.sampleRate,
@@ -583,21 +648,19 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
 
   // Stop recording for hold-to-record feature
   Future<void> _stopRecording() async {
-    // Only cancel the lock recording timer, keep the other timers running if recording is locked
     lockRecordingTimer?.cancel();
+    showLockIndicator.value = false;
 
     if (!isRecording.value || !isHoldingRecord.value) return;
 
     isHoldingRecord.value = false;
 
-    // If recording is locked, don't stop it and keep timers running
-    if (isRecordingLocked) {
+    // If was swiped up, lock the recording
+    if (wasSwipedUp) {
+      isRecordingLocked = true;
+      showLockIndicator.value = true; // Keep showing the pause button
       return;
     }
-
-    // If we reach here, recording is not locked, so cancel all timers
-    recordingTimer?.cancel();
-    blinkTimer?.cancel();
 
     // Check if we should cancel based on horizontal drag
     if (isCancelling.value) {
@@ -608,6 +671,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     final path = await controller?.stop();
     isRecording.value = false;
     isRecordingLocked = false;
+    wasSwipedUp = false;
+    showLockIndicator.value = false;
+    isPaused = false;
     widget.onRecordingComplete(path);
   }
 
@@ -624,7 +690,37 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     isRecording.value = false;
     isHoldingRecord.value = false;
     isRecordingLocked = false;
+    isPaused = false;
     widget.onRecordingComplete(path);
+  }
+
+  // Add pause/resume recording function
+  Future<void> _togglePauseRecording() async {
+    if (isPaused) {
+      await controller?.record(
+        sampleRate: voiceRecordingConfig?.sampleRate,
+        bitRate: voiceRecordingConfig?.bitRate,
+        androidEncoder: voiceRecordingConfig?.androidEncoder,
+        iosEncoder: voiceRecordingConfig?.iosEncoder,
+        androidOutputFormat: voiceRecordingConfig?.androidOutputFormat,
+      );
+      // Resume timers
+      recordingTimer?.cancel();
+      recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        recordingDuration.value++;
+      });
+      blinkTimer?.cancel();
+      blinkTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+        showMicIcon.value = !showMicIcon.value;
+      });
+    } else {
+      await controller?.pause();
+      // Pause timers
+      recordingTimer?.cancel();
+      blinkTimer?.cancel();
+    }
+    isPaused = !isPaused;
+    setState(() {});
   }
 
   Future<void> _onIconPressed(

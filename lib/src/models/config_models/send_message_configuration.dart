@@ -344,6 +344,8 @@ class HoldToRecordConfiguration {
     this.cancelTextColor,
     this.releaseTextColor,
     this.lockedTextColor,
+    this.lockIndicatorColor,
+    this.lockIndicatorIconColor,
   });
 
   /// Icon to display for hold-to-record button
@@ -396,4 +398,10 @@ class HoldToRecordConfiguration {
 
   /// Color for the locked text
   final Color? lockedTextColor;
+
+  /// Color for the lock indicator background
+  final Color? lockIndicatorColor;
+
+  /// Color for the lock indicator icon
+  final Color? lockIndicatorIconColor;
 }
