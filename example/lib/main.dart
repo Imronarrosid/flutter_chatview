@@ -82,7 +82,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 DateTime.now().subtract(Duration(hours: 20 * index));
             return Message(
               id: createdAt.toString(), // More consistent ID
-              message:
+              mediaPath:
                   "https://miro.medium.com/max/1000/0*s7of7kWnf9fDg4XM.jpeg",
               createdAt: createdAt,
               sentBy: '2',
@@ -104,7 +104,7 @@ class _ChatScreenState extends State<ChatScreen> {
     DateTime createdAt = DateTime.now();
     _chatController.addMessage(Message(
       id: createdAt.toString(), // More consistent ID
-      message: "https://picsum.photos/200/300",
+      mediaPath: "https://picsum.photos/200/300",
       createdAt: createdAt,
       sentBy: '2',
       messageType: MessageType.image,
@@ -127,7 +127,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     DateTime.now().subtract(Duration(hours: 20 * index));
                 return Message(
                   id: createdAt.toString(), // More consistent ID
-                  message:
+                  mediaPath:
                       "https://miro.medium.com/max/1000/0*s7of7kWnf9fDg4XM.jpeg",
                   createdAt: createdAt,
                   sentBy: '2',
@@ -139,7 +139,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ...previouse,
                 PreviewImage(
                   id: item.id,
-                  uri: item.message,
+                  uri: item.mediaPath,
                   createdAt: item.createdAt.millisecondsSinceEpoch,
                 )
               ];
@@ -152,7 +152,7 @@ class _ChatScreenState extends State<ChatScreen> {
             enableScrollToBottomButton: true,
             enablePagination: true,
             enableChatSeparator: true,
-            enableOtherUserProfileAvatar: false,
+            enableOtherUserProfileAvatar: true,
             enableOtherUserName: false),
         scrollToBottomButtonConfig: ScrollToBottomButtonConfig(
           backgroundColor: theme.textFieldBackgroundColor,
@@ -248,17 +248,28 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           backgroundColor: theme.backgroundColor,
         ),
+        mediaPreviewConfig: MediaPreviewConfig(
+          defaultSendButtonColor: theme.outgoingChatBubbleColor,
+        ),
         sendMessageConfig: SendMessageConfiguration(
+          enableHoldToRecord: true,
+          holdToRecordConfiguration: HoldToRecordConfiguration(
+            lockRecordingAfterDuration: const Duration(seconds: 2),
+          ),
           imagePickerIconsConfig: ImagePickerIconsConfiguration(
             cameraIconColor: theme.cameraIconColor,
             galleryIconColor: theme.galleryIconColor,
           ),
-          replyMessageColor: theme.replyMessageColor,
-          defaultSendButtonColor: theme.sendButtonColor,
-          replyDialogColor: theme.replyDialogColor,
-          replyTitleColor: theme.replyTitleColor,
+          defaultSendButtonColor: theme.
+            sendButtonColor,
+          replyMessageConfiguration: ReplyMessageViewConfiguration(
+            replyMessageColor: theme.replyMessageColor,
+            replyDialogColor: theme.replyDialogColor,
+            replyTitleColor: theme.replyTitleColor,
+            micIconColor: theme.replyMicIconColor,
+            closeIconColor: theme.closeIconColor,
+          ),
           textFieldBackgroundColor: theme.textFieldBackgroundColor,
-          closeIconColor: theme.closeIconColor,
           textFieldConfig: TextFieldConfiguration(
             onMessageTyping: (status) {
               /// Do with status
@@ -267,7 +278,6 @@ class _ChatScreenState extends State<ChatScreen> {
             compositionThresholdTime: const Duration(seconds: 1),
             textStyle: TextStyle(color: theme.textFieldTextColor),
           ),
-          micIconColor: theme.replyMicIconColor,
           voiceRecordingConfiguration: VoiceRecordingConfiguration(
             backgroundColor: theme.waveformBackgroundColor,
             recorderIconColor: theme.recordIconColor,
@@ -281,10 +291,12 @@ class _ChatScreenState extends State<ChatScreen> {
         chatBubbleConfig: ChatBubbleConfiguration(
           outgoingChatBubbleConfig: ChatBubble(
             linkPreviewConfig: LinkPreviewConfiguration(
+              // proxyUrl: "https://proxy.corsfix.com/?",
               backgroundColor: theme.linkPreviewOutgoingChatColor,
               bodyStyle: theme.outgoingChatLinkBodyStyle,
               titleStyle: theme.outgoingChatLinkTitleStyle,
             ),
+            padding: const EdgeInsets.all(8),
             receiptsWidgetConfig: ReceiptsWidgetConfig(
               showReceiptsIn: ShowReceiptsIn.all,
               receiptsBuilder: (status) {
@@ -295,6 +307,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 );
               },
             ),
+            textStyle: TextStyle(color: Colors.white, fontSize: 14),
             color: theme.outgoingChatBubbleColor,
           ),
           inComingChatBubbleConfig: ChatBubble(
@@ -368,7 +381,10 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           imageMessageConfig: ImageMessageConfiguration(
+            width: 200,
+            height: 300,
             unloadedColor: Colors.black,
+            hideShareIcon: true,
             imageProviderBuilder: (
                 {required conditional, required imageHeaders, required uri}) {
               if (!uri.startsWith('http')) {
@@ -379,7 +395,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 headers: imageHeaders,
               );
             },
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+            // margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
             shareIconConfig: ShareIconConfiguration(
               defaultIconBackgroundColor: theme.shareIconBackgroundColor,
               defaultIconColor: theme.shareIconColor,
@@ -420,28 +436,50 @@ class _ChatScreenState extends State<ChatScreen> {
               color: isDarkTheme ? Colors.white : Colors.black,
             ),
           ),
-          onTap: (item) =>
-              _onSendTap(item.text, const ReplyMessage(), MessageType.text),
+          onTap: (item) => _onSendTap(
+              mediaPath: '',
+              replyMessage: const ReplyMessage(),
+              messageType: MessageType.text,
+              text: item.text),
         ),
       ),
     );
   }
 
-  void _onSendTap(
-    String message,
-    ReplyMessage replyMessage,
-    MessageType messageType,
-  ) {
-    _chatController.addMessage(
-      Message(
-        id: DateTime.now().toString(),
-        createdAt: DateTime.now(),
-        message: message,
-        sentBy: _chatController.currentUser.id,
-        replyMessage: replyMessage,
-        messageType: messageType,
-      ),
-    );
+  void _onSendTap({
+    required String mediaPath,
+    required ReplyMessage replyMessage,
+    required MessageType messageType,
+    required String text,
+  }) {
+    final createdAt = DateTime.now();
+    final id = createdAt.toString();
+
+    if (messageType == MessageType.image) {
+      _chatController.addMessage(
+        Message(
+          id: id,
+          mediaPath: mediaPath,
+          text: text,
+          createdAt: createdAt,
+          sentBy: _chatController.currentUser.id,
+          messageType: messageType,
+        ),
+      );
+    } else {
+      _chatController.addMessage(
+        Message(
+          id: id,
+          mediaPath: mediaPath,
+          text: text,
+          createdAt: createdAt,
+          sentBy: _chatController.currentUser.id,
+          messageType: messageType,
+          replyMessage: replyMessage,
+        ),
+      );
+    }
+
     Future.delayed(const Duration(milliseconds: 300), () {
       _chatController.initialMessageList.last.setStatus =
           MessageStatus.undelivered;
