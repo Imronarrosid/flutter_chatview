@@ -6,102 +6,212 @@ Future<File> concatenateWavFiles(List<String> inputPaths, String outputPath) asy
     throw ArgumentError('No input files provided');
   }
 
-  // Read the first file to get the format
-  final firstFile = await File(inputPaths[0]).readAsBytes();
-  final ByteData firstFileData = ByteData.view(firstFile.buffer);
+  // Validate and collect audio data from all files
+  List<WavFileInfo> wavFiles = [];
+  int totalDataSize = 0;
+  int? format, channels, sampleRate, bitsPerSample;
 
-  // Verify it's a WAV file
-  if (String.fromCharCodes(firstFile.getRange(0, 4)) != 'RIFF' ||
-      String.fromCharCodes(firstFile.getRange(8, 12)) != 'WAVE') {
-    throw FormatException('First file is not a valid WAV file');
-  }
+  for (int i = 0; i < inputPaths.length; i++) {
+    try {
+      final fileInfo = await extractWavInfo(inputPaths[i]);
 
-  // Extract format information from the first file
-  int formatOffset = _findChunk(firstFile, 'fmt ');
-  if (formatOffset < 0) {
-    throw FormatException('Format chunk not found in first file');
-  }
+      // Ensure all files have the same audio format
+      if (i == 0) {
+        format = fileInfo.format;
+        channels = fileInfo.channels;
+        sampleRate = fileInfo.sampleRate;
+        bitsPerSample = fileInfo.bitsPerSample;
+      } else if (fileInfo.format != format ||
+          fileInfo.channels != channels ||
+          fileInfo.sampleRate != sampleRate ||
+          fileInfo.bitsPerSample != bitsPerSample) {
+        print('Warning: ${inputPaths[i]} has a different format - results may be unpredictable');
+      }
 
-  final formatChunkSize = firstFileData.getUint32(formatOffset + 4, Endian.little);
-  final audioFormat = firstFileData.getUint16(formatOffset + 8, Endian.little);
-  final numChannels = firstFileData.getUint16(formatOffset + 10, Endian.little);
-  final sampleRate = firstFileData.getUint32(formatOffset + 12, Endian.little);
-  final byteRate = firstFileData.getUint32(formatOffset + 16, Endian.little);
-  final blockAlign = firstFileData.getUint16(formatOffset + 20, Endian.little);
-  final bitsPerSample = firstFileData.getUint16(formatOffset + 22, Endian.little);
-
-  // Collect audio data from all files
-  List<Uint8List> audioDataChunks = [];
-  int totalAudioDataSize = 0;
-
-  for (String filePath in inputPaths) {
-    final fileBytes = await File(filePath).readAsBytes();
-    final ByteData fileData = ByteData.view(fileBytes.buffer);
-
-    // Verify file format matches the first file
-    if (String.fromCharCodes(fileBytes.getRange(0, 4)) != 'RIFF' ||
-        String.fromCharCodes(fileBytes.getRange(8, 12)) != 'WAVE') {
-      print('Warning: $filePath is not a valid WAV file - skipping');
-      continue;
+      wavFiles.add(fileInfo);
+      totalDataSize += fileInfo.dataSize;
+    } catch (e) {
+      print('Error processing ${inputPaths[i]}: $e');
     }
-
-    int dataOffset = _findChunk(fileBytes, 'data');
-    if (dataOffset < 0) {
-      print('Warning: Data chunk not found in $filePath - skipping');
-      continue;
-    }
-
-    int dataSize = fileData.getUint32(dataOffset + 4, Endian.little);
-    audioDataChunks.add(fileBytes.sublist(dataOffset + 8, dataOffset + 8 + dataSize));
-    totalAudioDataSize += dataSize;
   }
 
-  // Create the output file
+  if (wavFiles.isEmpty) {
+    throw Exception('No valid WAV files found to concatenate');
+  }
+
+  final firstFile = wavFiles[0];
+  final blockAlign = firstFile.channels! * (firstFile.bitsPerSample! ~/ 8);
+  final byteRate = firstFile.sampleRate! * blockAlign;
+  final totalSampleFrames = totalDataSize ~/ blockAlign;
+
+  // Calculate duration in seconds for metadata
+  final double durationSeconds = totalSampleFrames / firstFile.sampleRate!;
+
+  // Create INFO metadata
+  final Map<String, String> infoMetadata = {
+    'INAM': 'Concatenated WAV file',
+    'ICMT': 'Combined from ${wavFiles.length} files',
+    'ICRD': DateTime.now().toString().substring(0, 10),
+    'IDUR': durationSeconds.toStringAsFixed(3), // Duration in seconds
+  };
+
+  // Calculate LIST chunk size (adding 4 for 'INFO' identifier)
+  int listChunkSize = 4; // 'INFO' identifier
+  infoMetadata.forEach((key, value) {
+    // Each entry has: 4-byte ID + 4-byte size + data + possible padding byte
+    int entrySize = 4 + 4 + value.length;
+    if (entrySize % 2 != 0) entrySize++; // Padding to even size
+    listChunkSize += entrySize;
+  });
+
+  // Calculate total file size including LIST chunk
+  int totalFileSize = 12 + // 'RIFF' + size + 'WAVE'
+      (8 + 16) + // fmt chunk header + size
+      (8 + listChunkSize) + // LIST chunk header + size
+      (8 + totalDataSize); // data chunk header + size
+
+  // Create output WAV file
   final outputFile = File(outputPath);
-  final outputBuffer = BytesBuilder();
+  final outputStream = outputFile.openWrite();
 
-  // Write WAV header
-  // RIFF header
-  outputBuffer.add(utf8Encode('RIFF'));
-  outputBuffer.add(_uint32ToBytes(36 + totalAudioDataSize, Endian.little)); // File size - 8
-  outputBuffer.add(utf8Encode('WAVE'));
+  try {
+    // Write WAV header
+    // RIFF header
+    outputStream.add(utf8Encode('RIFF'));
+    outputStream.add(_uint32ToBytes(totalFileSize - 8, Endian.little)); // File size - 8
+    outputStream.add(utf8Encode('WAVE'));
 
-  // Format chunk
-  outputBuffer.add(utf8Encode('fmt '));
-  outputBuffer.add(_uint32ToBytes(16, Endian.little)); // Format chunk size
-  outputBuffer.add(_uint16ToBytes(audioFormat, Endian.little)); // Audio format
-  outputBuffer.add(_uint16ToBytes(numChannels, Endian.little)); // Num channels
-  outputBuffer.add(_uint32ToBytes(sampleRate, Endian.little)); // Sample rate
-  outputBuffer.add(_uint32ToBytes(byteRate, Endian.little)); // Byte rate
-  outputBuffer.add(_uint16ToBytes(blockAlign, Endian.little)); // Block align
-  outputBuffer.add(_uint16ToBytes(bitsPerSample, Endian.little)); // Bits per sample
+    // Format chunk
+    outputStream.add(utf8Encode('fmt '));
+    outputStream.add(_uint32ToBytes(16, Endian.little)); // Format chunk size
+    outputStream.add(_uint16ToBytes(firstFile.format!, Endian.little)); // Audio format (1 = PCM)
+    outputStream.add(_uint16ToBytes(firstFile.channels!, Endian.little)); // Channels
+    outputStream.add(_uint32ToBytes(firstFile.sampleRate!, Endian.little)); // Sample rate
+    outputStream.add(_uint32ToBytes(byteRate, Endian.little)); // Byte rate
+    outputStream.add(_uint16ToBytes(blockAlign, Endian.little)); // Block align
+    outputStream.add(_uint16ToBytes(firstFile.bitsPerSample!, Endian.little)); // Bits per sample
 
-  // Data chunk
-  outputBuffer.add(utf8Encode('data'));
-  outputBuffer.add(_uint32ToBytes(totalAudioDataSize, Endian.little)); // Data size
+    // LIST/INFO chunk - important for duration metadata
+    outputStream.add(utf8Encode('LIST'));
+    outputStream.add(_uint32ToBytes(listChunkSize, Endian.little));
+    outputStream.add(utf8Encode('INFO'));
 
-  // Add all audio data
-  for (Uint8List chunk in audioDataChunks) {
-    outputBuffer.add(chunk);
+    // Write each INFO sub-chunk
+    infoMetadata.forEach((key, value) {
+      outputStream.add(utf8Encode(key));
+
+      // Size of the string data
+      int valueSize = value.length;
+      // Pad to even length if needed
+      bool needsPadding = valueSize % 2 != 0;
+      if (needsPadding) valueSize++;
+
+      outputStream.add(_uint32ToBytes(valueSize, Endian.little));
+      outputStream.add(utf8Encode(value));
+
+      // Add padding byte if needed
+      if (needsPadding) {
+        outputStream.add([0]);
+      }
+    });
+
+    // Data chunk
+    outputStream.add(utf8Encode('data'));
+    outputStream.add(_uint32ToBytes(totalDataSize, Endian.little)); // Data size
+
+    // Write audio data from each file
+    for (var fileInfo in wavFiles) {
+      final file = File(fileInfo.filePath);
+      final fileStream = file.openRead(fileInfo.dataOffset, fileInfo.dataOffset + fileInfo.dataSize);
+      await for (var chunk in fileStream) {
+        outputStream.add(chunk);
+      }
+    }
+  } finally {
+    await outputStream.close();
   }
 
-  // Write the output file
-  await outputFile.writeAsBytes(outputBuffer.toBytes());
-  print('Successfully concatenated ${inputPaths.length} WAV files to $outputPath');
+  print('Successfully concatenated ${wavFiles.length} WAV files to $outputPath');
+  print('Total duration: ${durationSeconds.toStringAsFixed(2)} seconds');
   return File(outputPath);
 }
 
-int _findChunk(Uint8List fileBytes, String chunkId) {
-  final chunkIdBytes = utf8Encode(chunkId);
-  for (int i = 0; i < fileBytes.length - 4; i++) {
-    if (fileBytes[i] == chunkIdBytes[0] &&
-        fileBytes[i + 1] == chunkIdBytes[1] &&
-        fileBytes[i + 2] == chunkIdBytes[2] &&
-        fileBytes[i + 3] == chunkIdBytes[3]) {
-      return i;
+Future<WavFileInfo> extractWavInfo(String filePath) async {
+  final file = File(filePath);
+  if (!await file.exists()) {
+    throw FileSystemException('File not found', filePath);
+  }
+
+  final fileBytes = await file.readAsBytes();
+  final ByteData fileData = ByteData.view(fileBytes.buffer);
+
+  // Validate WAV header
+  if (String.fromCharCodes(fileBytes.getRange(0, 4)) != 'RIFF' ||
+      String.fromCharCodes(fileBytes.getRange(8, 12)) != 'WAVE') {
+    throw FormatException('Not a valid WAV file: $filePath');
+  }
+
+  // Find format chunk
+  int formatOffset = -1;
+  for (int i = 12; i < fileBytes.length - 4; i++) {
+    if (String.fromCharCodes(fileBytes.getRange(i, i + 4)) == 'fmt ') {
+      formatOffset = i;
+      break;
     }
   }
-  return -1;
+
+  if (formatOffset < 0) {
+    throw FormatException('Format chunk not found in: $filePath');
+  }
+
+  final formatChunkSize = fileData.getUint32(formatOffset + 4, Endian.little);
+  final format = fileData.getUint16(formatOffset + 8, Endian.little);
+  final channels = fileData.getUint16(formatOffset + 10, Endian.little);
+  final sampleRate = fileData.getUint32(formatOffset + 12, Endian.little);
+  final bitsPerSample = fileData.getUint16(formatOffset + 22, Endian.little);
+
+  // Find data chunk
+  int dataOffset = -1;
+  for (int i = formatOffset + 8 + formatChunkSize; i < fileBytes.length - 4; i++) {
+    if (String.fromCharCodes(fileBytes.getRange(i, i + 4)) == 'data') {
+      dataOffset = i;
+      break;
+    }
+  }
+
+  if (dataOffset < 0) {
+    throw FormatException('Data chunk not found in: $filePath');
+  }
+
+  final dataSize = fileData.getUint32(dataOffset + 4, Endian.little);
+
+  return WavFileInfo(
+      filePath: filePath,
+      format: format,
+      channels: channels,
+      sampleRate: sampleRate,
+      bitsPerSample: bitsPerSample,
+      dataOffset: dataOffset + 8, // Skip 'data' marker and size
+      dataSize: dataSize);
+}
+
+class WavFileInfo {
+  final String filePath;
+  final int? format;
+  final int? channels;
+  final int? sampleRate;
+  final int? bitsPerSample;
+  final int dataOffset;
+  final int dataSize;
+
+  WavFileInfo(
+      {required this.filePath,
+      required this.format,
+      required this.channels,
+      required this.sampleRate,
+      required this.bitsPerSample,
+      required this.dataOffset,
+      required this.dataSize});
 }
 
 List<int> utf8Encode(String input) {
