@@ -63,7 +63,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
 
   PlayerState get playerState => _playerState.value;
 
-  PlayerWaveStyle playerWaveStyle = const PlayerWaveStyle(scaleFactor: 70);
+  PlayerWaveStyle playerWaveStyle = const PlayerWaveStyle(scaleFactor: 70,);
 
   final ValueNotifier<bool> _isFileExist = ValueNotifier(false);
   final ValueNotifier<double> _downloadProgress = ValueNotifier<double>(0);
@@ -78,8 +78,8 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
         ..preparePlayer(
           path: widget.message.mediaPath,
           noOfSamples: widget.config?.playerWaveStyle
-                  ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
-              playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
+                  ?.getSamplesForWidth(widget.screenWidth * 0.30) ??
+              playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.30),
         ).whenComplete(() {
           widget.onMaxDuration?.call(controller.maxDuration);
           controller.setFinishMode(
@@ -99,8 +99,8 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
             ..preparePlayer(
               path: path,
               noOfSamples: widget.config?.playerWaveStyle
-                      ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
-                  playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
+                      ?.getSamplesForWidth(widget.screenWidth * 0.30) ??
+                  playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.30),
             ).whenComplete(() {
               _isFileExist.value = isDownloaded;
               controller.setFinishMode(
@@ -245,6 +245,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
       return AudioFileWaveforms(
         size: Size(widget.screenWidth * 0.30, 35),
         playerController: controller,
+
         waveformType: WaveformType.fitWidth,
         playerWaveStyle: widget.config?.playerWaveStyle ?? playerWaveStyle,
         margin: widget.config?.waveformMargin,
