@@ -26,6 +26,7 @@ import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:chatview/src/utils/constants/constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
@@ -179,20 +180,21 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
               stream: _recorderController?.onStateChanged(),
               builder: (context, recorderStateSnapshot) {
                 final recorderState = recorderStateSnapshot.data ?? RecordState.stop;
+                print('recordsts $recorderState');
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     ValueListenableBuilder(
                         valueListenable: isRecording,
                         builder: (context, isRecordingValue, child) {
-                          if (recorderState==RecordState.record && !isRecordingLocked) {
+                          if (recorderState == RecordState.record && !isRecordingLocked) {
                             return IconButton(
                                 onPressed: () {
                                   _finishRecording();
                                 },
                                 icon: const Icon(Icons.lock, color: Colors.red));
                           }
-                          if (recorderState==RecordState.record && isRecordingLocked) {
+                          if (recorderState == RecordState.record && isRecordingLocked) {
                             return IconButton(
                                 onPressed: () {
                                   _pauseRecording();
@@ -200,7 +202,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                 style: IconButton.styleFrom(backgroundColor: Colors.blue),
                                 icon: const Icon(Icons.pause, color: Colors.white));
                           }
-                          if (recorderState==RecordState.stop && isRecordingLocked) {
+                          if (recorderState == RecordState.stop && isRecordingLocked) {
                             return IconButton(
                                 onPressed: () {
                                   _startRecording();
@@ -218,34 +220,49 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                               // recorderState.isPaused &&
                               controller != null &&
                               !kIsWeb &&
-                              recorderState==RecordState.stop) {
-                            return AudioFileWaveforms(
-                              playerWaveStyle: PlayerWaveStyle(
-                                  liveWaveColor: Colors.black,
-                                  fixedWaveColor: Colors.black,
-                                  backgroundColor: Colors.lightBlue),
-                              size: const Size(double.maxFinite, 50),
-                              playerController: _playerController!,
-                              margin: voiceRecordingConfig?.margin,
-                              padding: voiceRecordingConfig?.padding ??
-                                  EdgeInsets.symmetric(
-                                    horizontal: cancelRecordConfiguration == null ? 8 : 5,
-                                  ),
-                              decoration: voiceRecordingConfig?.decoration ??
-                                  BoxDecoration(
-                                    color: voiceRecordingConfig?.backgroundColor,
-                                    borderRadius: BorderRadius.circular(12.0),
-                                  ),
+                              _isRecordingLocked.value &&
+                              recorderState == RecordState.stop) {
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: AudioFileWaveforms(
+                                    playerWaveStyle: PlayerWaveStyle(
+                                        liveWaveColor: Colors.black,
+                                        fixedWaveColor: Colors.black,
+                                        backgroundColor: Colors.lightBlue),
+                                    size: const Size(double.maxFinite, 50),
+                                    playerController: _playerController!,
+                                    margin: voiceRecordingConfig?.margin,
+                                    padding: voiceRecordingConfig?.padding ??
+                                        EdgeInsets.symmetric(
+                                          horizontal: cancelRecordConfiguration == null ? 8 : 5,
+                                        ),
+                                    decoration: voiceRecordingConfig?.decoration ??
+                                        BoxDecoration(
+                                          color: voiceRecordingConfig?.backgroundColor,
+                                          borderRadius: BorderRadius.circular(12.0),
+                                        ),
 
-                              // playerWaveStyle: voiceRecordingConfig?.waveStyle ??
-                              //     WaveStyle(
-                              //       extendWaveform: true,
-                              //       showMiddleLine: false,
-                              //       waveColor: voiceRecordingConfig?.waveStyle?.waveColor ?? Colors.black,
-                              //     ),
+                                    // playerWaveStyle: voiceRecordingConfig?.waveStyle ??
+                                    //     WaveStyle(
+                                    //       extendWaveform: true,
+                                    //       showMiddleLine: false,
+                                    //       waveColor: voiceRecordingConfig?.waveStyle?.waveColor ?? Colors.black,
+                                    //     ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    _finishRecording();
+                                  },
+                                  icon: const Icon(Icons.send, color: Colors.purple),
+                                ),
+                              ],
                             );
                           } else {
                             return TextFieldView(
+                              recordingDuration: recordingDuration,
+                              recorderController: _recorderController,
                               recorderState: recorderState,
                               isRecordingLocked: _isRecordingLocked,
                               controller: controller,
@@ -289,7 +306,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
 
     showLockIndicator.value = false;
 
-    if (!(controller?.recorderState.isRecording ?? false) || _isRecordingLocked.value) return;
+    bool _isRecording = await _recorderController!.isRecording();
+
+    if (!(_isRecording) || _isRecordingLocked.value) return;
 
     isHoldingRecord.value = false;
 
@@ -306,7 +325,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     //   return;
     // }
 
-    final path = await controller?.stop();
+    // final path = await controller?.stop();
+    final path = await _recorderController?.stop();
+
     isRecording.value = false;
     _isRecordingLocked.value = false;
     wasSwipedUp = false;
@@ -333,7 +354,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
 
     showLockIndicator.value = false;
 
-    bool _isRecording=await _recorderController!.isRecording();
+    bool _isRecording = await _recorderController!.isRecording();
 
     if (!(_isRecording) || !_isRecordingLocked.value) return;
 
@@ -400,24 +421,17 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     recordingTimer = null;
     blinkTimer = null;
     lockRecordingTimer = null;
+    bool isRecord = await _recorderController!.isRecording();
+    if (!isRecord) return;
+    await _recorderController?.cancel();
 
-    if (!isRecording.value) return;
-    final path = await controller?.stop();
-    if (path == null) {
-      isRecording.value = false;
-      isHoldingRecord.value = false;
-      _isRecordingLocked.value = false;
-      return;
-    }
-    final file = File(path);
-
-    if (await file.exists()) {
-      await file.delete();
-    }
-
+    // final path = await controller?.stop();
     isRecording.value = false;
     isHoldingRecord.value = false;
     _isRecordingLocked.value = false;
+    isPaused.value = false;
+    _audioSegment1 = null;
+    _audioSegment2 = null;
   }
 
   Future<void> _recordOrStop() async {
@@ -447,14 +461,14 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android,
       "Voice messages are only supported with android and ios platform",
     );
+    // Cancel any existing timers first
+    recordingTimer?.cancel();
+    blinkTimer?.cancel();
+    lockRecordingTimer?.cancel();
+    bool _isRecording = await _recorderController!.isRecording();
 
-    if (isRecording.value) return;
+    if (_isRecording) return;
     if (!_isRecordingLocked.value && _audioSegment1 == null) {
-      // Cancel any existing timers first
-      recordingTimer?.cancel();
-      blinkTimer?.cancel();
-      lockRecordingTimer?.cancel();
-
       horizontalDragOffset.value = 0.0;
       verticalDragOffset.value = 0.0;
       _isRecordingLocked.value = false;
@@ -509,6 +523,30 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
 
   // Finish recording and send the voice message
   Future<void> _finishRecording() async {
+    bool _isRecording = await _recorderController!.isRecording();
+
+    if ((!_isRecording) && _isRecordingLocked.value) {
+      // Cancel all timers
+      recordingTimer?.cancel();
+      blinkTimer?.cancel();
+      lockRecordingTimer?.cancel();
+
+      // Reset timer variables
+      recordingTimer = null;
+      blinkTimer = null;
+      lockRecordingTimer = null;
+
+      // final path = await controller?.stop();
+      isRecording.value = false;
+      isHoldingRecord.value = false;
+      _isRecordingLocked.value = false;
+      isPaused.value = false;
+      widget.onRecordingComplete(_audioSegment1);
+      _audioSegment1 = null;
+      _audioSegment2 = null;
+      return;
+    }
+
     if (!isRecording.value) return;
 
     // Cancel all timers
@@ -581,9 +619,12 @@ class TextFieldView extends StatefulWidget {
     required this.onStoprecording,
     required this.onLongPressStart,
     required this.onLongPressEnd,
+    this.recorderController,
+    required this.recordingDuration,
   });
   final RecordState recorderState;
   final RecorderController? controller;
+  final AudioRecorder? recorderController;
   final TextFieldConfiguration? textFieldConfig;
   final SendMessageConfiguration? sendMessageConfig;
   final VoiceRecordingConfiguration? voiceRecordingConfig;
@@ -591,6 +632,7 @@ class TextFieldView extends StatefulWidget {
   final ValueNotifier isRecordingLocked;
   final FocusNode? focusNode;
   final TextEditingController? textEditingController;
+  final ValueListenable<int> recordingDuration;
 
   /// Provides callback when user tap on text field.
   final VoidCallBack onPressed;
@@ -718,7 +760,7 @@ class _TextFieldViewState extends State<TextFieldView> {
       ),
       child: Row(
         children: [
-          if (widget.recorderState==RecordState.record && widget.controller != null && !kIsWeb)
+          if (widget.recorderState == RecordState.record && widget.controller != null && !kIsWeb)
             Expanded(
               child: Stack(
                 children: [
@@ -752,14 +794,11 @@ class _TextFieldViewState extends State<TextFieldView> {
                             }),
                         const SizedBox(width: 12),
                         // Time counter
-                        StreamBuilder<Duration>(
-                          stream: widget.controller?.onCurrentDuration,
-                          builder: (
-                            context,
-                            duration,
-                          ) {
+                        ValueListenableBuilder<int>(
+                          valueListenable: widget.recordingDuration,
+                          builder: (context, duration, _) {
                             return Text(
-                              _formatDuration(duration.data?.inSeconds ?? 0),
+                              _formatDuration(duration),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -865,7 +904,7 @@ class _TextFieldViewState extends State<TextFieldView> {
               } else {
                 return Row(
                   children: [
-                    if (!(widget.recorderState ==RecordState.record)) ...[
+                    if (!(widget.recorderState == RecordState.record)) ...[
                       if (widget.sendMessageConfig?.enableCameraImagePicker ?? true)
                         IconButton(
                           constraints: const BoxConstraints(),
@@ -949,11 +988,13 @@ class _TextFieldViewState extends State<TextFieldView> {
                                 ),
                                 // Mic button with gesture detector
                                 GestureDetector(
-                                  onLongPressStart: (_) {
+                                  onLongPressStart: (_) async {
+                                    await HapticFeedback.mediumImpact();
                                     widget.onLongPressStart.call();
                                     blinkTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
                                       showMicIcon.value = !showMicIcon.value;
                                     });
+                                    SystemSound.play(SystemSoundType.alert);
                                   },
                                   onLongPressEnd: (_) {
                                     if (widget.isRecordingLocked.value) return;
@@ -970,6 +1011,14 @@ class _TextFieldViewState extends State<TextFieldView> {
                                     if (details.offsetFromOrigin.dy <
                                         -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0)) {
                                       widget.isRecordingLocked.value = true;
+                                    } else {
+                                      // _isRecordingLocked.value = false;
+                                    }
+                                    if (details.offsetFromOrigin.dx <
+                                        -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0)) {
+                                      HapticFeedback.mediumImpact();
+
+                                      widget.onCancelRecording.call();
                                     } else {
                                       // _isRecordingLocked.value = false;
                                     }
@@ -994,12 +1043,12 @@ class _TextFieldViewState extends State<TextFieldView> {
                                       // }
                                     }
                                   },
-                                  onLongPressCancel: () {
-                                    if (!widget.isRecordingLocked.value) {
-                                      showLockIndicator.value = false;
-                                      widget.onCancelRecording.call();
-                                    }
-                                  },
+                                  // onLongPressCancel: () {
+                                  //   if (!widget.isRecordingLocked.value) {
+                                  //     showLockIndicator.value = false;
+                                  //     widget.onCancelRecording.call();
+                                  //   }
+                                  // },
                                   child: IconButton(
                                     onPressed: null,
                                     icon: holdToRecordConfig?.holdToRecordIcon ??
@@ -1015,15 +1064,15 @@ class _TextFieldViewState extends State<TextFieldView> {
                           : IconButton(
                               onPressed:
                                   (widget.textFieldConfig?.enabled ?? true) ? widget.onStoprecording.call() : null,
-                              icon: (widget.recorderState==RecordState.record
+                              icon: (widget.recorderState == RecordState.record
                                       ? widget.voiceRecordingConfig?.stopIcon
                                       : widget.voiceRecordingConfig?.micIcon) ??
                                   Icon(
-                                    widget.recorderState==RecordState.record ? Icons.stop : Icons.mic,
+                                    widget.recorderState == RecordState.record ? Icons.stop : Icons.mic,
                                     color: widget.voiceRecordingConfig?.recorderIconColor,
                                   ),
                             ),
-                    if (widget.recorderState==RecordState.record && widget.cancelRecordConfiguration != null)
+                    if (widget.recorderState == RecordState.record && widget.cancelRecordConfiguration != null)
                       IconButton(
                         onPressed: () {
                           widget.cancelRecordConfiguration?.onCancel?.call();
@@ -1127,11 +1176,11 @@ class _TextFieldViewState extends State<TextFieldView> {
 
     // Set up timer for locking recording if configured
     lockRecordingTimer?.cancel();
-    if (holdToRecordConfig?.lockRecordingAfterDuration != null) {
-      lockRecordingTimer = Timer(holdToRecordConfig!.lockRecordingAfterDuration!, () {
-        _isRecordingLocked.value = true;
-      });
-    }
+    // if (holdToRecordConfig?.lockRecordingAfterDuration != null) {
+    //   lockRecordingTimer = Timer(holdToRecordConfig!.lockRecordingAfterDuration!, () {
+    //     _isRecordingLocked.value = true;
+    //   });
+    // }
   }
 
   // Stop recording for hold-to-record feature
