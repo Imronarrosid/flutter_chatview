@@ -258,6 +258,22 @@ class VoiceRecordingConfiguration {
     this.androidEncoder,
     this.iosEncoder,
     this.androidOutputFormat,
+    this.playerWaveStyle = const PlayerWaveStyle(
+      fixedWaveColor: Colors.white38,
+      liveWaveColor: Colors.white,
+      backgroundColor: Color(0xffEE5366),
+      waveThickness: 4.0,
+      spacing: 6.5,
+    ),
+    this.playIconColor,
+    this.pauseIconColor,
+    this.deleteIconColor,
+    this.sendIconColor,
+    this.playIcon,
+    this.pauseIcon,
+    this.deleteIcon,
+    this.sendIcon,
+    this.micIconColor,
   });
 
   /// Applies styles to waveform.
@@ -282,6 +298,8 @@ class VoiceRecordingConfiguration {
   /// An icon for stopping voice recording.
   final Widget? stopIcon;
 
+  final Color? micIconColor;
+
   /// Applies color to mic and stop icon.
   final Color? recorderIconColor;
 
@@ -303,6 +321,16 @@ class VoiceRecordingConfiguration {
 
   /// The audio output format to be used for recorded audio files on Android.
   final AndroidOutputFormat? androidOutputFormat;
+
+  final PlayerWaveStyle playerWaveStyle;
+  final Color? playIconColor;
+  final Color? pauseIconColor;
+  final Color? deleteIconColor;
+  final Color? sendIconColor;
+  final Widget? playIcon;
+  final Widget? pauseIcon;
+  final Widget? deleteIcon;
+  final Widget? sendIcon;
 }
 
 class CancelRecordConfiguration {
