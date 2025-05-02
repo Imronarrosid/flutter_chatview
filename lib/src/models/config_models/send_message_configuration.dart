@@ -36,6 +36,9 @@ class SendMessageConfiguration {
   /// Used to give color to send button.
   final Color? defaultSendButtonColor;
 
+  /// Used to give icon color to send button.
+  final Color? sendButtonIconColor;
+
   /// Provides ability to give custom send button.
   final Widget? sendButtonIcon;
 
@@ -74,6 +77,7 @@ class SendMessageConfiguration {
 
   const SendMessageConfiguration({
     this.textFieldConfig,
+    this.sendButtonIconColor,
     this.textFieldBackgroundColor,
     this.imagePickerIconsConfig,
     this.imagePickerConfiguration,
