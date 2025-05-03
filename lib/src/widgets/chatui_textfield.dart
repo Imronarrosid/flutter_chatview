@@ -21,6 +21,7 @@
  */
 import 'dart:async';
 import 'dart:io' show File, Platform, Directory;
+import 'dart:math' as Math;
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:chatview/src/models/config_models/audio_record_config.dart';
@@ -285,8 +286,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                       opacity: isShowMic ? 1.0 : 0.3,
                                                       child: Icon(
                                                         Icons.mic,
-                                                        color: voiceRecordingConfig?.recorderIconColor ??
-                                                            Colors.red,
+                                                        color:
+                                                            voiceRecordingConfig?.recorderIconColor ?? Colors.red,
                                                         size: 24,
                                                       ),
                                                     );
@@ -301,15 +302,46 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                     style: TextStyle(
                                                       fontSize: 16,
                                                       fontWeight: FontWeight.bold,
-                                                      color: voiceRecordingConfig?.recorderIconColor ??
-                                                          Colors.black,
+                                                      color:
+                                                          voiceRecordingConfig?.recorderIconColor ?? Colors.black,
                                                     ),
                                                   );
                                                 },
                                               ),
                                               const Spacer(),
-                                              const Icon(Icons.keyboard_arrow_left_rounded),
-                                              const Text('swipe left to cancel')
+                                              if (recorderState == RecordState.record && !isRecordingLocked) ...[
+                                                Container(
+                                                  width: 166,
+                                                  child: const SwipeLeftAnimation(
+                                                    curve: Curves.ease,
+                                                    duration: Duration(
+                                                      milliseconds: 800,
+                                                    ),
+                                                    alignments: [
+                                                      Alignment.centerLeft,
+                                                      Alignment.centerRight,
+                                                    ],
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Icon(Icons.keyboard_arrow_left_rounded),
+                                                        SizedBox(width: 4),
+                                                        Text('swipe left to cancel'),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12)
+                                              ] else
+                                                IconButton(
+                                                  onPressed: () {
+                                                    _cancelRecording();
+                                                  },
+                                                  icon: voiceRecordingConfig?.deleteIcon ??
+                                                      Icon(Icons.delete,
+                                                          color:
+                                                              voiceRecordingConfig?.deleteIconColor ?? Colors.red),
+                                                ),
                                             ],
                                           ),
                                         );
@@ -352,7 +384,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                             icon: voiceRecordingConfig?.sendIcon ??
                                 Icon(
                                   Icons.send,
-                                  color: sendMessageConfig?.sendButtonIconColor ?? Colors.white,
+                                  color: sendMessageConfig?.sendButtonIconColor ?? Colors.black,
                                 ),
                           ),
                         ValueListenableBuilder<String>(
@@ -1252,4 +1284,66 @@ class SendMessageButton extends IconButton {
     super.hoverColor,
     super.focusColor,
   });
+}
+
+class SwipeLeftAnimation extends StatefulWidget {
+  final Widget child;
+  final Duration duration;
+  final List<Alignment> alignments;
+  final Curve curve;
+
+  const SwipeLeftAnimation({
+    Key? key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 600),
+    required this.alignments,
+    this.curve = Curves.easeInOut,
+  }) : super(key: key);
+
+  @override
+  State<SwipeLeftAnimation> createState() => _SwipeLeftAnimationState();
+}
+
+class _SwipeLeftAnimationState extends State<SwipeLeftAnimation> {
+  late int _currentIndex;
+  late Alignment _currentAlignment;
+  late Cubic _currentCurve;
+
+  List<Cubic> curves = [
+    Curves.easeInOut,
+    Curves.easeIn,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = 0;
+    _currentAlignment = widget.alignments[_currentIndex];
+    _currentCurve = curves[_currentIndex];
+    _startAnimation();
+  }
+
+  void _startAnimation() {
+    Future.delayed(widget.duration, () {
+      if (!mounted) return;
+
+      setState(() {
+        _currentIndex = (_currentIndex + 1) % widget.alignments.length;
+        _currentAlignment = widget.alignments[_currentIndex];
+        _currentCurve = curves[_currentIndex];
+      });
+
+      _startAnimation();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedAlign(
+      alignment: _currentAlignment,
+      duration: widget.duration,
+      curve: widget.curve,
+      child: widget.child,
+    );
+  }
 }
