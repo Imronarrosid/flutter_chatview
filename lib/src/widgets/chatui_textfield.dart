@@ -31,6 +31,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 
 import '../../chatview.dart';
@@ -851,13 +852,19 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android,
       "Voice messages are only supported with android and ios platform",
     );
+    if (_recorderController == null) return;
+    final bool hasPermission = await Permission.microphone.isGranted;
+
+    if (!hasPermission) await Permission.microphone.request();
+    if (!hasPermission) return;
+
     // Cancel any existing timers first
     recordingTimer?.cancel();
     blinkTimer?.cancel();
     lockRecordingTimer?.cancel();
-    bool _isRecording = await _recorderController!.isRecording();
+    final bool isStatusRecord = await _recorderController!.isRecording();
 
-    if (_isRecording) return;
+    if (isStatusRecord) return;
     if (!_isRecordingLocked.value && _audioSegment1 == null) {
       horizontalDragOffset.value = 0.0;
       verticalDragOffset.value = 0.0;
