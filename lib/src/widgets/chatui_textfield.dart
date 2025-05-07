@@ -196,16 +196,24 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                     ValueListenableBuilder(
                         valueListenable: isRecording,
                         builder: (context, isRecordingValue, child) {
-                          if (recorderState == RecordState.record && !isRecordingLocked) {
-                            return IconButton(
-                                onPressed: () {
-                                  _finishRecording();
-                                },
-                                style: IconButton.styleFrom(
-                                  backgroundColor: voiceRecordingConfig?.backgroundColor,
-                                ),
-                                icon:
-                                    Icon(Icons.lock, color: voiceRecordingConfig?.playIconColor ?? Colors.black));
+                          if (isRecordingValue && recorderState == RecordState.record && !isRecordingLocked) {
+                            return ValueListenableBuilder<double>(
+                                valueListenable: verticalDragOffset,
+                                builder: (context, verticalOffset, _) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                        bottom: !verticalOffset.isNegative ? 0 : (verticalOffset.abs() + 12)),
+                                    child: IconButton(
+                                        onPressed: () {
+                                          _finishRecording();
+                                        },
+                                        style: IconButton.styleFrom(
+                                          backgroundColor: voiceRecordingConfig?.backgroundColor,
+                                        ),
+                                        icon: Icon(Icons.lock,
+                                            color: voiceRecordingConfig?.playIconColor ?? Colors.black)),
+                                  );
+                                });
                           }
                           if (recorderState == RecordState.record && isRecordingLocked) {
                             return IconButton(
@@ -378,9 +386,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                                 },
                                                                 icon: voiceRecordingConfig?.deleteIcon ??
                                                                     Icon(Icons.delete,
-                                                                        color:
-                                                                            voiceRecordingConfig?.deleteIconColor ??
-                                                                                Colors.red),
+                                                                        color: voiceRecordingConfig
+                                                                                ?.deleteIconColor ??
+                                                                            Colors.red),
                                                               ),
                                                             ),
                                                         ],
@@ -419,7 +427,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                       ScaleTransitionWrapper(
                                         // autoStart: false,
                                         beginScale: recorderState == RecordState.record ? 2.2 : 1.0,
-                                        endScale:recorderState == RecordState.record ? 2.2 : 1.0,
+                                        endScale: recorderState == RecordState.record ? 2.2 : 1.0,
                                         curve: Curves.bounceInOut,
                                         child: SendMessageButton(
                                           onPressed: () {
