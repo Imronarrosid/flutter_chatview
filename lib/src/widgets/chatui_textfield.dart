@@ -309,94 +309,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                         playerState, snapshot, context, maxDuration);
                                                   } else if (_recorderController != null &&
                                                       recorderState == RecordState.record) {
-                                                    return Container(
-                                                      height: inputFieldHeight,
-                                                      padding: voiceRecordingConfig?.padding ??
-                                                          EdgeInsets.symmetric(
-                                                            horizontal: cancelRecordConfiguration == null ? 8 : 5,
-                                                          ),
-                                                      margin: voiceRecordingConfig?.margin,
-                                                      decoration: voiceRecordingConfig?.decoration ??
-                                                          BoxDecoration(
-                                                            color: voiceRecordingConfig?.backgroundColor,
-                                                            borderRadius: BorderRadius.circular(50.0),
-                                                          ),
-                                                      child: Row(
-                                                        mainAxisAlignment: MainAxisAlignment.start,
-                                                        children: [
-                                                          // Blinking mic icon
-                                                          ValueListenableBuilder<bool>(
-                                                              valueListenable: showMicIcon,
-                                                              builder: (context, isShowMic, _) {
-                                                                return Opacity(
-                                                                  opacity: isShowMic ? 1.0 : 0.3,
-                                                                  child: Icon(
-                                                                    Icons.mic,
-                                                                    color:
-                                                                        voiceRecordingConfig?.recorderIconColor ??
-                                                                            Colors.red,
-                                                                    size: 24,
-                                                                  ),
-                                                                );
-                                                              }),
-                                                          const SizedBox(width: 12),
-                                                          // Time counter
-                                                          ValueListenableBuilder<int>(
-                                                            valueListenable: recordingDuration,
-                                                            builder: (context, duration, _) {
-                                                              return Text(
-                                                                _formatDuration(duration),
-                                                                style: TextStyle(
-                                                                  fontSize: 16,
-                                                                  fontWeight: FontWeight.bold,
-                                                                  color: voiceRecordingConfig?.recorderIconColor ??
-                                                                      Colors.black,
-                                                                ),
-                                                              );
-                                                            },
-                                                          ),
-                                                          const Spacer(),
-                                                          if (recorderState == RecordState.record &&
-                                                              !isRecordingLocked) ...[
-                                                            const SizedBox(
-                                                              width: 166,
-                                                              child: SwipeLeftAnimation(
-                                                                curve: Curves.ease,
-                                                                duration: Duration(
-                                                                  milliseconds: 800,
-                                                                ),
-                                                                alignments: [
-                                                                  Alignment.centerLeft,
-                                                                  Alignment.centerRight,
-                                                                ],
-                                                                child: Row(
-                                                                  mainAxisSize: MainAxisSize.min,
-                                                                  children: [
-                                                                    Icon(Icons.keyboard_arrow_left_rounded),
-                                                                    SizedBox(width: 4),
-                                                                    Text('swipe left to cancel'),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            const SizedBox(width: 12)
-                                                          ] else
-                                                            Padding(
-                                                              padding: const EdgeInsets.only(right: 12.0),
-                                                              child: IconButton(
-                                                                onPressed: () {
-                                                                  _cancelRecording();
-                                                                },
-                                                                icon: voiceRecordingConfig?.deleteIcon ??
-                                                                    Icon(Icons.delete,
-                                                                        color: voiceRecordingConfig
-                                                                                ?.deleteIconColor ??
-                                                                            Colors.red),
-                                                              ),
-                                                            ),
-                                                        ],
-                                                      ),
-                                                    );
+                                                    return _recordingView(recorderState, isRecordingLocked);
                                                   } else {
                                                     return TextFieldView(
                                                       inputText: _inputText,
@@ -582,6 +495,90 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                 );
               });
         });
+  }
+
+  Container _recordingView(RecordState recorderState, bool isRecordingLocked) {
+    return Container(
+      height: inputFieldHeight,
+      padding: voiceRecordingConfig?.padding ??
+          EdgeInsets.symmetric(
+            horizontal: cancelRecordConfiguration == null ? 8 : 5,
+          ),
+      margin: voiceRecordingConfig?.margin,
+      decoration: voiceRecordingConfig?.decoration ??
+          BoxDecoration(
+            color: voiceRecordingConfig?.backgroundColor,
+            borderRadius: BorderRadius.circular(50.0),
+          ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          // Blinking mic icon
+          ValueListenableBuilder<bool>(
+              valueListenable: showMicIcon,
+              builder: (context, isShowMic, _) {
+                return Opacity(
+                  opacity: isShowMic ? 1.0 : 0.3,
+                  child: Icon(
+                    Icons.mic,
+                    color: voiceRecordingConfig?.recorderIconColor ?? Colors.red,
+                    size: 24,
+                  ),
+                );
+              }),
+          const SizedBox(width: 12),
+          // Time counter
+          ValueListenableBuilder<int>(
+            valueListenable: recordingDuration,
+            builder: (context, duration, _) {
+              return Text(
+                _formatDuration(duration),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: voiceRecordingConfig?.recorderIconColor ?? Colors.black,
+                ),
+              );
+            },
+          ),
+          const Spacer(),
+          if (recorderState == RecordState.record && !isRecordingLocked) ...[
+            const SizedBox(
+              width: 166,
+              child: SwipeLeftAnimation(
+                curve: Curves.ease,
+                duration: Duration(
+                  milliseconds: 800,
+                ),
+                alignments: [
+                  Alignment.centerLeft,
+                  Alignment.centerRight,
+                ],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.keyboard_arrow_left_rounded),
+                    SizedBox(width: 4),
+                    Text('swipe left to cancel'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12)
+          ] else
+            Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: IconButton(
+                onPressed: () {
+                  _cancelRecording();
+                },
+                icon: voiceRecordingConfig?.deleteIcon ??
+                    Icon(Icons.delete, color: voiceRecordingConfig?.deleteIconColor ?? Colors.red),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Row _pausedRecordView(PlayerState playerState, String snapshot, BuildContext context, int maxDuration) {
