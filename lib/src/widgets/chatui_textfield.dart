@@ -264,22 +264,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                           return Stack(
                             children: [
                               if (recorderState == RecordState.record)
-                                Container(
-                                  height: inputFieldHeight,
-                                  margin: EdgeInsets.only(
-                                      right: (recorderState == RecordState.stop || !snapshot.isNegative)
-                                          ? 0
-                                          : finalPadding),
-                                  padding: voiceRecordingConfig?.padding ??
-                                      EdgeInsets.symmetric(
-                                        horizontal: cancelRecordConfiguration == null ? 8 : 5,
-                                      ),
-                                  decoration: voiceRecordingConfig?.decoration ??
-                                      BoxDecoration(
-                                        color: voiceRecordingConfig?.backgroundColor,
-                                        borderRadius: BorderRadius.circular(50.0),
-                                      ),
-                                ),
+                                _recordingBackground(recorderState, snapshot, finalPadding),
                               Padding(
                                 padding: EdgeInsets.only(
                                     right: (recorderState == RecordState.stop || !snapshot.isNegative)
@@ -495,6 +480,23 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                 );
               });
         });
+  }
+
+  Container _recordingBackground(RecordState recorderState, double snapshot, double finalPadding) {
+    return Container(
+      height: inputFieldHeight,
+      margin:
+          EdgeInsets.only(right: (recorderState == RecordState.stop || !snapshot.isNegative) ? 0 : finalPadding),
+      padding: voiceRecordingConfig?.padding ??
+          EdgeInsets.symmetric(
+            horizontal: cancelRecordConfiguration == null ? 8 : 5,
+          ),
+      decoration: voiceRecordingConfig?.decoration ??
+          BoxDecoration(
+            color: voiceRecordingConfig?.backgroundColor,
+            borderRadius: BorderRadius.circular(50.0),
+          ),
+    );
   }
 
   Container _recordingView(RecordState recorderState, bool isRecordingLocked) {
