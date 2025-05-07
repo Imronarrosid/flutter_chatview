@@ -246,7 +246,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                   ),
                             );
                           }
-
+    
                           return const SizedBox.shrink();
                         }),
                     const SizedBox(
@@ -280,9 +280,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                 stream: _playerController?.onPlayerStateChanged,
                                                 builder: (_, pState) {
                                                   final PlayerState? playerState = pState.data;
-
+    
                                                   int maxDuration = _playerController?.maxDuration ?? 0;
-
+    
                                                   if (playerState != null &&
                                                       // (playerState.isInitialised) &&
                                                       // recorderState.isPaused &&
@@ -389,7 +389,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                 verticalDragOffset.value = details.offsetFromOrigin.dy;
                                                 debugPrint(
                                                     'positionX: ${details.offsetFromOrigin.dx} positionY: ${details.offsetFromOrigin.dy}');
-
+    
                                                 if (details.offsetFromOrigin.dy <
                                                     -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0)) {
                                                   _isRecordingLocked.value = true;
@@ -400,24 +400,24 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                         -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0) &&
                                                     (isRecording.value)) {
                                                   _cancelRecording();
-
+    
                                                   HapticFeedback.lightImpact();
                                                 }
                                                 //  else {
                                                 //   // _isRecordingLocked.value = false;
                                                 // }
-
+    
                                                 if (!isRecordingLocked) {
                                                   lockIndicatorOffset.value = verticalDragOffset.value;
-
+    
                                                   double swipeThreshold =
                                                       holdToRecordConfig?.lockSwipeThreshold ?? 50.0;
-
+    
                                                   // Check for initial swipe up
                                                   if (verticalDragOffset.value <= -swipeThreshold) {
                                                     wasSwipedUp = true;
                                                   }
-
+    
                                                   // // If swiped up and then down without releasing, cancel recording
                                                   // if (wasSwipedUp &&
                                                   //     !isRecordingLocked &&
@@ -1165,87 +1165,90 @@ class _TextFieldViewState extends State<TextFieldView> {
   @override
   Widget build(BuildContext context) {
     final OutlineInputBorder outlineBorder = _outLineBorder;
-    return Container(
-      padding: widget.textFieldConfig?.padding ?? const EdgeInsets.symmetric(horizontal: 6),
-      margin: widget.textFieldConfig?.margin,
-      decoration: BoxDecoration(
-        borderRadius: widget.textFieldConfig?.borderRadius ?? BorderRadius.circular(textFieldBorderRadius),
-        color: widget.sendMessageConfig?.textFieldBackgroundColor ?? Colors.white,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              focusNode: widget.focusNode,
-              controller: widget.textEditingController,
-              style: widget.textFieldConfig?.textStyle ?? const TextStyle(color: Colors.white),
-              maxLines: widget.textFieldConfig?.maxLines ?? 5,
-              minLines: widget.textFieldConfig?.minLines ?? 1,
-              keyboardType: widget.textFieldConfig?.textInputType,
-              inputFormatters: widget.textFieldConfig?.inputFormatters,
-              onChanged: _onChanged,
-              enabled: widget.textFieldConfig?.enabled,
-              textCapitalization: widget.textFieldConfig?.textCapitalization ?? TextCapitalization.sentences,
-              decoration: InputDecoration(
-                hintText: widget.textFieldConfig?.hintText ?? PackageStrings.message,
-                fillColor: widget.sendMessageConfig?.textFieldBackgroundColor ?? Colors.white,
-                filled: true,
-                hintStyle: widget.textFieldConfig?.hintStyle ??
-                    TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.grey.shade600,
-                      letterSpacing: 0.25,
-                    ),
-                contentPadding:
-                    widget.textFieldConfig?.contentPadding ?? const EdgeInsets.symmetric(horizontal: 6),
-                border: outlineBorder,
-                focusedBorder: outlineBorder,
-                enabledBorder: outlineBorder,
-                disabledBorder: outlineBorder,
+    return Padding(
+      padding: const EdgeInsets.only(right: 6.0),
+      child: Container(
+        padding: widget.textFieldConfig?.padding ?? const EdgeInsets.symmetric(horizontal: 6),
+        margin: widget.textFieldConfig?.margin,
+        decoration: BoxDecoration(
+          borderRadius: widget.textFieldConfig?.borderRadius ?? BorderRadius.circular(textFieldBorderRadius),
+          color: widget.sendMessageConfig?.textFieldBackgroundColor ?? Colors.white,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                focusNode: widget.focusNode,
+                controller: widget.textEditingController,
+                style: widget.textFieldConfig?.textStyle ?? const TextStyle(color: Colors.white),
+                maxLines: widget.textFieldConfig?.maxLines ?? 5,
+                minLines: widget.textFieldConfig?.minLines ?? 1,
+                keyboardType: widget.textFieldConfig?.textInputType,
+                inputFormatters: widget.textFieldConfig?.inputFormatters,
+                onChanged: _onChanged,
+                enabled: widget.textFieldConfig?.enabled,
+                textCapitalization: widget.textFieldConfig?.textCapitalization ?? TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  hintText: widget.textFieldConfig?.hintText ?? PackageStrings.message,
+                  fillColor: widget.sendMessageConfig?.textFieldBackgroundColor ?? Colors.white,
+                  filled: true,
+                  hintStyle: widget.textFieldConfig?.hintStyle ??
+                      TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.grey.shade600,
+                        letterSpacing: 0.25,
+                      ),
+                  contentPadding:
+                      widget.textFieldConfig?.contentPadding ?? const EdgeInsets.symmetric(horizontal: 6),
+                  border: outlineBorder,
+                  focusedBorder: outlineBorder,
+                  enabledBorder: outlineBorder,
+                  disabledBorder: outlineBorder,
+                ),
               ),
             ),
-          ),
-          if (widget.sendMessageConfig?.enableCameraImagePicker ?? true)
-            IconButton(
-              constraints: const BoxConstraints(),
-              onPressed: (widget.textFieldConfig?.enabled ?? true)
-                  ? () => _onIconPressed(
-                        ImageSource.camera,
-                        config: widget.sendMessageConfig?.imagePickerConfiguration,
-                      )
-                  : null,
-              icon: imagePickerIconsConfig?.cameraImagePickerIcon ??
-                  Icon(
-                    Icons.camera_alt_outlined,
-                    color: imagePickerIconsConfig?.cameraIconColor,
-                  ),
-            ),
-          if (widget.sendMessageConfig?.enableGalleryImagePicker ?? true)
-            IconButton(
-              constraints: const BoxConstraints(),
-              onPressed: (widget.textFieldConfig?.enabled ?? true)
-                  ? () => _onIconPressed(
-                        ImageSource.gallery,
-                        config: widget.sendMessageConfig?.imagePickerConfiguration,
-                      )
-                  : null,
-              icon: imagePickerIconsConfig?.galleryImagePickerIcon ??
-                  Icon(
-                    Icons.image,
-                    color: imagePickerIconsConfig?.galleryIconColor,
-                  ),
-            ),
-          if (widget.recorderState == RecordState.record && widget.cancelRecordConfiguration != null)
-            IconButton(
-              onPressed: () {
-                widget.cancelRecordConfiguration?.onCancel?.call();
-                widget.onCancelRecording.call();
-              },
-              icon: widget.cancelRecordConfiguration?.icon ?? const Icon(Icons.cancel_outlined),
-              color: widget.cancelRecordConfiguration?.iconColor ?? widget.voiceRecordingConfig?.recorderIconColor,
-            ),
-        ],
+            if (widget.sendMessageConfig?.enableCameraImagePicker ?? true)
+              IconButton(
+                constraints: const BoxConstraints(),
+                onPressed: (widget.textFieldConfig?.enabled ?? true)
+                    ? () => _onIconPressed(
+                          ImageSource.camera,
+                          config: widget.sendMessageConfig?.imagePickerConfiguration,
+                        )
+                    : null,
+                icon: imagePickerIconsConfig?.cameraImagePickerIcon ??
+                    Icon(
+                      Icons.camera_alt_outlined,
+                      color: imagePickerIconsConfig?.cameraIconColor,
+                    ),
+              ),
+            if (widget.sendMessageConfig?.enableGalleryImagePicker ?? true)
+              IconButton(
+                constraints: const BoxConstraints(),
+                onPressed: (widget.textFieldConfig?.enabled ?? true)
+                    ? () => _onIconPressed(
+                          ImageSource.gallery,
+                          config: widget.sendMessageConfig?.imagePickerConfiguration,
+                        )
+                    : null,
+                icon: imagePickerIconsConfig?.galleryImagePickerIcon ??
+                    Icon(
+                      Icons.image,
+                      color: imagePickerIconsConfig?.galleryIconColor,
+                    ),
+              ),
+            if (widget.recorderState == RecordState.record && widget.cancelRecordConfiguration != null)
+              IconButton(
+                onPressed: () {
+                  widget.cancelRecordConfiguration?.onCancel?.call();
+                  widget.onCancelRecording.call();
+                },
+                icon: widget.cancelRecordConfiguration?.icon ?? const Icon(Icons.cancel_outlined),
+                color: widget.cancelRecordConfiguration?.iconColor ?? widget.voiceRecordingConfig?.recorderIconColor,
+              ),
+          ],
+        ),
       ),
     );
   }
