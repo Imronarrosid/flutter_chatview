@@ -259,6 +259,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                     ValueListenableBuilder<double>(
                         valueListenable: horizontalDragOffset,
                         builder: (context, snapshot, _) {
+                          double padding = snapshot.isNegative ? snapshot.abs() : 0;
+                          double finalPadding = padding > 60 ? 60 : padding;
                           return Stack(
                             children: [
                               if (recorderState == RecordState.record)
@@ -267,7 +269,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                   margin: EdgeInsets.only(
                                       right: (recorderState == RecordState.stop || !snapshot.isNegative)
                                           ? 0
-                                          : snapshot.abs()),
+                                          : finalPadding),
                                   padding: voiceRecordingConfig?.padding ??
                                       EdgeInsets.symmetric(
                                         horizontal: cancelRecordConfiguration == null ? 8 : 5,
@@ -282,7 +284,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                 padding: EdgeInsets.only(
                                     right: (recorderState == RecordState.stop || !snapshot.isNegative)
                                         ? 0
-                                        : snapshot.abs()),
+                                        : finalPadding),
                                 child: Row(
                                   children: [
                                     Expanded(
