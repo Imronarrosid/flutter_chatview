@@ -167,12 +167,13 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
                           ),
                         Padding(
                           key: chatViewIW?.chatTextFieldViewKey,
-                          padding: EdgeInsets.fromLTRB(
-                            bottomPadding4,
-                            bottomPadding4,
-                            bottomPadding4,
-                            _bottomPadding,
-                          ),
+                          padding: EdgeInsets.zero,
+                          // padding: EdgeInsets.fromLTRB(
+                          //   bottomPadding4,
+                          //   bottomPadding4,
+                          //   bottomPadding4,
+                          //   _bottomPadding,
+                          // ),
                           child: Stack(
                             alignment: Alignment.bottomCenter,
                             children: [
