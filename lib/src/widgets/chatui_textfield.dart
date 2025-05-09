@@ -272,188 +272,192 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                         _bottomPadding,
                       ),
                       decoration: BoxDecoration(
-                        color: recorderState == RecordState.record || (recorderState == RecordState.stop && isRecordingLocked) 
-                            ? sendMessageConfig?.textFieldBackgroundColor??Colors.white
+                        color: recorderState == RecordState.record ||
+                                (recorderState == RecordState.stop && isRecordingLocked)
+                            ? sendMessageConfig?.textFieldBackgroundColor ?? Colors.white
                             : null,
                       ),
                       child: ValueListenableBuilder<double>(
                           valueListenable: horizontalDragOffset,
                           builder: (context, snapshot, _) {
                             double padding = snapshot.isNegative ? snapshot.abs() : 0;
-                            double finalPadding = padding > 60 ? 60 : padding;
+                            double finalPadding =
+                                (recorderState == RecordState.stop || !snapshot.isNegative || isRecordingLocked)
+                                    ? 0
+                                    : padding > 60
+                                        ? 60
+                                        : padding;
                             return Stack(
                               children: [
-                                if (recorderState == RecordState.record)
-                                  _recordingBackground(recorderState, snapshot, finalPadding),
-                                Padding(
-                                  padding: EdgeInsets.only(
-                                      right: (recorderState == RecordState.stop || !snapshot.isNegative || isRecordingLocked)
-                                          ? 0
-                                          : finalPadding),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: ValueListenableBuilder<String>(
-                                            valueListenable: _recordingPath,
-                                            builder: (context, snapshot, _) {
-                                              return StreamBuilder<PlayerState>(
-                                                  stream: _playerController?.onPlayerStateChanged,
-                                                  builder: (_, pState) {
-                                                    final PlayerState? playerState = pState.data;
-
-                                                    int maxDuration = _playerController?.maxDuration ?? 0;
-
-                                                    if (playerState != null &&
-                                                        // (playerState.isInitialised) &&
-                                                        // recorderState.isPaused &&
-                                                        _recorderController != null &&
-                                                        !kIsWeb &&
-                                                        _isRecordingLocked.value &&
-                                                        recorderState == RecordState.stop) {
-                                                      return _pausedRecordView(
-                                                          playerState, snapshot, context, maxDuration);
-                                                    } else if (_recorderController != null &&
-                                                        recorderState == RecordState.record) {
-                                                      return _recordingView(recorderState, isRecordingLocked);
-                                                    } else {
-                                                      return TextFieldView(
-                                                        inputText: _inputText,
-                                                        recordingDuration: recordingDuration,
-                                                        recorderController: _recorderController,
-                                                        recorderState: recorderState,
-                                                        isRecordingLocked: _isRecordingLocked,
-                                                        controller: controller,
-                                                        textFieldConfig: textFieldConfig,
-                                                        sendMessageConfig: sendMessageConfig,
-                                                        voiceRecordingConfig: voiceRecordingConfig,
-                                                        cancelRecordConfiguration: cancelRecordConfiguration,
-                                                        focusNode: widget.focusNode,
-                                                        textEditingController: widget.textEditingController,
-                                                        onPressed: widget.onPressed,
-                                                        onImageSelected: widget.onImageSelected,
-                                                        onRecordingComplete: widget.onRecordingComplete,
-                                                        onCancelRecording: _cancelRecording,
-                                                        onStoprecording: _stopRecording,
-                                                        onLongPressStart: _startRecording,
-                                                        onLongPressEnd: _stopRecording,
-                                                        onFinishRecording: _stopRecording,
-                                                      );
-                                                    }
-                                                  });
-                                            }),
-                                      ),
-                                      if ((recorderState == RecordState.record ||
-                                              recorderState == RecordState.stop) &&
-                                          _isRecordingLocked.value)
-                                        ScaleTransitionWrapper(
-                                          // autoStart: false,
-                                          beginScale: recorderState == RecordState.record ? 2.2 : 1.0,
-                                          endScale: recorderState == RecordState.record ? 2.2 : 1.0,
-                                          curve: Curves.bounceInOut,
-                                          child: SendMessageButton(
-                                            onPressed: () {
-                                              _finishRecording();
-                                            },
-                                            style: IconButton.styleFrom(
-                                              backgroundColor: sendMessageConfig?.defaultSendButtonColor,
-                                            ),
-                                            icon: voiceRecordingConfig?.sendIcon ??
-                                                Icon(
-                                                  Icons.send,
-                                                  color: sendMessageConfig?.sendButtonIconColor ?? Colors.black,
-                                                ),
-                                          ),
-                                        ),
-                                      ValueListenableBuilder<String>(
-                                          valueListenable: _inputText,
-                                          builder: (_, inputTextValue, child) {
-                                            if (inputTextValue.isNotEmpty) {
-                                              return SendMessageButton(
-                                                color: Colors.white,
-                                                style: IconButton.styleFrom(
-                                                  backgroundColor:
-                                                      widget.sendMessageConfig?.defaultSendButtonColor ??
-                                                          Colors.green,
-                                                ),
-                                                onPressed: (textFieldConfig?.enabled ?? true)
-                                                    ? () {
-                                                        widget.onPressed();
-                                                        _inputText.value = '';
-                                                      }
-                                                    : null,
-                                                icon: widget.sendMessageConfig?.sendButtonIcon ??
-                                                    const Icon(Icons.send),
-                                              );
-                                            }
-                                            if (inputTextValue.isEmpty &&
-                                                (recorderState == RecordState.record ||
-                                                    recorderState == RecordState.stop) &&
-                                                !isRecordingLocked) {
-                                              return GestureDetector(
-                                                onLongPressStart: (_) async {
-                                                  await HapticFeedback.mediumImpact();
-                                                  _startRecording();
-                                                  blinkTimer =
-                                                      Timer.periodic(const Duration(milliseconds: 500), (timer) {
-                                                    showMicIcon.value = !showMicIcon.value;
-                                                  });
-                                                  SystemSound.play(SystemSoundType.alert);
-                                                },
-                                                onLongPressEnd: (_) {
-                                                  if (isRecordingLocked) return;
-                                                  _stopRecording();
-                                                  blinkTimer?.cancel();
-                                                },
-                                                onLongPressMoveUpdate: (details) {
-                                                  horizontalDragOffset.value = details.offsetFromOrigin.dx;
-                                                  verticalDragOffset.value = details.offsetFromOrigin.dy;
-                                                  debugPrint(
-                                                      'positionX: ${details.offsetFromOrigin.dx} positionY: ${details.offsetFromOrigin.dy}');
-
-                                                  if (details.offsetFromOrigin.dy <
-                                                      -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0)) {
-                                                    _isRecordingLocked.value = true;
+                                // if (recorderState == RecordState.record)
+                                //   _recordingBackground(recorderState, snapshot, finalPadding),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ValueListenableBuilder<String>(
+                                          valueListenable: _recordingPath,
+                                          builder: (context, snapshot, _) {
+                                            return StreamBuilder<PlayerState>(
+                                                stream: _playerController?.onPlayerStateChanged,
+                                                builder: (_, pState) {
+                                                  final PlayerState? playerState = pState.data;
+                                
+                                                  int maxDuration = _playerController?.maxDuration ?? 0;
+                                
+                                                  if (playerState != null &&
+                                                      // (playerState.isInitialised) &&
+                                                      // recorderState.isPaused &&
+                                                      _recorderController != null &&
+                                                      !kIsWeb &&
+                                                      _isRecordingLocked.value &&
+                                                      recorderState == RecordState.stop) {
+                                                    return _pausedRecordView(
+                                                        playerState, snapshot, context, maxDuration);
+                                                  } else if (_recorderController != null &&
+                                                      recorderState == RecordState.record) {
+                                                    return _recordingView(recorderState, isRecordingLocked);
                                                   } else {
-                                                    // _isRecordingLocked.value = false;
+                                                    return TextFieldView(
+                                                      inputText: _inputText,
+                                                      recordingDuration: recordingDuration,
+                                                      recorderController: _recorderController,
+                                                      recorderState: recorderState,
+                                                      isRecordingLocked: _isRecordingLocked,
+                                                      controller: controller,
+                                                      textFieldConfig: textFieldConfig,
+                                                      sendMessageConfig: sendMessageConfig,
+                                                      voiceRecordingConfig: voiceRecordingConfig,
+                                                      cancelRecordConfiguration: cancelRecordConfiguration,
+                                                      focusNode: widget.focusNode,
+                                                      textEditingController: widget.textEditingController,
+                                                      onPressed: widget.onPressed,
+                                                      onImageSelected: widget.onImageSelected,
+                                                      onRecordingComplete: widget.onRecordingComplete,
+                                                      onCancelRecording: _cancelRecording,
+                                                      onStoprecording: _stopRecording,
+                                                      onLongPressStart: _startRecording,
+                                                      onLongPressEnd: _stopRecording,
+                                                      onFinishRecording: _stopRecording,
+                                                    );
                                                   }
-                                                  if (details.offsetFromOrigin.dx <
-                                                          -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0) &&
-                                                      (isRecording.value)) {
-                                                    _cancelRecording();
-
-                                                    HapticFeedback.lightImpact();
-                                                  }
-                                                  //  else {
-                                                  //   // _isRecordingLocked.value = false;
-                                                  // }
-
-                                                  if (!isRecordingLocked) {
-                                                    lockIndicatorOffset.value = verticalDragOffset.value;
-
-                                                    double swipeThreshold =
-                                                        holdToRecordConfig?.lockSwipeThreshold ?? 50.0;
-
-                                                    // Check for initial swipe up
-                                                    if (verticalDragOffset.value <= -swipeThreshold) {
-                                                      wasSwipedUp = true;
+                                                });
+                                          }),
+                                    ),
+                                    if ((recorderState == RecordState.record ||
+                                            recorderState == RecordState.stop) &&
+                                        _isRecordingLocked.value)
+                                      ScaleTransitionWrapper(
+                                        // autoStart: false,
+                                        beginScale: recorderState == RecordState.record ? 2.2 : 1.0,
+                                        endScale: recorderState == RecordState.record ? 2.2 : 1.0,
+                                        curve: Curves.bounceInOut,
+                                        child: SendMessageButton(
+                                          onPressed: () {
+                                            _finishRecording();
+                                          },
+                                          style: IconButton.styleFrom(
+                                            backgroundColor: sendMessageConfig?.defaultSendButtonColor,
+                                          ),
+                                          icon: voiceRecordingConfig?.sendIcon ??
+                                              Icon(
+                                                Icons.send,
+                                                color: sendMessageConfig?.sendButtonIconColor ?? Colors.black,
+                                              ),
+                                        ),
+                                      ),
+                                    ValueListenableBuilder<String>(
+                                        valueListenable: _inputText,
+                                        builder: (_, inputTextValue, child) {
+                                          if (inputTextValue.isNotEmpty) {
+                                            return SendMessageButton(
+                                              color: Colors.white,
+                                              style: IconButton.styleFrom(
+                                                backgroundColor:
+                                                    widget.sendMessageConfig?.defaultSendButtonColor ??
+                                                        Colors.green,
+                                              ),
+                                              onPressed: (textFieldConfig?.enabled ?? true)
+                                                  ? () {
+                                                      widget.onPressed();
+                                                      _inputText.value = '';
                                                     }
-
-                                                    // // If swiped up and then down without releasing, cancel recording
-                                                    // if (wasSwipedUp &&
-                                                    //     !isRecordingLocked &&
-                                                    //     verticalDragOffset.value >
-                                                    //         -20) {
-                                                    //   _cancelRecording();
-                                                    //   return;
-                                                    // }
+                                                  : null,
+                                              icon: widget.sendMessageConfig?.sendButtonIcon ??
+                                                  const Icon(Icons.send),
+                                            );
+                                          }
+                                          if (inputTextValue.isEmpty &&
+                                              (recorderState == RecordState.record ||
+                                                  recorderState == RecordState.stop) &&
+                                              !isRecordingLocked) {
+                                            return GestureDetector(
+                                              onLongPressStart: (_) async {
+                                                await HapticFeedback.mediumImpact();
+                                                _startRecording();
+                                                blinkTimer =
+                                                    Timer.periodic(const Duration(milliseconds: 500), (timer) {
+                                                  showMicIcon.value = !showMicIcon.value;
+                                                });
+                                                SystemSound.play(SystemSoundType.alert);
+                                              },
+                                              onLongPressEnd: (_) {
+                                                if (isRecordingLocked) return;
+                                                _stopRecording();
+                                                blinkTimer?.cancel();
+                                              },
+                                              onLongPressMoveUpdate: (details) {
+                                                horizontalDragOffset.value = details.offsetFromOrigin.dx;
+                                                verticalDragOffset.value = details.offsetFromOrigin.dy;
+                                                debugPrint(
+                                                    'positionX: ${details.offsetFromOrigin.dx} positionY: ${details.offsetFromOrigin.dy}');
+                                
+                                                if (details.offsetFromOrigin.dy <
+                                                    -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0)) {
+                                                  _isRecordingLocked.value = true;
+                                                } else {
+                                                  // _isRecordingLocked.value = false;
+                                                }
+                                                if (details.offsetFromOrigin.dx <
+                                                        -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0) &&
+                                                    (isRecording.value)) {
+                                                  _cancelRecording();
+                                
+                                                  HapticFeedback.lightImpact();
+                                                }
+                                                //  else {
+                                                //   // _isRecordingLocked.value = false;
+                                                // }
+                                
+                                                if (!isRecordingLocked) {
+                                                  lockIndicatorOffset.value = verticalDragOffset.value;
+                                
+                                                  double swipeThreshold =
+                                                      holdToRecordConfig?.lockSwipeThreshold ?? 50.0;
+                                
+                                                  // Check for initial swipe up
+                                                  if (verticalDragOffset.value <= -swipeThreshold) {
+                                                    wasSwipedUp = true;
                                                   }
-                                                },
-                                                // onLongPressCancel: () {
-                                                //   if (!widget.isRecordingLocked.value) {
-                                                //     showLockIndicator.value = false;
-                                                //     widget.onCancelRecording.call();
-                                                //   }
-                                                // },
+                                
+                                                  // // If swiped up and then down without releasing, cancel recording
+                                                  // if (wasSwipedUp &&
+                                                  //     !isRecordingLocked &&
+                                                  //     verticalDragOffset.value >
+                                                  //         -20) {
+                                                  //   _cancelRecording();
+                                                  //   return;
+                                                  // }
+                                                }
+                                              },
+                                              // onLongPressCancel: () {
+                                              //   if (!widget.isRecordingLocked.value) {
+                                              //     showLockIndicator.value = false;
+                                              //     widget.onCancelRecording.call();
+                                              //   }
+                                              // },
+                                              child: AnimatedContainer(
+                                                duration: const Duration(milliseconds: 300),
+                                                padding: EdgeInsets.only(right: finalPadding),
                                                 child: Tooltip(
                                                   message: 'hold to record audio',
                                                   enableFeedback: true,
@@ -486,12 +490,12 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                     ),
                                                   ),
                                                 ),
-                                              );
-                                            }
-                                            return SizedBox.shrink();
-                                          }),
-                                    ],
-                                  ),
+                                              ),
+                                            );
+                                          }
+                                          return SizedBox.shrink();
+                                        }),
+                                  ],
                                 ),
                               ],
                             );
