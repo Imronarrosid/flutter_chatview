@@ -264,12 +264,17 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                       const SizedBox(
                         height: 15,
                       ),
-                    Padding(
+                    Container(
                       padding: EdgeInsets.fromLTRB(
                         bottomPadding4,
                         bottomPadding4,
                         bottomPadding4,
                         _bottomPadding,
+                      ),
+                      decoration: BoxDecoration(
+                        color: recorderState == RecordState.record || (recorderState == RecordState.stop && isRecordingLocked) 
+                            ? sendMessageConfig?.textFieldBackgroundColor??Colors.white
+                            : null,
                       ),
                       child: ValueListenableBuilder<double>(
                           valueListenable: horizontalDragOffset,
@@ -282,7 +287,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                   _recordingBackground(recorderState, snapshot, finalPadding),
                                 Padding(
                                   padding: EdgeInsets.only(
-                                      right: (recorderState == RecordState.stop || !snapshot.isNegative)
+                                      right: (recorderState == RecordState.stop || !snapshot.isNegative || isRecordingLocked)
                                           ? 0
                                           : finalPadding),
                                   child: Row(
