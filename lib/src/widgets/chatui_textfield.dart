@@ -134,7 +134,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   ValueNotifier<TypeWriterStatus> composingStatus = ValueNotifier(TypeWriterStatus.typed);
 
   late Debouncer debouncer;
-
+  final ValueNotifier<int> _seconds = ValueNotifier<int>(0);
+  final ValueNotifier<bool> _isRunning = ValueNotifier<bool>(false);
+  Timer? _timer;
   @override
   void initState() {
     attachListeners();
@@ -180,6 +182,38 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     composingStatus.addListener(() {
       widget.sendMessageConfig?.textFieldConfig?.onMessageTyping?.call(composingStatus.value);
     });
+  }
+
+  void _startTimer() {
+    if (!_isRecordingLocked.value) {
+      _resetTimer();
+    }
+    if (!_isRunning.value) {
+      _isRunning.value = true;
+
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        _seconds.value++;
+      });
+    }
+  }
+
+  void _pauseTimer() {
+    if (_isRunning.value && _timer != null) {
+      _timer!.cancel();
+      _isRunning.value = false;
+    }
+  }
+
+  void _resumeTimer() {
+    _startTimer();
+  }
+
+  void _resetTimer() {
+    if (_timer != null) {
+      _timer!.cancel();
+    }
+    _seconds.value = 0;
+    _isRunning.value = false;
   }
 
   // Format seconds to mm:ss
@@ -301,9 +335,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                 stream: _playerController?.onPlayerStateChanged,
                                                 builder: (_, pState) {
                                                   final PlayerState? playerState = pState.data;
-                                
+
                                                   int maxDuration = _playerController?.maxDuration ?? 0;
-                                
+
                                                   if (playerState != null &&
                                                       // (playerState.isInitialised) &&
                                                       // recorderState.isPaused &&
@@ -410,7 +444,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                 verticalDragOffset.value = details.offsetFromOrigin.dy;
                                                 debugPrint(
                                                     'positionX: ${details.offsetFromOrigin.dx} positionY: ${details.offsetFromOrigin.dy}');
-                                
+
                                                 if (details.offsetFromOrigin.dy <
                                                     -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0)) {
                                                   _isRecordingLocked.value = true;
@@ -421,24 +455,24 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                         -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0) &&
                                                     (isRecording.value)) {
                                                   _cancelRecording();
-                                
+
                                                   HapticFeedback.lightImpact();
                                                 }
                                                 //  else {
                                                 //   // _isRecordingLocked.value = false;
                                                 // }
-                                
+
                                                 if (!isRecordingLocked) {
                                                   lockIndicatorOffset.value = verticalDragOffset.value;
-                                
+
                                                   double swipeThreshold =
                                                       holdToRecordConfig?.lockSwipeThreshold ?? 50.0;
-                                
+
                                                   // Check for initial swipe up
                                                   if (verticalDragOffset.value <= -swipeThreshold) {
                                                     wasSwipedUp = true;
                                                   }
-                                
+
                                                   // // If swiped up and then down without releasing, cancel recording
                                                   // if (wasSwipedUp &&
                                                   //     !isRecordingLocked &&
@@ -556,8 +590,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
           const SizedBox(width: 12),
           // Time counter
           ValueListenableBuilder<int>(
-            valueListenable: recordingDuration,
-            builder: (context, duration, _) {
+            valueListenable: _seconds,
+            builder: (context, duration, __) {
+              print('duration.data $duration');
               return Text(
                 _formatDuration(duration),
                 style: TextStyle(
@@ -704,6 +739,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     blinkTimer?.cancel();
     lockRecordingTimer?.cancel();
 
+    _resetTimer();
+
     // Reset timer variables
     recordingTimer = null;
     blinkTimer = null;
@@ -763,6 +800,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     recordingTimer?.cancel();
     blinkTimer?.cancel();
     lockRecordingTimer?.cancel();
+
+    _pauseTimer();
 
     // Reset timer variables
     recordingTimer = null;
@@ -888,7 +927,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     recordingTimer?.cancel();
     blinkTimer?.cancel();
     lockRecordingTimer?.cancel();
+
     final bool isStatusRecord = await _recorderController!.isRecording();
+    _startTimer();
 
     if (isStatusRecord) return;
     if (!_isRecordingLocked.value && _audioSegment1 == null) {
