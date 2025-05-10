@@ -110,7 +110,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   // Variables for recording time counter and blinking mic
   ValueNotifier<int> recordingDuration = ValueNotifier(0);
   ValueNotifier<bool> showMicIcon = ValueNotifier(true);
-  Timer? recordingTimer;
+
   Timer? blinkTimer;
 
   // Add new variables for lock indicator
@@ -171,7 +171,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     recordingDuration.dispose();
     showMicIcon.dispose();
     lockRecordingTimer?.cancel();
-    recordingTimer?.cancel();
     blinkTimer?.cancel();
     showLockIndicator.dispose();
     lockIndicatorOffset.dispose();
@@ -735,14 +734,14 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       "Voice messages are only supported with android and ios platform",
     );
     // Cancel all timers
-    recordingTimer?.cancel();
+
     blinkTimer?.cancel();
     lockRecordingTimer?.cancel();
 
     _resetTimer();
 
     // Reset timer variables
-    recordingTimer = null;
+
     blinkTimer = null;
     lockRecordingTimer = null;
 
@@ -797,14 +796,14 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       "Voice messages are only supported with android and ios platform",
     );
     // Cancel all timers
-    recordingTimer?.cancel();
+
     blinkTimer?.cancel();
     lockRecordingTimer?.cancel();
 
     _pauseTimer();
 
     // Reset timer variables
-    recordingTimer = null;
+
     blinkTimer = null;
     lockRecordingTimer = null;
 
@@ -868,12 +867,12 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     );
 
     // Cancel all timers
-    recordingTimer?.cancel();
+
     blinkTimer?.cancel();
     lockRecordingTimer?.cancel();
 
     // Reset timer variables
-    recordingTimer = null;
+
     blinkTimer = null;
     lockRecordingTimer = null;
     bool isRecord = await _recorderController!.isRecording();
@@ -924,7 +923,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     if (!hasPermission) return;
 
     // Cancel any existing timers first
-    recordingTimer?.cancel();
+
     blinkTimer?.cancel();
     lockRecordingTimer?.cancel();
 
@@ -966,13 +965,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     isRecording.value = true;
 
     // Ensure timers are null before creating new ones
-    recordingTimer = null;
-    blinkTimer = null;
 
-    // Start recording timer
-    recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      recordingDuration.value++;
-    });
+    blinkTimer = null;
 
     // Start blinking mic icon
     blinkTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
@@ -994,12 +988,12 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
 
     if ((!_isRecording) && _isRecordingLocked.value) {
       // Cancel all timers
-      recordingTimer?.cancel();
+
       blinkTimer?.cancel();
       lockRecordingTimer?.cancel();
 
       // Reset timer variables
-      recordingTimer = null;
+
       blinkTimer = null;
       lockRecordingTimer = null;
 
@@ -1017,12 +1011,10 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     if (!isRecording.value) return;
 
     // Cancel all timers
-    recordingTimer?.cancel();
     blinkTimer?.cancel();
     lockRecordingTimer?.cancel();
 
     // Reset timer variables
-    recordingTimer = null;
     blinkTimer = null;
     lockRecordingTimer = null;
 
@@ -1032,38 +1024,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     _isRecordingLocked.value = false;
     isPaused.value = false;
     widget.onRecordingComplete(path);
-  }
-
-  // Add pause/resume recording function
-  Future<void> _togglePauseRecording() async {
-    debugPrint('Toggling pause recording: ${isPaused.value}');
-    if (isPaused.value) {
-      // Cancel existing timers before creating new ones
-      recordingTimer?.cancel();
-      blinkTimer?.cancel();
-
-      await controller?.record(
-        sampleRate: voiceRecordingConfig?.sampleRate,
-        bitRate: voiceRecordingConfig?.bitRate,
-        androidEncoder: voiceRecordingConfig?.androidEncoder,
-        iosEncoder: voiceRecordingConfig?.iosEncoder,
-        androidOutputFormat: voiceRecordingConfig?.androidOutputFormat,
-      );
-
-      // Create new timers
-      recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        recordingDuration.value++;
-      });
-      blinkTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-        showMicIcon.value = !showMicIcon.value;
-      });
-    } else {
-      await controller?.pause();
-      // Cancel timers when pausing
-      recordingTimer?.cancel();
-      blinkTimer?.cancel();
-    }
-    isPaused.value = !isPaused.value;
   }
 
   AudioRecordConfig get audioRecordConfig => widget.audioRecordConfig ?? const AudioRecordConfig();
