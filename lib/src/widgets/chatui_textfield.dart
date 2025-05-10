@@ -352,8 +352,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                   } else {
                                                     return TextFieldView(
                                                       inputText: _inputText,
-                                                      recorderState: recorderState,
-                                                      controller: controller,
                                                       textFieldConfig: textFieldConfig,
                                                       sendMessageConfig: sendMessageConfig,
                                                       focusNode: widget.focusNode,
@@ -1060,8 +1058,6 @@ class BuildPlayButton extends StatelessWidget {
 class TextFieldView extends StatefulWidget {
   const TextFieldView({
     super.key,
-    required this.recorderState,
-    this.controller,
     this.textFieldConfig,
     this.sendMessageConfig,
     this.focusNode,
@@ -1070,8 +1066,6 @@ class TextFieldView extends StatefulWidget {
     required this.onImageSelected,
     required this.inputText,
   });
-  final RecordState recorderState;
-  final RecorderController? controller;
   final TextFieldConfiguration? textFieldConfig;
   final SendMessageConfiguration? sendMessageConfig;
   final FocusNode? focusNode;
