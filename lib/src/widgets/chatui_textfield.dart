@@ -352,25 +352,14 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                   } else {
                                                     return TextFieldView(
                                                       inputText: _inputText,
-                                                      recordingDuration: recordingDuration,
-                                                      recorderController: _recorderController,
                                                       recorderState: recorderState,
-                                                      isRecordingLocked: _isRecordingLocked,
                                                       controller: controller,
                                                       textFieldConfig: textFieldConfig,
                                                       sendMessageConfig: sendMessageConfig,
-                                                      voiceRecordingConfig: voiceRecordingConfig,
-                                                      cancelRecordConfiguration: cancelRecordConfiguration,
                                                       focusNode: widget.focusNode,
                                                       textEditingController: widget.textEditingController,
                                                       onPressed: widget.onPressed,
                                                       onImageSelected: widget.onImageSelected,
-                                                      onRecordingComplete: widget.onRecordingComplete,
-                                                      onCancelRecording: _cancelRecording,
-                                                      onStoprecording: _stopRecording,
-                                                      onLongPressStart: _startRecording,
-                                                      onLongPressEnd: _stopRecording,
-                                                      onFinishRecording: _stopRecording,
                                                     );
                                                   }
                                                 });
@@ -1075,57 +1064,24 @@ class TextFieldView extends StatefulWidget {
     this.controller,
     this.textFieldConfig,
     this.sendMessageConfig,
-    this.voiceRecordingConfig,
-    this.cancelRecordConfiguration,
-    required this.isRecordingLocked,
     this.focusNode,
     this.textEditingController,
     required this.onPressed,
     required this.onImageSelected,
-    required this.onRecordingComplete,
-    required this.onCancelRecording,
-    required this.onStoprecording,
-    required this.onLongPressStart,
-    required this.onLongPressEnd,
-    this.recorderController,
-    required this.recordingDuration,
-    required this.onFinishRecording,
     required this.inputText,
   });
   final RecordState recorderState;
   final RecorderController? controller;
-  final AudioRecorder? recorderController;
   final TextFieldConfiguration? textFieldConfig;
   final SendMessageConfiguration? sendMessageConfig;
-  final VoiceRecordingConfiguration? voiceRecordingConfig;
-  final CancelRecordConfiguration? cancelRecordConfiguration;
-  final ValueNotifier isRecordingLocked;
   final FocusNode? focusNode;
   final TextEditingController? textEditingController;
-  final ValueListenable<int> recordingDuration;
 
   /// Provides callback when user tap on text field.
   final VoidCallBack onPressed;
 
   /// Provides callback when user select images from camera/gallery.
   final StringsCallBack onImageSelected;
-
-  /// Provides callback once voice is recorded.
-  final Function(String?) onRecordingComplete;
-
-  ///Provides callback when user cancel recording.
-  /// This callback is used to cancel the recording when the user swipes left.
-  final Function() onCancelRecording;
-
-  final Function() onStoprecording;
-
-  ///Provides calback when user long pres mic icon
-  final Function() onLongPressStart;
-
-  ///Provides calback when user long pres mic icon end
-  final Function() onLongPressEnd;
-
-  final Function() onFinishRecording;
 
   final ValueNotifier<String> inputText;
 
@@ -1263,16 +1219,6 @@ class _TextFieldViewState extends State<TextFieldView> {
                       Icons.image,
                       color: imagePickerIconsConfig?.galleryIconColor,
                     ),
-              ),
-            if (widget.recorderState == RecordState.record && widget.cancelRecordConfiguration != null)
-              IconButton(
-                onPressed: () {
-                  widget.cancelRecordConfiguration?.onCancel?.call();
-                  widget.onCancelRecording.call();
-                },
-                icon: widget.cancelRecordConfiguration?.icon ?? const Icon(Icons.cancel_outlined),
-                color:
-                    widget.cancelRecordConfiguration?.iconColor ?? widget.voiceRecordingConfig?.recorderIconColor,
               ),
           ],
         ),
