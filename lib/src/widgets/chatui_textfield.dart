@@ -327,41 +327,50 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                 Row(
                                   children: [
                                     Expanded(
-                                      child: ValueListenableBuilder<String>(
-                                          valueListenable: _recordingPath,
-                                          builder: (context, snapshot, _) {
-                                            return StreamBuilder<PlayerState>(
-                                                stream: _playerController?.onPlayerStateChanged,
-                                                builder: (_, pState) {
-                                                  final PlayerState? playerState = pState.data;
-
-                                                  int maxDuration = _playerController?.maxDuration ?? 0;
-
-                                                  if (playerState != null &&
-                                                      // (playerState.isInitialised) &&
-                                                      // recorderState.isPaused &&
-                                                      _recorderController != null &&
-                                                      !kIsWeb &&
-                                                      _isRecordingLocked.value &&
-                                                      recorderState == RecordState.stop) {
-                                                    return _pausedRecordView(
-                                                        playerState, snapshot, context, maxDuration);
-                                                  } else if (_recorderController != null &&
-                                                      recorderState == RecordState.record) {
-                                                    return _recordingView(recorderState, isRecordingLocked);
-                                                  } else {
-                                                    return TextFieldView(
-                                                      inputText: _inputText,
-                                                      textFieldConfig: textFieldConfig,
-                                                      sendMessageConfig: sendMessageConfig,
-                                                      focusNode: widget.focusNode,
-                                                      textEditingController: widget.textEditingController,
-                                                      onPressed: widget.onPressed,
-                                                      onImageSelected: widget.onImageSelected,
-                                                    );
-                                                  }
-                                                });
-                                          }),
+                                      child: Stack(
+                                        children: [
+                                          Visibility(
+                                            visible: recorderState != RecordState.record && !isRecordingLocked,
+                                            maintainState: true,
+                                            child: TextFieldView(
+                                              inputText: _inputText,
+                                              textFieldConfig: textFieldConfig,
+                                              sendMessageConfig: sendMessageConfig,
+                                              focusNode: widget.focusNode,
+                                              textEditingController: widget.textEditingController,
+                                              onPressed: widget.onPressed,
+                                              onImageSelected: widget.onImageSelected,
+                                            ),
+                                          ),
+                                          ValueListenableBuilder<String>(
+                                              valueListenable: _recordingPath,
+                                              builder: (context, snapshot, _) {
+                                                return StreamBuilder<PlayerState>(
+                                                    stream: _playerController?.onPlayerStateChanged,
+                                                    builder: (_, pState) {
+                                                      final PlayerState? playerState = pState.data;
+                                                                                
+                                                      int maxDuration = _playerController?.maxDuration ?? 0;
+                                                                                
+                                                      if (playerState != null &&
+                                                          // (playerState.isInitialised) &&
+                                                          // recorderState.isPaused &&
+                                                          _recorderController != null &&
+                                                          !kIsWeb &&
+                                                          _isRecordingLocked.value &&
+                                                          recorderState == RecordState.stop) {
+                                                        return _pausedRecordView(
+                                                            playerState, snapshot, context, maxDuration);
+                                                      } else if (_recorderController != null &&
+                                                          recorderState == RecordState.record) {
+                                                        return _recordingView(recorderState, isRecordingLocked);
+                                                      } else {
+                                                        return const SizedBox.shrink();
+                                                      }
+                                                    });
+                                              }),
+                                        ],
+                                      ),
                                     ),
                                     if ((recorderState == RecordState.record ||
                                             recorderState == RecordState.stop) &&
