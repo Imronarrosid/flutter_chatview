@@ -349,9 +349,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                     stream: _playerController?.onPlayerStateChanged,
                                                     builder: (_, pState) {
                                                       final PlayerState? playerState = pState.data;
-                                                                                
+
                                                       int maxDuration = _playerController?.maxDuration ?? 0;
-                                                                                
+
                                                       if (playerState != null &&
                                                           // (playerState.isInitialised) &&
                                                           // recorderState.isPaused &&
@@ -598,8 +598,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
               );
             },
           ),
-          const Spacer(),
           if (recorderState == RecordState.record && !isRecordingLocked) ...[
+            const Spacer(),
             const SizedBox(
               width: 166,
               child: SwipeLeftAnimation(
@@ -624,13 +624,24 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
             const SizedBox(width: 12)
           ] else
             Padding(
-              padding: const EdgeInsets.only(right: 12.0),
-              child: IconButton(
+              padding: const EdgeInsets.only(left: 85.0),
+              child: TextButton(
                 onPressed: () {
                   _cancelRecording();
                 },
-                icon: voiceRecordingConfig?.deleteIcon ??
-                    Icon(Icons.delete, color: voiceRecordingConfig?.deleteIconColor ?? Colors.red),
+                style: TextButton.styleFrom(
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  foregroundColor: voiceRecordingConfig?.deleteIconColor ?? Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50.0),
+                  ),
+                ),
+                child: Text(
+                  Platform.localeName == 'id_ID' ? 'BATAL' : 'CANCEL',
+                ),
               ),
             ),
         ],
