@@ -1344,31 +1344,27 @@ class ShowSendMessageButton extends StatelessWidget {
               //     widget.onCancelRecording.call();
               //   }
               // },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                // padding: EdgeInsets.only(right: finalPadding),
-                child: Tooltip(
-                  message: 'hold to record audio',
-                  enableFeedback: true,
-                  triggerMode: TooltipTriggerMode.tap,
-                  child: ScaleTransitionWrapper(
-                    key: recorderState == RecordState.record ? const Key('mic') : UniqueKey(),
-                    autoStart: recorderState == RecordState.record,
-                    beginScale: recorderState == RecordState.record && isRecordingLocked ? 2.3 : 1.0,
-                    endScale: 2.3,
-                    curve: Curves.elasticInOut,
-                    duration: const Duration(milliseconds: 300),
-                    child: SendMessageButton(
-                      onPressed: null,
-                      style: IconButton.styleFrom(
-                        disabledBackgroundColor: sendMessageConfig?.defaultSendButtonColor ?? Colors.green,
-                      ),
-                      icon: sendMessageConfig?.voiceRecordingConfiguration?.micIcon ??
-                          Icon(
-                            Icons.mic,
-                            color: voiceRecordingConfig?.recorderIconColor,
-                          ),
+              child: Tooltip(
+                message: 'hold to record audio',
+                enableFeedback: true,
+                triggerMode: TooltipTriggerMode.tap,
+                child: ScaleTransitionWrapper(
+                  key: recorderState == RecordState.record ? const Key('mic') : UniqueKey(),
+                  autoStart: recorderState == RecordState.record,
+                  beginScale: recorderState == RecordState.record && isRecordingLocked ? 2.3 : 1.0,
+                  endScale: 2.3,
+                  curve: Curves.elasticInOut,
+                  duration: const Duration(milliseconds: 300),
+                  child: SendMessageButton(
+                    onPressed: null,
+                    style: IconButton.styleFrom(
+                      disabledBackgroundColor: sendMessageConfig?.defaultSendButtonColor ?? Colors.green,
                     ),
+                    icon: sendMessageConfig?.voiceRecordingConfiguration?.micIcon ??
+                        Icon(
+                          Icons.mic,
+                          color: voiceRecordingConfig?.recorderIconColor,
+                        ),
                   ),
                 ),
               ),
