@@ -116,7 +116,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   Timer? blinkTimer;
 
   // Add new variables for lock indicator
-  ValueNotifier<bool> showLockIndicator = ValueNotifier(false);
   ValueNotifier<double> lockIndicatorOffset = ValueNotifier(0.0);
   bool wasSwipedUp = false;
   ValueNotifier<bool> isPaused = ValueNotifier(false);
@@ -176,7 +175,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     showMicIcon.dispose();
     lockRecordingTimer?.cancel();
     blinkTimer?.cancel();
-    showLockIndicator.dispose();
     lockIndicatorOffset.dispose();
     super.dispose();
   }
@@ -703,8 +701,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     blinkTimer = null;
     lockRecordingTimer = null;
 
-    showLockIndicator.value = false;
-
     bool _isRecording = await _recorderController!.isRecording();
 
     if (!(_isRecording)) return;
@@ -765,8 +761,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     blinkTimer = null;
     lockRecordingTimer = null;
 
-    showLockIndicator.value = false;
-
     bool _isRecording = await _recorderController!.isRecording();
 
     if (!(_isRecording) || !_isRecordingLocked.value) return;
@@ -813,7 +807,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     isRecording.value = false;
     // _isRecordingLocked.value = true;
     wasSwipedUp = false;
-    showLockIndicator.value = false;
     isPaused.value = false;
     // widget.onRecordingComplete(path);
   }
@@ -899,7 +892,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       recordingDuration.value = 0;
       showMicIcon.value = true;
       wasSwipedUp = false;
-      showLockIndicator.value = true;
       lockIndicatorOffset.value = 0.0;
       isPaused.value = false;
     }
