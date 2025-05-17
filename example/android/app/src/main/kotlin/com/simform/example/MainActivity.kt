@@ -1,4 +1,4 @@
-package com.example.simform
+package com.simform.example
 
 import io.flutter.embedding.android.FlutterActivity
 
