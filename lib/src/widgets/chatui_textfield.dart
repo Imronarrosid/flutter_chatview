@@ -801,27 +801,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     _audioSegment2 = null;
   }
 
-  Future<void> _recordOrStop() async {
-    assert(
-      defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android,
-      "Voice messages are only supported with android and ios platform",
-    );
-    if (!isRecording.value) {
-      await controller?.record(
-        sampleRate: voiceRecordingConfig?.sampleRate,
-        bitRate: voiceRecordingConfig?.bitRate,
-        androidEncoder: voiceRecordingConfig?.androidEncoder,
-        iosEncoder: voiceRecordingConfig?.iosEncoder,
-        androidOutputFormat: AndroidOutputFormat.mpeg4,
-      );
-      isRecording.value = true;
-    } else {
-      final path = await controller?.stop();
-      isRecording.value = false;
-      widget.onRecordingComplete(path);
-    }
-  }
-
   // Start recording for hold-to-record feature
   Future<void> _startRecording() async {
     assert(
