@@ -21,6 +21,7 @@
  */
 
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:chatview/src/widgets/swipe_left_animation_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -337,7 +338,7 @@ class VoiceRecordingConfiguration {
   final Widget? deleteIcon;
   final Widget? sendIcon;
 
-  final Widget? swipeLeftWidget;
+  final SwipeLeftAnimationWidget? swipeLeftWidget;
 }
 
 class CancelRecordConfiguration {

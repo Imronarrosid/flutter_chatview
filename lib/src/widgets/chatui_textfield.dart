@@ -39,6 +39,7 @@ import '../utils/concate_audio.dart';
 import '../utils/debounce.dart';
 import '../utils/package_strings.dart';
 import 'scale_transition_wrapper.dart';
+import 'swipe_left_animation_widget.dart';
 
 class ChatUITextField extends StatefulWidget {
   const ChatUITextField({
@@ -468,11 +469,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   Container _recordingView(RecordState recorderState, bool isRecordingLocked) {
     return Container(
       height: inputFieldHeight,
-      padding: voiceRecordingConfig?.padding ??
-          EdgeInsets.symmetric(
-            horizontal: cancelRecordConfiguration == null ? 8 : 5,
-          ),
-      margin: voiceRecordingConfig?.margin,
       decoration: voiceRecordingConfig?.decoration ??
           BoxDecoration(
             color: voiceRecordingConfig?.backgroundColor,
@@ -511,29 +507,26 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
           ),
           if (recorderState == RecordState.record && !isRecordingLocked) ...[
             const Spacer(),
-            SizedBox(
-              width: 166,
-              child: SwipeLeftAnimation(
-                curve: Curves.ease,
-                duration: const Duration(
-                  milliseconds: 800,
-                ),
-                alignments: const [
-                  Alignment.centerLeft,
-                  Alignment.centerRight,
-                ],
-                child: voiceRecordingConfig?.swipeLeftWidget ??
-                    const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.keyboard_arrow_left_rounded),
-                        SizedBox(width: 4),
-                        Text('swipe left to cancel'),
-                      ],
+            voiceRecordingConfig?.swipeLeftWidget ??
+                Container(
+                  padding: const EdgeInsets.only(right: 26),
+                  child: SwipeLeftAnimationWidget(
+                    curve: Curves.ease,
+                    duration: const Duration(
+                      milliseconds: 800,
                     ),
-              ),
-            ),
-            const SizedBox(width: 12)
+                    swipeDistance: 18,
+                    child: voiceRecordingConfig?.swipeLeftWidget ??
+                        const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.keyboard_arrow_left_rounded),
+                            SizedBox(width: 4),
+                            Text('swipe left to cancel'),
+                          ],
+                        ),
+                  ),
+                ),
           ] else
             Padding(
               padding: const EdgeInsets.only(left: 85.0),
@@ -1130,68 +1123,6 @@ class SendMessageButton extends IconButton {
     super.hoverColor,
     super.focusColor,
   });
-}
-
-class SwipeLeftAnimation extends StatefulWidget {
-  final Widget child;
-  final Duration duration;
-  final List<Alignment> alignments;
-  final Curve curve;
-
-  const SwipeLeftAnimation({
-    Key? key,
-    required this.child,
-    this.duration = const Duration(milliseconds: 600),
-    required this.alignments,
-    this.curve = Curves.easeInOut,
-  }) : super(key: key);
-
-  @override
-  State<SwipeLeftAnimation> createState() => _SwipeLeftAnimationState();
-}
-
-class _SwipeLeftAnimationState extends State<SwipeLeftAnimation> {
-  late int _currentIndex;
-  late Alignment _currentAlignment;
-  late Cubic _currentCurve;
-
-  List<Cubic> curves = [
-    Curves.easeInOut,
-    Curves.easeIn,
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = 0;
-    _currentAlignment = widget.alignments[_currentIndex];
-    _currentCurve = curves[_currentIndex];
-    _startAnimation();
-  }
-
-  void _startAnimation() {
-    Future.delayed(widget.duration, () {
-      if (!mounted) return;
-
-      setState(() {
-        _currentIndex = (_currentIndex + 1) % widget.alignments.length;
-        _currentAlignment = widget.alignments[_currentIndex];
-        _currentCurve = curves[_currentIndex];
-      });
-
-      _startAnimation();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedAlign(
-      alignment: _currentAlignment,
-      duration: widget.duration,
-      curve: widget.curve,
-      child: widget.child,
-    );
-  }
 }
 
 class ShowSendMessageButton extends StatelessWidget {
