@@ -250,6 +250,7 @@ class VoiceRecordingConfiguration {
   /// Styling configuration for the recorder widget as well as
   /// configuring the audio recording quality.
   const VoiceRecordingConfiguration({
+    this.micTooltipMsg,
     this.swipeLeftWidget,
     this.waveStyle,
     this.padding,
@@ -327,6 +328,8 @@ class VoiceRecordingConfiguration {
 
   /// The audio output format to be used for recorded audio files on Android.
   final AndroidOutputFormat? androidOutputFormat;
+
+  final String? micTooltipMsg;
 
   final PlayerWaveStyle playerWaveStyle;
   final Color? playIconColor;

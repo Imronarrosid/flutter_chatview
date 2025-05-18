@@ -1221,7 +1221,7 @@ class ShowSendMessageButton extends StatelessWidget {
               //   }
               // },
               child: Tooltip(
-                message: 'hold to record audio',
+                message: voiceRecordingConfig?.micTooltipMsg ?? 'hold to record audio',
                 enableFeedback: true,
                 triggerMode: TooltipTriggerMode.tap,
                 child: ScaleTransitionWrapper(
