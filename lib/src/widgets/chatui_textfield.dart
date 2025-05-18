@@ -330,12 +330,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                 }),
                           ),
                           const SizedBox(
-                            height: 35,
+                            height: 50,
                           ),
-                          if (recorderState == RecordState.record)
-                            const SizedBox(
-                              height: 15,
-                            ),
                           Container(
                             padding: EdgeInsets.fromLTRB(
                               bottomPadding4,
