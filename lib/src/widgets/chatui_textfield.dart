@@ -635,6 +635,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
             ),
           ),
         ),
+        const SizedBox(
+          width: horizontalPadding,
+        ),
       ],
     );
   }
@@ -994,7 +997,7 @@ class _TextFieldViewState extends State<TextFieldView> {
   Widget build(BuildContext context) {
     final OutlineInputBorder outlineBorder = _outLineBorder;
     return Padding(
-      padding: const EdgeInsets.only(right: 6.0),
+      padding: const EdgeInsets.only(right: horizontalPadding),
       child: Container(
         padding: widget.textFieldConfig?.padding ?? const EdgeInsets.symmetric(horizontal: 6),
         margin: widget.textFieldConfig?.margin,
