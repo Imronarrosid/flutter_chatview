@@ -21,7 +21,6 @@
  */
 import 'dart:async';
 import 'dart:io' show File, Platform, Directory;
-import 'dart:math' as Math;
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:chatview/src/models/config_models/audio_record_config.dart';
@@ -39,7 +38,6 @@ import '../utils/concate_audio.dart';
 import '../utils/debounce.dart';
 import '../utils/package_strings.dart';
 import 'scale_transition_wrapper.dart';
-import 'swipe_left_animation_widget.dart';
 
 class ChatUITextField extends StatefulWidget {
   const ChatUITextField({
@@ -102,8 +100,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   ValueNotifier<bool> isHoldingRecord = ValueNotifier(false);
   ValueNotifier<double> horizontalDragOffset = ValueNotifier(0.0);
   ValueNotifier<double> verticalDragOffset = ValueNotifier(0.0);
-  ValueNotifier<bool> isCancelling = ValueNotifier(false);
-  ValueNotifier<bool> _isRecordingLocked = ValueNotifier(false);
+  ValueNotifier<bool> isLocked = ValueNotifier(false);
   Timer? lockRecordingTimer;
   String? _audioSegment1;
   String? _audioSegment2;
@@ -169,7 +166,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     isHoldingRecord.dispose();
     horizontalDragOffset.dispose();
     verticalDragOffset.dispose();
-    isCancelling.dispose();
     recordingDuration.dispose();
     showMicIcon.dispose();
     lockRecordingTimer?.cancel();
@@ -185,7 +181,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   }
 
   void _startTimer() {
-    if (!_isRecordingLocked.value) {
+    if (!isLocked.value) {
       _resetTimer();
     }
     if (!_isRunning.value) {
@@ -202,10 +198,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       _timer!.cancel();
       _isRunning.value = false;
     }
-  }
-
-  void _resumeTimer() {
-    _startTimer();
   }
 
   void _resetTimer() {
@@ -226,7 +218,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-        valueListenable: _isRecordingLocked,
+        valueListenable: isLocked,
         builder: (context, isRecordingLocked, child) {
           return StreamBuilder<RecordState>(
               stream: _recorderController?.onStateChanged(),
@@ -346,100 +338,86 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                   ? sendMessageConfig?.textFieldBackgroundColor ?? Colors.white
                                   : null,
                             ),
-                            child: ValueListenableBuilder<double>(
-                                valueListenable: horizontalDragOffset,
-                                builder: (context, snapshot, _) {
-                                  double padding = snapshot.isNegative ? snapshot.abs() : 0;
-                                  double finalPadding = (recorderState == RecordState.stop ||
-                                          !snapshot.isNegative ||
-                                          isRecordingLocked)
-                                      ? 0
-                                      : padding > 60
-                                          ? 60
-                                          : padding;
-                                  return Stack(
+                            child: Stack(
+                              children: [
+                                // if (recorderState == RecordState.record)
+                                //   _recordingBackground(recorderState, snapshot, finalPadding),
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  curve: Curves.easeInOut,
+                                  padding: EdgeInsets.only(
+                                    right: finalPadding,
+                                  ),
+                                  child: Row(
                                     children: [
-                                      // if (recorderState == RecordState.record)
-                                      //   _recordingBackground(recorderState, snapshot, finalPadding),
-                                      AnimatedContainer(
-                                        duration: const Duration(milliseconds: 200),
-                                        curve: Curves.easeInOut,
-                                        padding: EdgeInsets.only(
-                                          right: finalPadding,
-                                        ),
-                                        child: Row(
+                                      Expanded(
+                                        child: Stack(
                                           children: [
-                                            Expanded(
-                                              child: Stack(
-                                                children: [
-                                                  Visibility(
-                                                    visible:
-                                                        recorderState != RecordState.record && !isRecordingLocked,
-                                                    maintainState: true,
-                                                    child: TextFieldView(
-                                                      inputText: _inputText,
-                                                      textFieldConfig: textFieldConfig,
-                                                      sendMessageConfig: sendMessageConfig,
-                                                      focusNode: widget.focusNode,
-                                                      textEditingController: widget.textEditingController,
-                                                      onPressed: widget.onPressed,
-                                                      onImageSelected: widget.onImageSelected,
-                                                    ),
-                                                  ),
-                                                  ValueListenableBuilder<String>(
-                                                      valueListenable: _recordingPath,
-                                                      builder: (context, snapshot, _) {
-                                                        return StreamBuilder<PlayerState>(
-                                                            stream: _playerController?.onPlayerStateChanged,
-                                                            builder: (_, pState) {
-                                                              final PlayerState? playerState = pState.data;
-
-                                                              int maxDuration =
-                                                                  _playerController?.maxDuration ?? 0;
-
-                                                              if (playerState != null &&
-                                                                  // (playerState.isInitialised) &&
-                                                                  // recorderState.isPaused &&
-                                                                  _recorderController != null &&
-                                                                  !kIsWeb &&
-                                                                  _isRecordingLocked.value &&
-                                                                  recorderState == RecordState.stop) {
-                                                                return _pausedRecordView(
-                                                                    playerState, snapshot, context, maxDuration);
-                                                              } else if (_recorderController != null &&
-                                                                  recorderState == RecordState.record) {
-                                                                return _recordingView(
-                                                                    recorderState, isRecordingLocked);
-                                                              } else {
-                                                                return const SizedBox.shrink();
-                                                              }
-                                                            });
-                                                      }),
-                                                ],
+                                            Visibility(
+                                              visible: recorderState != RecordState.record && !isRecordingLocked,
+                                              maintainState: true,
+                                              child: TextFieldView(
+                                                imagePicker: _imagePicker,
+                                                inputText: _inputText,
+                                                textFieldConfig: textFieldConfig,
+                                                sendMessageConfig: sendMessageConfig,
+                                                focusNode: widget.focusNode,
+                                                textEditingController: widget.textEditingController,
+                                                onPressed: widget.onPressed,
+                                                onImageSelected: widget.onImageSelected,
                                               ),
                                             ),
-                                            ShowSendMessageButton(
-                                              recorderState: recorderState,
-                                              isRecordingLocked: isRecordingLocked,
-                                              sendMessageConfig: sendMessageConfig,
-                                              voiceRecordingConfig: voiceRecordingConfig,
-                                              onFinishRecording: _stopRecording,
-                                              onVerticalDragUpdate: _onVerticalDragUpdate,
-                                              onHorizontalDragUpdate: _onHorizontalDragUpdate,
-                                              inputText: _inputText,
-                                              sendMessage: () {
-                                                widget.onPressed();
-                                                _inputText.value = '';
-                                              },
-                                              startRecording: _startRecording,
-                                              stopRecording: _stopRecording,
-                                            ),
+                                            ValueListenableBuilder<String>(
+                                                valueListenable: _recordingPath,
+                                                builder: (context, snapshot, _) {
+                                                  return StreamBuilder<PlayerState>(
+                                                      stream: _playerController?.onPlayerStateChanged,
+                                                      builder: (_, pState) {
+                                                        final PlayerState? playerState = pState.data;
+
+                                                        int maxDuration = _playerController?.maxDuration ?? 0;
+
+                                                        if (playerState != null &&
+                                                            // (playerState.isInitialised) &&
+                                                            // recorderState.isPaused &&
+                                                            _recorderController != null &&
+                                                            !kIsWeb &&
+                                                            isLocked.value &&
+                                                            recorderState == RecordState.stop) {
+                                                          return _pausedRecordView(
+                                                              playerState, snapshot, context, maxDuration);
+                                                        } else if (_recorderController != null &&
+                                                            recorderState == RecordState.record) {
+                                                          return _recordingView(recorderState, isRecordingLocked);
+                                                        } else {
+                                                          return const SizedBox.shrink();
+                                                        }
+                                                      });
+                                                }),
                                           ],
                                         ),
                                       ),
+                                      ShowSendMessageButton(
+                                        recorderState: recorderState,
+                                        isRecordingLocked: isRecordingLocked,
+                                        sendMessageConfig: sendMessageConfig,
+                                        voiceRecordingConfig: voiceRecordingConfig,
+                                        onFinishRecording: _stopRecording,
+                                        onVerticalDragUpdate: _onVerticalDragUpdate,
+                                        onHorizontalDragUpdate: _onHorizontalDragUpdate,
+                                        inputText: _inputText,
+                                        sendMessage: () {
+                                          widget.onPressed();
+                                          _inputText.value = '';
+                                        },
+                                        startRecording: _startRecording,
+                                        stopRecording: _stopRecording,
+                                      ),
                                     ],
-                                  );
-                                }),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       );
@@ -459,7 +437,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
 
   void _onVerticalDragUpdate(verticalOffset) {
     if (verticalOffset < -(holdToRecordConfig?.cancelSwipeThreshold ?? 75.0)) {
-      _isRecordingLocked.value = true;
+      isLocked.value = true;
     } else {
       verticalDragOffset.value = verticalOffset;
       // _isRecordingLocked.value = false;
@@ -660,9 +638,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     blinkTimer = null;
     lockRecordingTimer = null;
 
-    bool _isRecording = await _recorderController!.isRecording();
+    bool isRecord = await _recorderController!.isRecording();
 
-    if (!(_isRecording)) return;
+    if (!(isRecord)) return;
 
     isHoldingRecord.value = false;
 
@@ -679,7 +657,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     //   return;
     // }
 
-    _isRecordingLocked.value = false;
+    isLocked.value = false;
     // final path = await controller?.stop();
     final Directory tempDir = await getTemporaryDirectory();
 
@@ -719,9 +697,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     blinkTimer = null;
     lockRecordingTimer = null;
 
-    bool _isRecording = await _recorderController!.isRecording();
+    bool isRecord = await _recorderController!.isRecording();
 
-    if (!(_isRecording) || !_isRecordingLocked.value) return;
+    if (!(isRecord) || !isLocked.value) return;
 
     isHoldingRecord.value = false;
 
@@ -784,13 +762,13 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     blinkTimer = null;
     lockRecordingTimer = null;
     bool isRecord = await _recorderController!.isRecording();
-    if (!isRecord && !_isRecordingLocked.value) return;
+    if (!isRecord && !isLocked.value) return;
     await _recorderController?.cancel();
 
     // final path = await controller?.stop();
     isRecording.value = false;
     isHoldingRecord.value = false;
-    _isRecordingLocked.value = false;
+    isLocked.value = false;
     isRecording.value = false;
     isPaused.value = false;
     _audioSegment1 = null;
@@ -818,13 +796,12 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     _startTimer();
 
     if (isStatusRecord) return;
-    if (!_isRecordingLocked.value && _audioSegment1 == null) {
+    if (!isLocked.value && _audioSegment1 == null) {
       horizontalDragOffset.value = 0.0;
       verticalDragOffset.value = 0.0;
-      _isRecordingLocked.value = false;
-      isCancelling.value = false;
+      isLocked.value = false;
       isHoldingRecord.value = true;
-      _isRecordingLocked.value = false;
+      isLocked.value = false;
       recordingDuration.value = 0;
       showMicIcon.value = true;
       wasSwipedUp = false;
@@ -920,6 +897,7 @@ class TextFieldView extends StatefulWidget {
     required this.onPressed,
     required this.onImageSelected,
     required this.inputText,
+    required this.imagePicker,
   });
   final TextFieldConfiguration? textFieldConfig;
   final SendMessageConfiguration? sendMessageConfig;
@@ -934,16 +912,14 @@ class TextFieldView extends StatefulWidget {
 
   final ValueNotifier<String> inputText;
 
+  final ImagePicker imagePicker;
+
   @override
   State<TextFieldView> createState() => _TextFieldViewState();
 }
 
 class _TextFieldViewState extends State<TextFieldView> {
   final ValueNotifier<String> _inputText = ValueNotifier('');
-
-  final ImagePicker _imagePicker = ImagePicker();
-
-  // RecorderController? controller;
 
   SendMessageConfiguration? get sendMessageConfig => widget.sendMessageConfig;
 
@@ -973,10 +949,6 @@ class _TextFieldViewState extends State<TextFieldView> {
     debouncer =
         Debouncer(sendMessageConfig?.textFieldConfig?.compositionThresholdTime ?? const Duration(seconds: 1));
     super.initState();
-
-    if (!kIsWeb && (Platform.isIOS || Platform.isAndroid)) {
-      // controller = RecorderController();
-    }
   }
 
   @override
@@ -1080,7 +1052,7 @@ class _TextFieldViewState extends State<TextFieldView> {
     ImagePickerConfiguration? config,
   }) async {
     try {
-      final XFile? image = await _imagePicker.pickImage(
+      final XFile? image = await widget.imagePicker.pickImage(
         source: imageSource,
         maxHeight: config?.maxHeight,
         maxWidth: config?.maxWidth,
