@@ -528,18 +528,18 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
           ),
           if (recorderState == RecordState.record && !isRecordingLocked) ...[
             const Spacer(),
-            const SizedBox(
+             SizedBox(
               width: 166,
               child: SwipeLeftAnimation(
                 curve: Curves.ease,
-                duration: Duration(
+                duration: const Duration(
                   milliseconds: 800,
                 ),
-                alignments: [
+                alignments: const [
                   Alignment.centerLeft,
                   Alignment.centerRight,
                 ],
-                child: Row(
+                child:voiceRecordingConfig?.swipeLeftWidget??  const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.keyboard_arrow_left_rounded),

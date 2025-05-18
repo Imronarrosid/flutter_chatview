@@ -249,6 +249,7 @@ class VoiceRecordingConfiguration {
   /// Styling configuration for the recorder widget as well as
   /// configuring the audio recording quality.
   const VoiceRecordingConfiguration({
+    this.swipeLeftWidget,
     this.waveStyle,
     this.padding,
     this.margin,
@@ -335,6 +336,8 @@ class VoiceRecordingConfiguration {
   final Widget? pauseIcon;
   final Widget? deleteIcon;
   final Widget? sendIcon;
+
+  final Widget? swipeLeftWidget;
 }
 
 class CancelRecordConfiguration {
