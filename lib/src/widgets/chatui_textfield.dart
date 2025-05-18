@@ -1138,7 +1138,7 @@ class SendMessageButton extends IconButton {
     super.key,
     required super.onPressed,
     required super.icon,
-    super.padding = const EdgeInsets.all(10),
+    super.padding = const EdgeInsets.all(12),
     super.constraints,
     super.style,
     super.tooltip,
