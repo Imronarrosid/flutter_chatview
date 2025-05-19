@@ -250,6 +250,7 @@ class VoiceRecordingConfiguration {
   /// Styling configuration for the recorder widget as well as
   /// configuring the audio recording quality.
   const VoiceRecordingConfiguration({
+    this.cancelSwipeThreshold,
     this.micTooltipMsg,
     this.swipeLeftWidget,
     this.waveStyle,
@@ -342,6 +343,8 @@ class VoiceRecordingConfiguration {
   final Widget? sendIcon;
 
   final SwipeLeftAnimationWidget? swipeLeftWidget;
+
+  final double? cancelSwipeThreshold;
 }
 
 class CancelRecordConfiguration {

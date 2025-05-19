@@ -112,8 +112,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   Timer? blinkTimer;
 
   // Add new variables for lock indicator
-  ValueNotifier<double> lockIndicatorOffset = ValueNotifier(0.0);
-  bool wasSwipedUp = false;
+
   ValueNotifier<bool> isPaused = ValueNotifier(false);
 
   SendMessageConfiguration? get sendMessageConfig => widget.sendMessageConfig;
@@ -124,10 +123,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
 
   TextFieldConfiguration? get textFieldConfig => sendMessageConfig?.textFieldConfig;
 
-  CancelRecordConfiguration? get cancelRecordConfiguration => sendMessageConfig?.cancelRecordConfiguration;
-
-  HoldToRecordConfiguration? get holdToRecordConfig => sendMessageConfig?.holdToRecordConfiguration;
-
   ValueNotifier<TypeWriterStatus> composingStatus = ValueNotifier(TypeWriterStatus.typed);
 
   late Debouncer debouncer;
@@ -135,7 +130,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   final ValueNotifier<bool> _isRunning = ValueNotifier<bool>(false);
   Timer? _timer;
 
-  bool lockAnimationEnd = false;
   @override
   void initState() {
     attachListeners();
@@ -170,7 +164,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     showMicIcon.dispose();
     lockRecordingTimer?.cancel();
     blinkTimer?.cancel();
-    lockIndicatorOffset.dispose();
     super.dispose();
   }
 
@@ -428,7 +421,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
 
   void _onHorizontalDragUpdate(horizontalOffset) {
     horizontalDragOffset.value = horizontalOffset;
-    if (horizontalOffset < -(holdToRecordConfig?.cancelSwipeThreshold ?? 50.0) && (isRecording.value)) {
+    if (horizontalOffset < -(voiceRecordingConfig?.cancelSwipeThreshold ?? 50.0) && (isRecording.value)) {
       _cancelRecording();
 
       HapticFeedback.lightImpact();
@@ -436,7 +429,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
   }
 
   void _onVerticalDragUpdate(verticalOffset) {
-    if (verticalOffset < -(holdToRecordConfig?.cancelSwipeThreshold ?? 75.0)) {
+    if (verticalOffset < -(voiceRecordingConfig?.cancelSwipeThreshold ?? 75.0)) {
       isLocked.value = true;
     } else {
       verticalDragOffset.value = verticalOffset;
@@ -674,7 +667,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       // _recordingPath.value = result.path;
     }
     isRecording.value = false;
-    wasSwipedUp = false;
     isPaused.value = false;
     widget.onRecordingComplete(_audioSegment1);
   }
@@ -741,7 +733,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       });
     isRecording.value = false;
     // _isRecordingLocked.value = true;
-    wasSwipedUp = false;
     isPaused.value = false;
     // widget.onRecordingComplete(path);
   }
@@ -804,8 +795,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       isLocked.value = false;
       recordingDuration.value = 0;
       showMicIcon.value = true;
-      wasSwipedUp = false;
-      lockIndicatorOffset.value = 0.0;
       isPaused.value = false;
     }
     if (_playerController?.playerState.isPlaying ?? false) {
@@ -928,8 +917,6 @@ class _TextFieldViewState extends State<TextFieldView> {
   ImagePickerIconsConfiguration? get imagePickerIconsConfig => sendMessageConfig?.imagePickerIconsConfig;
 
   TextFieldConfiguration? get textFieldConfig => sendMessageConfig?.textFieldConfig;
-
-  CancelRecordConfiguration? get cancelRecordConfiguration => sendMessageConfig?.cancelRecordConfiguration;
 
   HoldToRecordConfiguration? get holdToRecordConfig => sendMessageConfig?.holdToRecordConfiguration;
 
