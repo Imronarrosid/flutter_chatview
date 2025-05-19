@@ -76,7 +76,10 @@ class SendMessageConfiguration {
   /// Configuration for customizing the reply message view appearance.
   final ReplyMessageViewConfiguration? replyMessageConfiguration;
 
+  final Function<String>(String name)? replyToMessage;
+
   const SendMessageConfiguration({
+    this.replyToMessage,
     this.textFieldConfig,
     this.sendButtonIconColor,
     this.textFieldBackgroundColor,
