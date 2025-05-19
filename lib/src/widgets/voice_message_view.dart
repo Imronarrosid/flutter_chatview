@@ -53,17 +53,17 @@ class VoiceMessageView extends StatefulWidget {
   State<VoiceMessageView> createState() => _VoiceMessageViewState();
 }
 
-class _VoiceMessageViewState extends State<VoiceMessageView>
-    with AutomaticKeepAliveClientMixin {
+class _VoiceMessageViewState extends State<VoiceMessageView> with AutomaticKeepAliveClientMixin {
   late PlayerController controller;
   late StreamSubscription<PlayerState> playerStateSubscription;
 
-  final ValueNotifier<PlayerState> _playerState =
-      ValueNotifier(PlayerState.stopped);
+  final ValueNotifier<PlayerState> _playerState = ValueNotifier(PlayerState.stopped);
 
   PlayerState get playerState => _playerState.value;
 
-  PlayerWaveStyle playerWaveStyle = const PlayerWaveStyle(scaleFactor: 70,);
+  PlayerWaveStyle playerWaveStyle = const PlayerWaveStyle(
+    scaleFactor: 70,
+  );
 
   final ValueNotifier<bool> _isFileExist = ValueNotifier(false);
   final ValueNotifier<double> _downloadProgress = ValueNotifier<double>(0);
@@ -77,8 +77,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
       controller = PlayerController()
         ..preparePlayer(
           path: widget.message.mediaPath,
-          noOfSamples: widget.config?.playerWaveStyle
-                  ?.getSamplesForWidth(widget.screenWidth * 0.30) ??
+          noOfSamples: widget.config?.playerWaveStyle?.getSamplesForWidth(widget.screenWidth * 0.30) ??
               playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.30),
         ).whenComplete(() {
           widget.onMaxDuration?.call(controller.maxDuration);
@@ -86,8 +85,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
             finishMode: FinishMode.pause,
           );
         });
-      playerStateSubscription = controller.onPlayerStateChanged
-          .listen((state) => _playerState.value = state);
+      playerStateSubscription = controller.onPlayerStateChanged.listen((state) => _playerState.value = state);
 
       _isFileExist.value = true;
     } else {
@@ -98,8 +96,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
           controller = PlayerController()
             ..preparePlayer(
               path: path,
-              noOfSamples: widget.config?.playerWaveStyle
-                      ?.getSamplesForWidth(widget.screenWidth * 0.30) ??
+              noOfSamples: widget.config?.playerWaveStyle?.getSamplesForWidth(widget.screenWidth * 0.30) ??
                   playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.30),
             ).whenComplete(() {
               _isFileExist.value = isDownloaded;
@@ -108,8 +105,7 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
               );
               widget.onMaxDuration?.call(controller.maxDuration);
             });
-          playerStateSubscription = controller.onPlayerStateChanged
-              .listen((state) => _playerState.value = state);
+          playerStateSubscription = controller.onPlayerStateChanged.listen((state) => _playerState.value = state);
         }
       });
     }
@@ -132,111 +128,107 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return ValueListenableBuilder<bool>(
-        valueListenable: _isFileExist,
-        builder: (context, isFileExsit, child) {
-          return Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                decoration: widget.config?.decoration ??
-                    BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: widget.isMessageBySender
-                          ? widget.outgoingChatBubbleConfig?.color
-                          : widget.inComingChatBubbleConfig?.color,
-                    ),
-                // padding: widget.config?.padding ??
-                //     const EdgeInsets.symmetric(horizontal: 8),
-                margin: widget.config?.margin ??
-                    EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical:
-                          widget.message.reaction.reactions.isNotEmpty ? 15 : 0,
-                    ),
-                child: TimedAndReceiptMessageWidget(
-                  chatController: widget.chatController,
-                  isMessageBySender: widget.isMessageBySender,
-                  message: widget.message,
-                  inComingChatBubbleConfig: widget.inComingChatBubbleConfig,
-                  outgoingChatBubbleConfig: widget.outgoingChatBubbleConfig,
-                  messagePadding:
-                      widget.config?.waveformPadding ?? const EdgeInsets.all(8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!isFileExsit)
-                        DownloadProgressWidget(
-                          progress: _downloadProgress,
-                          onPressed: _downloadFile,
-                          config: widget.config,
-                        )
-                      else
-                        ValueListenableBuilder<PlayerState>(
-                          builder: (context, state, child) {
-                            return IconButton(
-                              onPressed: _playOrPause,
-                              icon: state.isStopped ||
-                                      state.isPaused ||
-                                      state.isInitialised
-                                  ? widget.config?.playIcon ??
-                                      Icon(
-                                        Icons.play_arrow,
-                                        color: widget.config?.waveColor ??
-                                            Colors.white,
-                                      )
-                                  : widget.config?.pauseIcon ??
-                                      Icon(
-                                        Icons.stop,
-                                        color: widget.config?.waveColor ??
-                                            Colors.white,
-                                      ),
-                            );
-                          },
-                          valueListenable: _playerState,
-                        ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildWave(isFileExsit),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 3, bottom: 6),
-                            child: Text(
-                              (widget.message.voiceMessageDuration ??
-                                      Duration.zero)
-                                  .toMMSS(),
-                              style: widget.config?.durationTextStyle ??
-                                  const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
-                            ),
+    return ListenableBuilder(
+        listenable: widget.message.reactionNotifier,
+        builder: (context, _) {
+          return ValueListenableBuilder<bool>(
+              valueListenable: _isFileExist,
+              builder: (context, isFileExsit, child) {
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      decoration: widget.config?.decoration ??
+                          BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: widget.isMessageBySender
+                                ? widget.outgoingChatBubbleConfig?.color
+                                : widget.inComingChatBubbleConfig?.color,
                           ),
-                        ],
-                      ),
-                      IconButton(
-                        onPressed: null,
-                        icon: Column(
+                      // padding: widget.config?.padding ??
+                      //     const EdgeInsets.symmetric(horizontal: 8),
+                      margin: widget.config?.margin ??
+                          EdgeInsets.fromLTRB(
+                            8,
+                            0,
+                            8,
+                            widget.message.reaction.reactions.isNotEmpty ? 15 : 0,
+                          ),
+                      child: TimedAndReceiptMessageWidget(
+                        chatController: widget.chatController,
+                        isMessageBySender: widget.isMessageBySender,
+                        message: widget.message,
+                        inComingChatBubbleConfig: widget.inComingChatBubbleConfig,
+                        outgoingChatBubbleConfig: widget.outgoingChatBubbleConfig,
+                        messagePadding: widget.config?.waveformPadding ?? const EdgeInsets.all(8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            widget.config?.voiceIcon ??
-                                Icon(Icons.mic_rounded,
-                                    color: widget.config?.waveColor ??
-                                        Colors.white),
+                            if (!isFileExsit)
+                              DownloadProgressWidget(
+                                progress: _downloadProgress,
+                                onPressed: _downloadFile,
+                                config: widget.config,
+                              )
+                            else
+                              ValueListenableBuilder<PlayerState>(
+                                builder: (context, state, child) {
+                                  return IconButton(
+                                    onPressed: _playOrPause,
+                                    icon: state.isStopped || state.isPaused || state.isInitialised
+                                        ? widget.config?.playIcon ??
+                                            Icon(
+                                              Icons.play_arrow,
+                                              color: widget.config?.waveColor ?? Colors.white,
+                                            )
+                                        : widget.config?.pauseIcon ??
+                                            Icon(
+                                              Icons.stop,
+                                              color: widget.config?.waveColor ?? Colors.white,
+                                            ),
+                                  );
+                                },
+                                valueListenable: _playerState,
+                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildWave(isFileExsit),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 3, bottom: 6),
+                                  child: Text(
+                                    (widget.message.voiceMessageDuration ?? Duration.zero).toMMSS(),
+                                    style: widget.config?.durationTextStyle ??
+                                        const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            IconButton(
+                              onPressed: null,
+                              icon: Column(
+                                children: [
+                                  widget.config?.voiceIcon ??
+                                      Icon(Icons.mic_rounded, color: widget.config?.waveColor ?? Colors.white),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              if (widget.message.reaction.reactions.isNotEmpty)
-                ReactionWidget(
-                  isMessageBySender: widget.isMessageBySender,
-                  message: widget.message,
-                  messageReactionConfig: widget.messageReactionConfig,
-                ),
-            ],
-          );
+                    ),
+                    if (widget.message.reaction.reactions.isNotEmpty)
+                      ReactionWidget(
+                        isMessageBySender: widget.isMessageBySender,
+                        message: widget.message,
+                        messageReactionConfig: widget.messageReactionConfig,
+                      ),
+                  ],
+                );
+              });
         });
   }
 
@@ -245,13 +237,11 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
       return AudioFileWaveforms(
         size: Size(widget.screenWidth * 0.30, 35),
         playerController: controller,
-
         waveformType: WaveformType.fitWidth,
         playerWaveStyle: widget.config?.playerWaveStyle ?? playerWaveStyle,
         margin: widget.config?.waveformMargin,
         animationCurve: widget.config?.animationCurve ?? Curves.easeIn,
-        animationDuration: widget.config?.animationDuration ??
-            const Duration(milliseconds: 500),
+        animationDuration: widget.config?.animationDuration ?? const Duration(milliseconds: 500),
         enableSeekGesture: widget.config?.enableSeekGesture ?? true,
       );
     } else {
@@ -279,21 +269,17 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
   }
 
   Future<void> _downloadFile() async {
-    String? path = await downloadFile(widget.message.mediaPath, widget.message.id,
-        (received, total) {
+    String? path = await downloadFile(widget.message.mediaPath, widget.message.id, (received, total) {
       _downloadProgress.value = (received / total * 100);
     });
     if (path != null) {
       controller = PlayerController()
         ..preparePlayer(
           path: path,
-          noOfSamples: widget.config?.playerWaveStyle
-                  ?.getSamplesForWidth(widget.screenWidth * 0.5) ??
+          noOfSamples: widget.config?.playerWaveStyle?.getSamplesForWidth(widget.screenWidth * 0.5) ??
               playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.5),
-        ).whenComplete(
-            () => widget.onMaxDuration?.call(controller.maxDuration));
-      playerStateSubscription = controller.onPlayerStateChanged
-          .listen((state) => _playerState.value = state);
+        ).whenComplete(() => widget.onMaxDuration?.call(controller.maxDuration));
+      playerStateSubscription = controller.onPlayerStateChanged.listen((state) => _playerState.value = state);
 
       _isFileExist.value = true;
       _playOrPause();
@@ -302,13 +288,10 @@ class _VoiceMessageViewState extends State<VoiceMessageView>
 
   void _playOrPause() {
     assert(
-      defaultTargetPlatform == TargetPlatform.iOS ||
-          defaultTargetPlatform == TargetPlatform.android,
+      defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android,
       "Voice messages are only supported with android and ios platform",
     );
-    if (playerState.isInitialised ||
-        playerState.isPaused ||
-        playerState.isStopped) {
+    if (playerState.isInitialised || playerState.isPaused || playerState.isStopped) {
       controller.startPlayer();
     } else {
       controller.pausePlayer();
@@ -332,8 +315,7 @@ class DownloadProgressWidget extends StatefulWidget {
   State<DownloadProgressWidget> createState() => _DownloadProgressWidgetState();
 }
 
-class _DownloadProgressWidgetState extends State<DownloadProgressWidget>
-    with LoadingStateMixin {
+class _DownloadProgressWidgetState extends State<DownloadProgressWidget> with LoadingStateMixin {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<double>(
@@ -348,8 +330,7 @@ class _DownloadProgressWidgetState extends State<DownloadProgressWidget>
                 child: CircularProgressIndicator(
                   value: widget.progress.value / 100,
                   strokeWidth: 1,
-                  backgroundColor:
-                      widget.config?.bgProgressColor ?? Colors.grey.shade100,
+                  backgroundColor: widget.config?.bgProgressColor ?? Colors.grey.shade100,
                   color: widget.config?.progressColor ?? Colors.white,
                 ),
               ),
