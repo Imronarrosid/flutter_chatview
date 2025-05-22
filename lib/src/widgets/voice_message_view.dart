@@ -74,20 +74,20 @@ class _VoiceMessageViewState extends State<VoiceMessageView> with AutomaticKeepA
 
     if (!widget.message.mediaPath.startsWith('https')) {
       // downloadFile(widget.message.message, widget.message.message);
-      controller = PlayerController()
-        ..preparePlayer(
-          path: widget.message.mediaPath,
-          noOfSamples: widget.config?.playerWaveStyle?.getSamplesForWidth(widget.screenWidth * 0.30) ??
-              playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.30),
-        ).whenComplete(() {
-          widget.onMaxDuration?.call(controller.maxDuration);
-          controller.setFinishMode(
-            finishMode: FinishMode.pause,
-          );
-        });
-      playerStateSubscription = controller.onPlayerStateChanged.listen((state) => _playerState.value = state);
+      // controller = PlayerController()
+      //   ..preparePlayer(
+      //     path: widget.message.mediaPath,
+      //     noOfSamples: widget.config?.playerWaveStyle?.getSamplesForWidth(widget.screenWidth * 0.30) ??
+      //         playerWaveStyle.getSamplesForWidth(widget.screenWidth * 0.30),
+      //   ).whenComplete(() {
+      //     widget.onMaxDuration?.call(controller.maxDuration);
+      //     controller.setFinishMode(
+      //       finishMode: FinishMode.pause,
+      //     );
+      //   });
+      // playerStateSubscription = controller.onPlayerStateChanged.listen((state) => _playerState.value = state);
 
-      _isFileExist.value = true;
+      _isFileExist.value = false;
     } else {
       isFileDownloaded(widget.message.id).then((value) {
         bool isDownloaded = value.$1;
