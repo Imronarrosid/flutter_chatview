@@ -296,7 +296,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                                 ? 0
                                                                 : (verticalOffset.abs())),
                                                         child: IconButton(
-                                                          onPressed: () {},
+                                                          onPressed: null,
                                                           style: IconButton.styleFrom(
                                                             backgroundColor: voiceRecordingConfig?.backgroundColor,
                                                           ),
@@ -758,7 +758,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                   opacity: isShowMic ? 1.0 : 0.3,
                   child: Icon(
                     Icons.mic,
-                    color: voiceRecordingConfig?.recorderIconColor ?? Colors.red,
+                    color: voiceRecordingConfig?.recorderIndicatorColor ?? Colors.red,
                     size: 24,
                   ),
                 );
@@ -772,8 +772,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                 _formatDuration(duration),
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: voiceRecordingConfig?.recorderIconColor ?? Colors.black,
+                  color: voiceRecordingConfig?.recorDurationColor ?? Colors.black,
                 ),
               );
             },
@@ -1517,7 +1516,7 @@ class ShowSendMessageButton extends StatelessWidget {
                     icon: sendMessageConfig?.voiceRecordingConfiguration?.micIcon ??
                         Icon(
                           Icons.mic,
-                          color: voiceRecordingConfig?.recorderIconColor,
+                          color: voiceRecordingConfig?.recorderIndicatorColor,
                         ),
                   ),
                 ),
