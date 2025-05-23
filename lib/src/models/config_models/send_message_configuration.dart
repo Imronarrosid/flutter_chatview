@@ -253,6 +253,7 @@ class VoiceRecordingConfiguration {
   /// Styling configuration for the recorder widget as well as
   /// configuring the audio recording quality.
   const VoiceRecordingConfiguration({
+    this.lockIcon,
     this.cancelSwipeThreshold,
     this.micTooltipMsg,
     this.swipeLeftWidget,
@@ -308,6 +309,8 @@ class VoiceRecordingConfiguration {
 
   /// An icon for stopping voice recording.
   final Widget? stopIcon;
+
+  final Widget? lockIcon;
 
   final Color? micIconColor;
 

@@ -300,9 +300,12 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                           style: IconButton.styleFrom(
                                                             backgroundColor: voiceRecordingConfig?.backgroundColor,
                                                           ),
-                                                          icon: Icon(Icons.lock,
-                                                              color: voiceRecordingConfig?.playIconColor ??
-                                                                  Colors.black),
+                                                          icon: voiceRecordingConfig?.lockIcon ??
+                                                              Icon(
+                                                                Icons.lock,
+                                                                color: voiceRecordingConfig?.playIconColor ??
+                                                                    Colors.black,
+                                                              ),
                                                         ),
                                                       );
                                                     }),
