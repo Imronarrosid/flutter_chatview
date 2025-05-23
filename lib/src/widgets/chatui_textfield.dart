@@ -298,6 +298,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                         child: IconButton(
                                                           onPressed: null,
                                                           style: IconButton.styleFrom(
+                                                            disabledBackgroundColor:
+                                                                voiceRecordingConfig?.backgroundColor,
                                                             backgroundColor: voiceRecordingConfig?.backgroundColor,
                                                           ),
                                                           icon: voiceRecordingConfig?.lockIcon ??
