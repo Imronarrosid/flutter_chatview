@@ -772,7 +772,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                 _formatDuration(duration),
                 style: TextStyle(
                   fontSize: 16,
-                  color: voiceRecordingConfig?.recorDurationColor ?? Colors.black,
+                  color: voiceRecordingConfig?.recordDurationColor ?? Colors.black,
                 ),
               );
             },

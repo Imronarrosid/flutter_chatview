@@ -253,6 +253,7 @@ class VoiceRecordingConfiguration {
   /// Styling configuration for the recorder widget as well as
   /// configuring the audio recording quality.
   const VoiceRecordingConfiguration({
+    this.recordDurationColor,
     this.lockIcon,
     this.cancelSwipeThreshold,
     this.micTooltipMsg,
@@ -263,7 +264,7 @@ class VoiceRecordingConfiguration {
     this.decoration,
     this.backgroundColor,
     this.micIcon,
-    this.recorderIconColor,
+    this.recorderIndicatorColor,
     this.stopIcon,
     this.sampleRate,
     this.bitRate,
@@ -314,8 +315,10 @@ class VoiceRecordingConfiguration {
 
   final Color? micIconColor;
 
-  /// Applies color to mic and stop icon.
-  final Color? recorderIconColor;
+  /// Applies color to redcorIndicator.
+  final Color? recorderIndicatorColor;
+
+  final Color? recordDurationColor;
 
   /// The sample rate for audio is measured in samples per second.
   /// A higher sample rate generates more samples per second,
