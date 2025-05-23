@@ -1278,6 +1278,7 @@ class _TextFieldViewState extends State<TextFieldView> {
                 color: widget.sendMessageConfig?.textFieldBackgroundColor ?? Colors.white,
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: TextField(
