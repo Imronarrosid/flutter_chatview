@@ -163,14 +163,6 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     }
   }
 
-  double get _bottomPadding => (!kIsWeb && Platform.isIOS)
-      ? (widget.focusNode.hasFocus
-          ? bottomPadding1
-          : View.of(context).viewPadding.bottom > 0
-              ? bottomPadding2
-              : bottomPadding3)
-      : bottomPadding3;
-
   String get _replyTo => replyMessage.replyTo == currentUser?.id ? PackageStrings.you : repliedUser?.name ?? '';
 
   ChatUser? currentUser;
@@ -249,220 +241,259 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
               stream: _recorderController?.onStateChanged(),
               builder: (context, recorderStateSnapshot) {
                 final recorderState = recorderStateSnapshot.data ?? RecordState.stop;
-                return ValueListenableBuilder<double>(
-                    valueListenable: horizontalDragOffset,
-                    builder: (context, snapshot, _) {
-                      double padding = snapshot.isNegative ? snapshot.abs() : 0;
-                      double finalPadding =
-                          (recorderState == RecordState.stop || !snapshot.isNegative || isRecordingLocked)
-                              ? 0
-                              : padding > 60
-                                  ? 60
-                                  : padding;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 12.0),
-                            child: ValueListenableBuilder(
-                                valueListenable: isRecording,
-                                builder: (context, isRecordingValue, child) {
-                                  return AnimatedSwitcher(
-                                      duration: const Duration(milliseconds: 120),
-                                      layoutBuilder: (_, __) {
-                                        if (isRecordingValue &&
-                                            recorderState == RecordState.record &&
-                                            !isRecordingLocked) {
-                                          return AnimatedOpacity(
-                                            duration: const Duration(milliseconds: 120),
-                                            opacity: horizontalDragOffset.value.isNegative ? 0.0 : 1.0,
-                                            child: RepaintBoundary(
-                                              child: AnimatedContainer(
-                                                duration: const Duration(milliseconds: 120),
-                                                curve: Curves.linear,
-                                                transform: Matrix4.translationValues(
-                                                  0,
-                                                  horizontalDragOffset.value.isNegative ? 60 : 0,
-                                                  0,
-                                                ),
-                                                child: ValueListenableBuilder<double>(
-                                                    valueListenable: verticalDragOffset,
-                                                    builder: (context, verticalOffset, _) {
-                                                      return Padding(
-                                                        // duration: const Duration(milliseconds: 20),
-                                                        // curve: Curves.easeInOut,
-                                                        padding: EdgeInsets.only(
-                                                            bottom: !verticalOffset.isNegative
-                                                                ? 0
-                                                                : (verticalOffset.abs())),
-                                                        child: IconButton(
-                                                          onPressed: null,
-                                                          style: IconButton.styleFrom(
-                                                            disabledBackgroundColor:
-                                                                voiceRecordingConfig?.backgroundColor,
-                                                            backgroundColor: voiceRecordingConfig?.backgroundColor,
-                                                          ),
-                                                          icon: voiceRecordingConfig?.lockIcon ??
-                                                              Icon(
-                                                                Icons.lock,
-                                                                color: voiceRecordingConfig?.playIconColor ??
-                                                                    Colors.black,
+                return ValueListenableBuilder<String>(
+                    valueListenable: _recordingPath,
+                    builder: (context, recordingPath, _) {
+                      return StreamBuilder<PlayerState>(
+                          stream: _playerController?.onPlayerStateChanged,
+                          builder: (_, pState) {
+                            final PlayerState? playerState = pState.data;
+
+                            int maxDuration = _playerController?.maxDuration ?? 0;
+
+                            return ValueListenableBuilder<double>(
+                                valueListenable: horizontalDragOffset,
+                                builder: (context, snapshot, _) {
+                                  double padding = snapshot.isNegative ? snapshot.abs() : 0;
+                                  double finalPadding = (recorderState == RecordState.stop ||
+                                          !snapshot.isNegative ||
+                                          isRecordingLocked)
+                                      ? 0
+                                      : padding > 60
+                                          ? 60
+                                          : padding;
+                                  return ValueListenableBuilder<ReplyMessage>(
+                                      valueListenable: widget.replyMessage,
+                                      builder: (_, state, child) {
+                                        final String? text = sendMessageConfig?.replyToMessage != null
+                                            ? sendMessageConfig!.replyToMessage!(repliedUser?.name ?? '')
+                                            : null;
+                                        final replyTitle = text ?? "${PackageStrings.replyTo} $_replyTo";
+                                        final bool replyMessageNotEmpty =
+                                            state.mediaPath.isNotEmpty || state.text.isNotEmpty;
+                                        final OutlineInputBorder outlineBorder =
+                                            (state.mediaPath.isNotEmpty || state.text.isNotEmpty)
+                                                ? _outLineBorderWithReply
+                                                : _outLineBorder;
+
+                                        return Column(
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.only(right: 12.0),
+                                              child: ValueListenableBuilder(
+                                                  valueListenable: isRecording,
+                                                  builder: (context, isRecordingValue, child) {
+                                                    return AnimatedSwitcher(
+                                                        duration: const Duration(milliseconds: 120),
+                                                        layoutBuilder: (_, __) {
+                                                          if (isRecordingValue &&
+                                                              recorderState == RecordState.record &&
+                                                              !isRecordingLocked) {
+                                                            return AnimatedOpacity(
+                                                              duration: const Duration(milliseconds: 120),
+                                                              opacity: horizontalDragOffset.value.isNegative
+                                                                  ? 0.0
+                                                                  : 1.0,
+                                                              child: RepaintBoundary(
+                                                                child: AnimatedContainer(
+                                                                  duration: const Duration(milliseconds: 120),
+                                                                  curve: Curves.linear,
+                                                                  transform: Matrix4.translationValues(
+                                                                    0,
+                                                                    horizontalDragOffset.value.isNegative ? 60 : 0,
+                                                                    0,
+                                                                  ),
+                                                                  child: ValueListenableBuilder<double>(
+                                                                      valueListenable: verticalDragOffset,
+                                                                      builder: (context, verticalOffset, _) {
+                                                                        return Padding(
+                                                                          // duration: const Duration(milliseconds: 20),
+                                                                          // curve: Curves.easeInOut,
+                                                                          padding: EdgeInsets.only(
+                                                                              bottom: !verticalOffset.isNegative
+                                                                                  ? 0
+                                                                                  : (verticalOffset.abs())),
+                                                                          child: IconButton(
+                                                                            onPressed: null,
+                                                                            style: IconButton.styleFrom(
+                                                                              disabledBackgroundColor:
+                                                                                  voiceRecordingConfig
+                                                                                      ?.backgroundColor,
+                                                                              backgroundColor: voiceRecordingConfig
+                                                                                  ?.backgroundColor,
+                                                                            ),
+                                                                            icon: voiceRecordingConfig?.lockIcon ??
+                                                                                Icon(
+                                                                                  Icons.lock,
+                                                                                  color: voiceRecordingConfig
+                                                                                          ?.playIconColor ??
+                                                                                      Colors.black,
+                                                                                ),
+                                                                          ),
+                                                                        );
+                                                                      }),
+                                                                ),
                                                               ),
-                                                        ),
-                                                      );
-                                                    }),
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                        if (recorderState == RecordState.record && isRecordingLocked) {
-                                          return IconButton(
-                                            onPressed: () {
-                                              _pauseRecording();
-                                            },
-                                            style: IconButton.styleFrom(
-                                              backgroundColor:
-                                                  voiceRecordingConfig?.backgroundColor ?? Colors.white,
-                                            ),
-                                            icon: voiceRecordingConfig?.pauseIcon ??
-                                                Icon(
-                                                  Icons.pause,
-                                                  color: voiceRecordingConfig?.pauseIconColor ?? Colors.black87,
-                                                ),
-                                          );
-                                        }
-                                        if (recorderState == RecordState.stop && isRecordingLocked) {
-                                          return IconButton(
-                                            onPressed: () {
-                                              _startRecording();
-                                            },
-                                            style: IconButton.styleFrom(
-                                              backgroundColor:
-                                                  voiceRecordingConfig?.backgroundColor ?? Colors.white,
-                                            ),
-                                            icon: voiceRecordingConfig?.micIcon ??
-                                                Icon(
-                                                  Icons.mic,
-                                                  color: voiceRecordingConfig?.micIconColor ?? Colors.black87,
-                                                ),
-                                          );
-                                        }
+                                                            );
+                                                          }
+                                                          if (recorderState == RecordState.record &&
+                                                              isRecordingLocked) {
+                                                            return IconButton(
+                                                              onPressed: () {
+                                                                _pauseRecording();
+                                                              },
+                                                              style: IconButton.styleFrom(
+                                                                backgroundColor:
+                                                                    voiceRecordingConfig?.backgroundColor ??
+                                                                        Colors.white,
+                                                              ),
+                                                              icon: voiceRecordingConfig?.pauseIcon ??
+                                                                  Icon(
+                                                                    Icons.pause,
+                                                                    color: voiceRecordingConfig?.pauseIconColor ??
+                                                                        Colors.black87,
+                                                                  ),
+                                                            );
+                                                          }
+                                                          if (recorderState == RecordState.stop &&
+                                                              isRecordingLocked) {
+                                                            return IconButton(
+                                                              onPressed: () {
+                                                                _startRecording();
+                                                              },
+                                                              style: IconButton.styleFrom(
+                                                                backgroundColor:
+                                                                    voiceRecordingConfig?.backgroundColor ??
+                                                                        Colors.white,
+                                                              ),
+                                                              icon: voiceRecordingConfig?.micIcon ??
+                                                                  Icon(
+                                                                    Icons.mic,
+                                                                    color: voiceRecordingConfig?.micIconColor ??
+                                                                        Colors.black87,
+                                                                  ),
+                                                            );
+                                                          }
 
-                                        return const SizedBox.shrink();
-                                      });
-                                }),
-                          ),
-                          const SizedBox(
-                            height: 50,
-                          ),
-                          ValueListenableBuilder<ReplyMessage>(
-                            builder: (_, state, child) {
-                              final String? text = sendMessageConfig?.replyToMessage != null
-                                  ? sendMessageConfig!.replyToMessage!(repliedUser?.name ?? '')
-                                  : null;
-                              final replyTitle = text ?? "${PackageStrings.replyTo} $_replyTo";
-
-                              if ((state.mediaPath.isNotEmpty || state.text.isNotEmpty) &&
-                                  !(recorderState == RecordState.stop && !isRecordingLocked)) {
-                                return widget.replyMessageBuilder?.call(context, state) ??
-                                    Container(
-                                      margin: const EdgeInsets.only(
-                                        right: horizontalPadding,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: widget.sendMessageConfig?.textFieldBackgroundColor ?? Colors.white,
-                                        borderRadius: const BorderRadius.vertical(
-                                          top: Radius.circular(14),
-                                        ),
-                                      ),
-                                      // margin: const EdgeInsets.only(
-                                      //   bottom: 17,
-                                      //   right: 0.4,
-                                      //   left: 0.4,
-                                      // ),
-                                      padding: const EdgeInsets.fromLTRB(
-                                        leftPadding,
-                                        leftPadding,
-                                        leftPadding,
-                                        0,
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(bottom: 0),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(5),
-                                          child: Container(
-                                            height: 55,
-                                            decoration: BoxDecoration(
-                                              color: widget.sendMessageConfig?.replyMessageConfiguration
-                                                      ?.replyDialogColor ??
-                                                  Colors.grey.shade200,
+                                                          return const SizedBox.shrink();
+                                                        });
+                                                  }),
                                             ),
-                                            child: Stack(
+                                            SizedBox(
+                                              height: replyMessageNotEmpty ? 0 : 60,
+                                            ),
+                                            Stack(
                                               children: [
-                                                Align(
-                                                  alignment: Alignment.bottomLeft,
-                                                  child: ReplyMessageView(
-                                                    message: state,
-                                                    customMessageReplyViewBuilder:
-                                                        widget.messageConfig?.customMessageReplyViewBuilder,
-                                                    sendMessageConfig: widget.sendMessageConfig,
+                                                // if (recorderState == RecordState.record)
+                                                //   _recordingBackground(recorderState, snapshot, finalPadding),
+                                                AnimatedContainer(
+                                                  duration: const Duration(milliseconds: 200),
+                                                  curve: Curves.easeInOut,
+                                                  padding: EdgeInsets.only(
+                                                    right: finalPadding,
                                                   ),
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4),
                                                   child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    mainAxisSize: MainAxisSize.min,
+                                                    crossAxisAlignment: CrossAxisAlignment.end,
                                                     children: [
-                                                      Text(
-                                                        replyTitle,
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow.ellipsis,
-                                                        style: TextStyle(
-                                                          color: widget.sendMessageConfig
-                                                                  ?.replyMessageConfiguration?.replyTitleColor ??
-                                                              Colors.deepPurple,
-                                                          fontWeight: FontWeight.bold,
-                                                          letterSpacing: 0.25,
+                                                      Expanded(
+                                                        child: Container(
+                                                          padding: textFieldPadding,
+                                                          margin: EdgeInsets.fromLTRB(
+                                                            textFieldMargin?.left ?? horizontalPadding,
+                                                            replyMessageNotEmpty ? 0 : textFieldMargin?.top ?? 0,
+                                                            textFieldMargin?.right ?? horizontalPadding,
+                                                            textFieldMargin?.bottom ?? 8,
+                                                          ),
+                                                          child: Column(
+                                                            children: [
+                                                              if (replyMessageNotEmpty)
+                                                                widget.replyMessageBuilder?.call(context, state) ??
+                                                                    _replyView(state, replyTitle),
+                                                              Container(
+                                                                decoration: BoxDecoration(
+                                                                  borderRadius: outlineBorder.borderRadius,
+                                                                  color: widget.sendMessageConfig
+                                                                          ?.textFieldBackgroundColor ??
+                                                                      Colors.white,
+                                                                ),
+                                                                child: Stack(
+                                                                  children: [
+                                                                    if (playerState != null &&
+                                                                        // (playerState.isInitialised) &&
+                                                                        // recorderState.isPaused &&
+                                                                        _recorderController != null &&
+                                                                        !kIsWeb &&
+                                                                        isLocked.value &&
+                                                                        recorderState == RecordState.stop)
+                                                                      _pausedRecordView(playerState, recordingPath,
+                                                                          context, maxDuration)
+                                                                    else if (_recorderController != null &&
+                                                                        recorderState == RecordState.record)
+                                                                      _recordingView(
+                                                                          recorderState, isRecordingLocked)
+                                                                    else
+                                                                      Container(
+                                                                        decoration: BoxDecoration(
+                                                                          color: sendMessageConfig
+                                                                                  ?.textFieldBackgroundColor ??
+                                                                              Colors.white,
+                                                                          borderRadius: outlineBorder.borderRadius,
+                                                                        ),
+                                                                        height: inputFieldHeight,
+                                                                      ),
+                                                                    Column(
+                                                                      children: [
+                                                                        Visibility(
+                                                                          visible: recorderState !=
+                                                                                  RecordState.record &&
+                                                                              !isRecordingLocked,
+                                                                          maintainState: true,
+                                                                          child: TextFieldView(
+                                                                            replyMessage: widget.replyMessage,
+                                                                            imagePicker: _imagePicker,
+                                                                            inputText: _inputText,
+                                                                            textFieldConfig: textFieldConfig,
+                                                                            sendMessageConfig: sendMessageConfig,
+                                                                            focusNode: widget.focusNode,
+                                                                            textEditingController:
+                                                                                widget.textEditingController,
+                                                                            onPressed: widget.onPressed,
+                                                                            onImageSelected:
+                                                                                widget.onImageSelected,
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
                                                         ),
                                                       ),
-                                                      const Spacer(),
-                                                      Material(
-                                                        color: Colors.grey[200],
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius: BorderRadius.circular(30),
+                                                      Padding(
+                                                        padding: EdgeInsets.fromLTRB(
+                                                          0,
+                                                          textFieldMargin?.top ?? 0,
+                                                          textFieldMargin?.left ?? horizontalPadding,
+                                                          textFieldMargin?.bottom ?? 8,
                                                         ),
-                                                        child: InkWell(
-                                                          borderRadius: BorderRadius.circular(30),
-                                                          onTap: widget.onCloseReplyMessage,
-                                                          child: Container(
-                                                            constraints: const BoxConstraints(
-                                                              maxHeight: 16,
-                                                              minHeight: 14,
-                                                              maxWidth: 16,
-                                                              minWidth: 14,
-                                                            ),
-                                                            // style: IconButton
-                                                            //     .styleFrom(
-                                                            //   backgroundColor:
-                                                            //       Colors.amber,
-                                                            //   padding:
-                                                            //       EdgeInsets.zero,
-                                                            //   fixedSize:
-                                                            //       Size(16, 16),
-                                                            // ),
-                                                            padding: EdgeInsets.zero,
-                                                            child: Icon(
-                                                              Icons.close,
-                                                              color: widget
-                                                                      .sendMessageConfig
-                                                                      ?.replyMessageConfiguration
-                                                                      ?.closeIconColor ??
-                                                                  Colors.black26,
-                                                              size: 16,
-                                                            ),
-                                                          ),
+                                                        child: ShowSendMessageButton(
+                                                          recorderState: recorderState,
+                                                          isRecordingLocked: isRecordingLocked,
+                                                          sendMessageConfig: sendMessageConfig,
+                                                          voiceRecordingConfig: voiceRecordingConfig,
+                                                          onFinishRecording: _stopRecording,
+                                                          onVerticalDragUpdate: _onVerticalDragUpdate,
+                                                          onHorizontalDragUpdate: _onHorizontalDragUpdate,
+                                                          inputText: _inputText,
+                                                          sendMessage: () {
+                                                            widget.onPressed();
+                                                            _inputText.value = '';
+                                                          },
+                                                          startRecording: _startRecording,
+                                                          stopRecording: _stopRecording,
                                                         ),
                                                       ),
                                                     ],
@@ -470,257 +501,115 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                                 ),
                                               ],
                                             ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                              } else {
-                                return const SizedBox.shrink();
-                              }
-                            },
-                            valueListenable: widget.replyMessage,
-                          ),
-                          Container(
-                            padding: EdgeInsets.fromLTRB(
-                              bottomPadding4,
-                              bottomPadding4,
-                              bottomPadding4,
-                              _bottomPadding,
-                            ),
-                            decoration: BoxDecoration(
-                              color: recorderState == RecordState.record ||
-                                      (recorderState == RecordState.stop && isRecordingLocked)
-                                  ? sendMessageConfig?.textFieldBackgroundColor ?? Colors.white
-                                  : null,
-                            ),
-                            child: Stack(
-                              children: [
-                                // if (recorderState == RecordState.record)
-                                //   _recordingBackground(recorderState, snapshot, finalPadding),
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  curve: Curves.easeInOut,
-                                  padding: EdgeInsets.only(
-                                    right: finalPadding,
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Expanded(
-                                        child: Stack(
-                                          children: [
-                                            Column(
-                                              children: [
-                                                ValueListenableBuilder<ReplyMessage>(
-                                                  builder: (_, state, child) {
-                                                    final replyTitle = "${PackageStrings.replyTo} $_replyTo";
-
-                                                    if ((state.mediaPath.isNotEmpty || state.text.isNotEmpty) &&
-                                                        (recorderState == RecordState.stop &&
-                                                            !isRecordingLocked)) {
-                                                      return widget.replyMessageBuilder?.call(context, state) ??
-                                                          Container(
-                                                            margin: const EdgeInsets.only(
-                                                              right: horizontalPadding,
-                                                            ),
-                                                            decoration: BoxDecoration(
-                                                              color: widget.sendMessageConfig
-                                                                      ?.textFieldBackgroundColor ??
-                                                                  Colors.white,
-                                                              borderRadius: const BorderRadius.vertical(
-                                                                top: Radius.circular(14),
-                                                              ),
-                                                            ),
-                                                            // margin: const EdgeInsets.only(
-                                                            //   bottom: 17,
-                                                            //   right: 0.4,
-                                                            //   left: 0.4,
-                                                            // ),
-                                                            padding: const EdgeInsets.fromLTRB(
-                                                              leftPadding,
-                                                              leftPadding,
-                                                              leftPadding,
-                                                              0,
-                                                            ),
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.only(bottom: 0),
-                                                              child: ClipRRect(
-                                                                borderRadius: BorderRadius.circular(5),
-                                                                child: Container(
-                                                                  height: 55,
-                                                                  decoration: BoxDecoration(
-                                                                    color: widget
-                                                                            .sendMessageConfig
-                                                                            ?.replyMessageConfiguration
-                                                                            ?.replyDialogColor ??
-                                                                        Colors.grey.shade200,
-                                                                  ),
-                                                                  child: Stack(
-                                                                    children: [
-                                                                      Align(
-                                                                        alignment: Alignment.bottomLeft,
-                                                                        child: ReplyMessageView(
-                                                                          message: state,
-                                                                          customMessageReplyViewBuilder: widget
-                                                                              .messageConfig
-                                                                              ?.customMessageReplyViewBuilder,
-                                                                          sendMessageConfig:
-                                                                              widget.sendMessageConfig,
-                                                                        ),
-                                                                      ),
-                                                                      Padding(
-                                                                        padding: const EdgeInsets.symmetric(
-                                                                            horizontal: 6.0, vertical: 4),
-                                                                        child: Row(
-                                                                          mainAxisAlignment:
-                                                                              MainAxisAlignment.spaceBetween,
-                                                                          mainAxisSize: MainAxisSize.min,
-                                                                          children: [
-                                                                            Text(
-                                                                              replyTitle,
-                                                                              maxLines: 1,
-                                                                              overflow: TextOverflow.ellipsis,
-                                                                              style: TextStyle(
-                                                                                color: widget
-                                                                                        .sendMessageConfig
-                                                                                        ?.replyMessageConfiguration
-                                                                                        ?.replyTitleColor ??
-                                                                                    Colors.deepPurple,
-                                                                                fontWeight: FontWeight.bold,
-                                                                                letterSpacing: 0.25,
-                                                                              ),
-                                                                            ),
-                                                                            const Spacer(),
-                                                                            Material(
-                                                                              color: Colors.grey[200],
-                                                                              shape: RoundedRectangleBorder(
-                                                                                borderRadius:
-                                                                                    BorderRadius.circular(30),
-                                                                              ),
-                                                                              child: InkWell(
-                                                                                borderRadius:
-                                                                                    BorderRadius.circular(30),
-                                                                                onTap: widget.onCloseReplyMessage,
-                                                                                child: Container(
-                                                                                  constraints:
-                                                                                      const BoxConstraints(
-                                                                                    maxHeight: 16,
-                                                                                    minHeight: 14,
-                                                                                    maxWidth: 16,
-                                                                                    minWidth: 14,
-                                                                                  ),
-                                                                                  // style: IconButton
-                                                                                  //     .styleFrom(
-                                                                                  //   backgroundColor:
-                                                                                  //       Colors.amber,
-                                                                                  //   padding:
-                                                                                  //       EdgeInsets.zero,
-                                                                                  //   fixedSize:
-                                                                                  //       Size(16, 16),
-                                                                                  // ),
-                                                                                  padding: EdgeInsets.zero,
-                                                                                  child: Icon(
-                                                                                    Icons.close,
-                                                                                    color: widget
-                                                                                            .sendMessageConfig
-                                                                                            ?.replyMessageConfiguration
-                                                                                            ?.closeIconColor ??
-                                                                                        Colors.black26,
-                                                                                    size: 16,
-                                                                                  ),
-                                                                                ),
-                                                                              ),
-                                                                            ),
-                                                                          ],
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          );
-                                                    } else {
-                                                      return const SizedBox.shrink();
-                                                    }
-                                                  },
-                                                  valueListenable: widget.replyMessage,
-                                                ),
-                                                Visibility(
-                                                  visible:
-                                                      recorderState != RecordState.record && !isRecordingLocked,
-                                                  maintainState: true,
-                                                  child: TextFieldView(
-                                                    replyMessage: widget.replyMessage,
-                                                    imagePicker: _imagePicker,
-                                                    inputText: _inputText,
-                                                    textFieldConfig: textFieldConfig,
-                                                    sendMessageConfig: sendMessageConfig,
-                                                    focusNode: widget.focusNode,
-                                                    textEditingController: widget.textEditingController,
-                                                    onPressed: widget.onPressed,
-                                                    onImageSelected: widget.onImageSelected,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            ValueListenableBuilder<String>(
-                                                valueListenable: _recordingPath,
-                                                builder: (context, snapshot, _) {
-                                                  return StreamBuilder<PlayerState>(
-                                                      stream: _playerController?.onPlayerStateChanged,
-                                                      builder: (_, pState) {
-                                                        final PlayerState? playerState = pState.data;
-
-                                                        int maxDuration = _playerController?.maxDuration ?? 0;
-
-                                                        if (playerState != null &&
-                                                            // (playerState.isInitialised) &&
-                                                            // recorderState.isPaused &&
-                                                            _recorderController != null &&
-                                                            !kIsWeb &&
-                                                            isLocked.value &&
-                                                            recorderState == RecordState.stop) {
-                                                          return _pausedRecordView(
-                                                              playerState, snapshot, context, maxDuration);
-                                                        } else if (_recorderController != null &&
-                                                            recorderState == RecordState.record) {
-                                                          return _recordingView(recorderState, isRecordingLocked);
-                                                        } else {
-                                                          return const SizedBox.shrink();
-                                                        }
-                                                      });
-                                                }),
                                           ],
-                                        ),
-                                      ),
-                                      ShowSendMessageButton(
-                                        recorderState: recorderState,
-                                        isRecordingLocked: isRecordingLocked,
-                                        sendMessageConfig: sendMessageConfig,
-                                        voiceRecordingConfig: voiceRecordingConfig,
-                                        onFinishRecording: _stopRecording,
-                                        onVerticalDragUpdate: _onVerticalDragUpdate,
-                                        onHorizontalDragUpdate: _onHorizontalDragUpdate,
-                                        inputText: _inputText,
-                                        sendMessage: () {
-                                          widget.onPressed();
-                                          _inputText.value = '';
-                                        },
-                                        startRecording: _startRecording,
-                                        stopRecording: _stopRecording,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
+                                        );
+                                      });
+                                });
+                          });
                     });
               });
         });
+  }
+
+  Container _replyView(ReplyMessage state, String replyTitle) {
+    return Container(
+      height: 60,
+      decoration: BoxDecoration(
+        color: widget.sendMessageConfig?.textFieldBackgroundColor ?? Colors.white,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(14),
+        ),
+      ),
+      // margin: const EdgeInsets.only(
+      //   bottom: 17,
+      //   right: 0.4,
+      //   left: 0.4,
+      // ),
+      padding: const EdgeInsets.fromLTRB(
+        verticalPadding,
+        verticalPadding,
+        verticalPadding,
+        0,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(11),
+          child: Container(
+            decoration: BoxDecoration(
+              color: widget.sendMessageConfig?.replyMessageConfiguration?.replyDialogColor ?? Colors.grey.shade200,
+            ),
+            child: Stack(
+              children: [
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: ReplyMessageView(
+                    message: state,
+                    customMessageReplyViewBuilder: widget.messageConfig?.customMessageReplyViewBuilder,
+                    sendMessageConfig: widget.sendMessageConfig,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        replyTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: widget.sendMessageConfig?.replyMessageConfiguration?.replyTitleColor ??
+                              Colors.deepPurple,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.25,
+                        ),
+                      ),
+                      const Spacer(),
+                      Material(
+                        color: Colors.grey[200],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(30),
+                          onTap: widget.onCloseReplyMessage,
+                          child: Container(
+                            constraints: const BoxConstraints(
+                              maxHeight: 16,
+                              minHeight: 14,
+                              maxWidth: 16,
+                              minWidth: 14,
+                            ),
+                            // style: IconButton
+                            //     .styleFrom(
+                            //   backgroundColor:
+                            //       Colors.amber,
+                            //   padding:
+                            //       EdgeInsets.zero,
+                            //   fixedSize:
+                            //       Size(16, 16),
+                            // ),
+                            padding: EdgeInsets.zero,
+                            child: Icon(
+                              Icons.close,
+                              color: widget.sendMessageConfig?.replyMessageConfiguration?.closeIconColor ??
+                                  Colors.black26,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _onHorizontalDragUpdate(horizontalOffset) {
@@ -752,6 +641,9 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
+          const SizedBox(
+            width: leftPadding3,
+          ),
           // Blinking mic icon
           ValueListenableBuilder<bool>(
               valueListenable: showMicIcon,
@@ -828,91 +720,102 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     );
   }
 
-  Row _pausedRecordView(PlayerState playerState, String snapshot, BuildContext context, int maxDuration) {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () {
-            _cancelRecording();
-          },
-          icon: voiceRecordingConfig?.deleteIcon ??
-              Icon(Icons.delete, color: voiceRecordingConfig?.deleteIconColor ?? Colors.red),
-        ),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: voiceRecordingConfig?.playerWaveStyle.backgroundColor,
-              borderRadius: BorderRadius.circular(50.0),
-            ),
-            child: Row(
-              children: [
-                BuildPlayButton(
-                  voiceRecordingConfig: voiceRecordingConfig,
-                  playerState: playerState,
-                  playerController: _playerController,
-                ),
-                Expanded(
-                  child: AudioFileWaveforms(
-                    key: Key(snapshot),
-                    backgroundColor: voiceRecordingConfig?.playerWaveStyle.backgroundColor,
-                    waveformType: WaveformType.fitWidth,
-                    playerWaveStyle: voiceRecordingConfig?.playerWaveStyle ??
-                        const PlayerWaveStyle(
-                          fixedWaveColor: Colors.white38,
-                          liveWaveColor: Colors.white,
-                          backgroundColor: Color(0xffEE5366),
-                          waveThickness: 4.0,
-                          spacing: 6.0,
-                        ),
-                    // playerWaveStyle: widget.playerWaveStyle,
-                    size: Size(MediaQuery.of(context).size.width * 0.4, 30),
-                    playerController: _playerController!,
-                    margin: voiceRecordingConfig?.margin,
-                    padding: voiceRecordingConfig?.padding ?? const EdgeInsets.fromLTRB(0, 6, 10, 6),
-                    decoration: voiceRecordingConfig?.decoration ??
-                        BoxDecoration(
-                          color: voiceRecordingConfig?.playerWaveStyle.backgroundColor,
-                          borderRadius: BorderRadius.circular(50.0),
-                        ),
-
-                    // playerWaveStyle: voiceRecordingConfig?.waveStyle ??
-                    //     WaveStyle(
-                    //       extendWaveform: true,
-                    //       showMiddleLine: false,
-                    //       waveColor: voiceRecordingConfig?.waveStyle?.waveColor ?? Colors.black,
-                    //     ),
+  Widget _pausedRecordView(PlayerState playerState, String snapshot, BuildContext context, int maxDuration) {
+    return Container(
+      height: inputFieldHeight,
+      padding: const EdgeInsets.fromLTRB(
+        2.0,
+        4.0,
+        4.0,
+        4.0,
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+            onPressed: () {
+              _cancelRecording();
+            },
+            icon: voiceRecordingConfig?.deleteIcon ??
+                Icon(Icons.delete, color: voiceRecordingConfig?.deleteIconColor ?? Colors.red),
+          ),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: voiceRecordingConfig?.playerWaveStyle.backgroundColor,
+                borderRadius: BorderRadius.circular(50.0),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  BuildPlayButton(
+                    voiceRecordingConfig: voiceRecordingConfig,
+                    playerState: playerState,
+                    playerController: _playerController,
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 12.0),
-                  child: StreamBuilder<int>(
-                      initialData: 0,
-                      stream: _playerController?.onCurrentDurationChanged,
-                      builder: (context, duration) {
-                        int currentDuration = duration.data ?? 0;
-                        TextStyle timeStyle = const TextStyle(
-                          color: Colors.white,
-                        );
-                        if (!playerState.isPlaying && currentDuration == 0) {
+                  Expanded(
+                    child: AudioFileWaveforms(
+                      key: Key(snapshot),
+                      backgroundColor: voiceRecordingConfig?.playerWaveStyle.backgroundColor,
+                      waveformType: WaveformType.fitWidth,
+                      margin: const EdgeInsets.symmetric(
+                        vertical: horizontalPadding,
+                      ),
+                      playerWaveStyle: voiceRecordingConfig?.playerWaveStyle ??
+                          const PlayerWaveStyle(
+                            fixedWaveColor: Colors.white38,
+                            liveWaveColor: Colors.white,
+                            backgroundColor: Color(0xffEE5366),
+                            waveThickness: 4.0,
+                            spacing: 6.0,
+                          ),
+                      // playerWaveStyle: widget.playerWaveStyle,
+                      size: Size(MediaQuery.of(context).size.width * 0.4, 30 - horizontalPadding),
+                      playerController: _playerController!,
+                      padding: const EdgeInsets.fromLTRB(0, 6, 4, 6),
+                      decoration: voiceRecordingConfig?.decoration ??
+                          BoxDecoration(
+                            color: voiceRecordingConfig?.playerWaveStyle.backgroundColor,
+                            borderRadius: BorderRadius.circular(50.0),
+                          ),
+
+                      // playerWaveStyle: voiceRecordingConfig?.waveStyle ??
+                      //     WaveStyle(
+                      //       extendWaveform: true,
+                      //       showMiddleLine: false,
+                      //       waveColor: voiceRecordingConfig?.waveStyle?.waveColor ?? Colors.black,
+                      //     ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12.0),
+                    child: StreamBuilder<int>(
+                        initialData: 0,
+                        stream: _playerController?.onCurrentDurationChanged,
+                        builder: (context, duration) {
+                          int currentDuration = duration.data ?? 0;
+                          TextStyle timeStyle = const TextStyle(
+                            color: Colors.white,
+                          );
+                          if (!playerState.isPlaying && currentDuration == 0) {
+                            return Text(
+                              _formatDuration((maxDuration / 1000).toInt()),
+                              style: timeStyle,
+                            );
+                          }
                           return Text(
-                            _formatDuration((maxDuration / 1000).toInt()),
+                            _formatDuration((currentDuration / 1000).toInt()),
                             style: timeStyle,
                           );
-                        }
-                        return Text(
-                          _formatDuration((currentDuration / 1000).toInt()),
-                          style: timeStyle,
-                        );
-                      }),
-                )
-              ],
+                        }),
+                  )
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(
-          width: horizontalPadding,
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1137,6 +1040,19 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
     // }
   }
 
+  EdgeInsets? get textFieldMargin => widget.sendMessageConfig?.textFieldConfig?.margin as EdgeInsets?;
+  EdgeInsets? get textFieldPadding => widget.sendMessageConfig?.textFieldConfig?.padding as EdgeInsets?;
+
+  OutlineInputBorder get _outLineBorder => OutlineInputBorder(
+        borderSide: const BorderSide(color: Colors.transparent),
+        borderRadius: widget.sendMessageConfig?.textFieldConfig?.borderRadius ??
+            BorderRadius.circular(textFieldBorderRadius),
+      );
+  OutlineInputBorder get _outLineBorderWithReply => const OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.transparent),
+        borderRadius: BorderRadius.vertical(top: Radius.zero, bottom: Radius.circular(14)),
+      );
+
   AudioRecordConfig get audioRecordConfig => widget.audioRecordConfig ?? const AudioRecordConfig();
 }
 
@@ -1156,6 +1072,9 @@ class BuildPlayButton extends StatelessWidget {
   Widget build(BuildContext context) {
     if (playerState.isPlaying) {
       return IconButton(
+        splashRadius: 3,
+        padding: EdgeInsets.zero,
+        visualDensity: VisualDensity.compact,
         onPressed: () {
           _playerController?.pausePlayer();
         },
@@ -1167,6 +1086,9 @@ class BuildPlayButton extends StatelessWidget {
       );
     }
     return IconButton(
+      splashRadius: 3,
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
       onPressed: () {
         _playerController?.startPlayer();
       },
@@ -1236,6 +1158,9 @@ class _TextFieldViewState extends State<TextFieldView> {
         borderRadius: BorderRadius.vertical(top: Radius.zero, bottom: Radius.circular(14)),
       );
 
+  EdgeInsets? get textFieldMargin => widget.textFieldConfig?.margin as EdgeInsets?;
+  EdgeInsets? get textFieldPadding => widget.textFieldConfig?.padding as EdgeInsets?;
+
   ValueNotifier<TypeWriterStatus> composingStatus = ValueNotifier(TypeWriterStatus.typed);
 
   late Debouncer debouncer;
@@ -1264,94 +1189,79 @@ class _TextFieldViewState extends State<TextFieldView> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-        valueListenable: widget.replyMessage,
-        builder: (context, state, _) {
-          final OutlineInputBorder outlineBorder =
-              (state.mediaPath.isNotEmpty || state.text.isNotEmpty) ? _outLineBorderWithReply : _outLineBorder;
-          return Padding(
-            padding: const EdgeInsets.only(right: horizontalPadding),
-            child: Container(
-              padding: widget.textFieldConfig?.padding ?? const EdgeInsets.symmetric(horizontal: 6),
-              margin: widget.textFieldConfig?.margin,
-              decoration: BoxDecoration(
-                borderRadius: (state.mediaPath.isNotEmpty || state.text.isNotEmpty)
-                    ? const BorderRadius.vertical(top: Radius.zero, bottom: Radius.circular(14))
-                    : widget.sendMessageConfig?.textFieldConfig?.borderRadius ??
-                        BorderRadius.circular(textFieldBorderRadius),
-                color: widget.sendMessageConfig?.textFieldBackgroundColor ?? Colors.white,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: TextField(
-                      focusNode: widget.focusNode,
-                      controller: widget.textEditingController,
-                      style: widget.textFieldConfig?.textStyle ?? const TextStyle(color: Colors.white),
-                      maxLines: widget.textFieldConfig?.maxLines ?? 5,
-                      minLines: widget.textFieldConfig?.minLines ?? 1,
-                      keyboardType: widget.textFieldConfig?.textInputType,
-                      inputFormatters: widget.textFieldConfig?.inputFormatters,
-                      onChanged: _onChanged,
-                      enabled: widget.textFieldConfig?.enabled,
-                      textCapitalization:
-                          widget.textFieldConfig?.textCapitalization ?? TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        hintText: widget.textFieldConfig?.hintText ?? PackageStrings.message,
-                        fillColor: Colors.transparent,
-                        filled: true,
-                        hintStyle: widget.textFieldConfig?.hintStyle ??
-                            TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.grey.shade600,
-                              letterSpacing: 0.25,
-                            ),
-                        contentPadding:
-                            widget.textFieldConfig?.contentPadding ?? const EdgeInsets.symmetric(horizontal: 6),
-                        border: outlineBorder,
-                        focusedBorder: outlineBorder,
-                        enabledBorder: outlineBorder,
-                        disabledBorder: outlineBorder,
-                      ),
-                    ),
+    final bool replyMessageNotEmpty =
+        widget.replyMessage.value.mediaPath.isNotEmpty || widget.replyMessage.value.text.isNotEmpty;
+    final OutlineInputBorder outlineBorder = replyMessageNotEmpty ? _outLineBorderWithReply : _outLineBorder;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: TextField(
+            focusNode: widget.focusNode,
+            controller: widget.textEditingController,
+            style: widget.textFieldConfig?.textStyle ?? const TextStyle(color: Colors.white),
+            maxLines: widget.textFieldConfig?.maxLines ?? 5,
+            minLines: widget.textFieldConfig?.minLines ?? 1,
+            keyboardType: widget.textFieldConfig?.textInputType,
+            inputFormatters: widget.textFieldConfig?.inputFormatters,
+            onChanged: _onChanged,
+            enabled: widget.textFieldConfig?.enabled,
+            textCapitalization: widget.textFieldConfig?.textCapitalization ?? TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: widget.textFieldConfig?.hintText ?? PackageStrings.message,
+              fillColor: Colors.transparent,
+              filled: true,
+              hintStyle: widget.textFieldConfig?.hintStyle ??
+                  TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey.shade600,
+                    letterSpacing: 0.25,
                   ),
-                  if (widget.sendMessageConfig?.enableCameraImagePicker ?? true)
-                    IconButton(
-                      constraints: const BoxConstraints(),
-                      onPressed: (widget.textFieldConfig?.enabled ?? true)
-                          ? () => _onIconPressed(
-                                ImageSource.camera,
-                                config: widget.sendMessageConfig?.imagePickerConfiguration,
-                              )
-                          : null,
-                      icon: imagePickerIconsConfig?.cameraImagePickerIcon ??
-                          Icon(
-                            Icons.camera_alt_outlined,
-                            color: imagePickerIconsConfig?.cameraIconColor,
-                          ),
-                    ),
-                  if (widget.sendMessageConfig?.enableGalleryImagePicker ?? true)
-                    IconButton(
-                      constraints: const BoxConstraints(),
-                      onPressed: (widget.textFieldConfig?.enabled ?? true)
-                          ? () => _onIconPressed(
-                                ImageSource.gallery,
-                                config: widget.sendMessageConfig?.imagePickerConfiguration,
-                              )
-                          : null,
-                      icon: imagePickerIconsConfig?.galleryImagePickerIcon ??
-                          Icon(
-                            Icons.image,
-                            color: imagePickerIconsConfig?.galleryIconColor,
-                          ),
-                    ),
-                ],
-              ),
+              contentPadding: widget.textFieldConfig?.contentPadding ??
+                  const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+              border: outlineBorder,
+              focusedBorder: outlineBorder,
+              enabledBorder: outlineBorder,
+              disabledBorder: outlineBorder,
             ),
-          );
-        });
+          ),
+        ),
+        if (widget.sendMessageConfig?.enableCameraImagePicker ?? true)
+          IconButton(
+            constraints: const BoxConstraints(),
+            onPressed: (widget.textFieldConfig?.enabled ?? true)
+                ? () => _onIconPressed(
+                      ImageSource.camera,
+                      config: widget.sendMessageConfig?.imagePickerConfiguration,
+                    )
+                : null,
+            icon: imagePickerIconsConfig?.cameraImagePickerIcon ??
+                Icon(
+                  Icons.camera_alt_outlined,
+                  color: imagePickerIconsConfig?.cameraIconColor,
+                ),
+          ),
+        if (widget.sendMessageConfig?.enableGalleryImagePicker ?? true)
+          IconButton(
+            constraints: const BoxConstraints(),
+            onPressed: (widget.textFieldConfig?.enabled ?? true)
+                ? () => _onIconPressed(
+                      ImageSource.gallery,
+                      config: widget.sendMessageConfig?.imagePickerConfiguration,
+                    )
+                : null,
+            icon: imagePickerIconsConfig?.galleryImagePickerIcon ??
+                Icon(
+                  Icons.image,
+                  color: imagePickerIconsConfig?.galleryIconColor,
+                ),
+          ),
+      ],
+    );
   }
 
   Future<void> _onIconPressed(
