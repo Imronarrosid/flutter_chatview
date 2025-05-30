@@ -262,246 +262,151 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                                       : padding > 60
                                           ? 60
                                           : padding;
-                                  return ValueListenableBuilder<ReplyMessage>(
-                                      valueListenable: widget.replyMessage,
-                                      builder: (_, state, child) {
-                                        final String? text = sendMessageConfig?.replyToMessage != null
-                                            ? sendMessageConfig!.replyToMessage!(repliedUser?.name ?? '')
-                                            : null;
-                                        final replyTitle = text ?? "${PackageStrings.replyTo} $_replyTo";
-                                        final bool replyMessageNotEmpty =
-                                            state.mediaPath.isNotEmpty || state.text.isNotEmpty;
-                                        final OutlineInputBorder outlineBorder =
-                                            (state.mediaPath.isNotEmpty || state.text.isNotEmpty)
-                                                ? _outLineBorderWithReply
-                                                : _outLineBorder;
-
-                                        return Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Padding(
-                                              padding: const EdgeInsets.only(right: 12.0),
-                                              child: ValueListenableBuilder(
-                                                  valueListenable: isRecording,
-                                                  builder: (context, isRecordingValue, child) {
-                                                    return AnimatedSwitcher(
-                                                        duration: const Duration(milliseconds: 120),
-                                                        layoutBuilder: (_, __) {
-                                                          if (isRecordingValue &&
-                                                              recorderState == RecordState.record &&
-                                                              !isRecordingLocked) {
-                                                            return AnimatedOpacity(
-                                                              duration: const Duration(milliseconds: 120),
-                                                              opacity: horizontalDragOffset.value.isNegative
-                                                                  ? 0.0
-                                                                  : 1.0,
-                                                              child: RepaintBoundary(
-                                                                child: AnimatedContainer(
-                                                                  duration: const Duration(milliseconds: 120),
-                                                                  curve: Curves.linear,
-                                                                  transform: Matrix4.translationValues(
-                                                                    0,
-                                                                    horizontalDragOffset.value.isNegative ? 60 : 0,
-                                                                    0,
-                                                                  ),
-                                                                  child: ValueListenableBuilder<double>(
-                                                                      valueListenable: verticalDragOffset,
-                                                                      builder: (context, verticalOffset, _) {
-                                                                        return Padding(
-                                                                          // duration: const Duration(milliseconds: 20),
-                                                                          // curve: Curves.easeInOut,
-                                                                          padding: EdgeInsets.only(
-                                                                              bottom: !verticalOffset.isNegative
-                                                                                  ? 0
-                                                                                  : (verticalOffset.abs())),
-                                                                          child: IconButton(
-                                                                            onPressed: null,
-                                                                            style: IconButton.styleFrom(
-                                                                              disabledBackgroundColor:
-                                                                                  voiceRecordingConfig
-                                                                                      ?.backgroundColor,
-                                                                              backgroundColor: voiceRecordingConfig
-                                                                                  ?.backgroundColor,
-                                                                            ),
-                                                                            icon: voiceRecordingConfig?.lockIcon ??
-                                                                                Icon(
-                                                                                  Icons.lock,
-                                                                                  color: voiceRecordingConfig
-                                                                                          ?.playIconColor ??
-                                                                                      Colors.black,
-                                                                                ),
-                                                                          ),
-                                                                        );
-                                                                      }),
-                                                                ),
-                                                              ),
-                                                            );
+                                  return ValueListenableBuilder(
+                                      valueListenable: isRecording,
+                                      builder: (context, isRecordingValue, child) {
+                                        return AnimatedContainer(
+                                          duration: const Duration(milliseconds: 200),
+                                          curve: Curves.easeInOut,
+                                          padding: EdgeInsets.only(
+                                            right: finalPadding,
+                                          ),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.end,
+                                            children: [
+                                              Expanded(
+                                                child: Column(
+                                                  children: [
+                                                    ValueListenableBuilder<ReplyMessage>(
+                                                        valueListenable: widget.replyMessage,
+                                                        builder: (_, state, child) {
+                                                          final String? text =
+                                                              sendMessageConfig?.replyToMessage != null
+                                                                  ? sendMessageConfig!
+                                                                      .replyToMessage!(repliedUser?.name ?? '')
+                                                                  : null;
+                                                          final replyTitle =
+                                                              text ?? "${PackageStrings.replyTo} $_replyTo";
+                                                          final bool replyMessageNotEmpty =
+                                                              state.mediaPath.isNotEmpty || state.text.isNotEmpty;
+                                                          if (!replyMessageNotEmpty) {
+                                                            return const SizedBox.shrink();
                                                           }
-                                                          if (recorderState == RecordState.record &&
-                                                              isRecordingLocked) {
-                                                            return IconButton(
-                                                              onPressed: () {
-                                                                _pauseRecording();
-                                                              },
-                                                              style: IconButton.styleFrom(
-                                                                backgroundColor:
-                                                                    voiceRecordingConfig?.backgroundColor ??
-                                                                        Colors.white,
-                                                              ),
-                                                              icon: voiceRecordingConfig?.pauseIcon ??
-                                                                  Icon(
-                                                                    Icons.pause,
-                                                                    color: voiceRecordingConfig?.pauseIconColor ??
-                                                                        Colors.black87,
-                                                                  ),
-                                                            );
+                                                          if (widget.replyMessageBuilder != null) {
+                                                            return widget.replyMessageBuilder!(context, state);
                                                           }
-                                                          if (recorderState == RecordState.stop &&
-                                                              isRecordingLocked) {
-                                                            return IconButton(
-                                                              onPressed: () {
-                                                                _startRecording();
-                                                              },
-                                                              style: IconButton.styleFrom(
-                                                                backgroundColor:
-                                                                    voiceRecordingConfig?.backgroundColor ??
-                                                                        Colors.white,
-                                                              ),
-                                                              icon: voiceRecordingConfig?.micIcon ??
-                                                                  Icon(
-                                                                    Icons.mic,
-                                                                    color: voiceRecordingConfig?.micIconColor ??
-                                                                        Colors.black87,
-                                                                  ),
-                                                            );
-                                                          }
-
-                                                          return const SizedBox.shrink();
-                                                        });
-                                                  }),
-                                            ),
-                                            SizedBox(
-                                              height: replyMessageNotEmpty ? 0 : 60,
-                                            ),
-                                            Stack(
-                                              children: [
-                                                // if (recorderState == RecordState.record)
-                                                //   _recordingBackground(recorderState, snapshot, finalPadding),
-                                                AnimatedContainer(
-                                                  duration: const Duration(milliseconds: 200),
-                                                  curve: Curves.easeInOut,
-                                                  padding: EdgeInsets.only(
-                                                    right: finalPadding,
-                                                  ),
-                                                  child: Row(
-                                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                                    children: [
-                                                      Expanded(
-                                                        child: Container(
-                                                          padding: textFieldPadding,
-                                                          margin: EdgeInsets.fromLTRB(
-                                                            textFieldMargin?.left ?? horizontalPadding,
-                                                            replyMessageNotEmpty ? 0 : textFieldMargin?.top ?? 0,
-                                                            textFieldMargin?.right ?? horizontalPadding,
-                                                            textFieldMargin?.bottom ?? 8,
-                                                          ),
-                                                          child: Column(
-                                                            children: [
-                                                              if (replyMessageNotEmpty)
-                                                                widget.replyMessageBuilder?.call(context, state) ??
-                                                                    _replyView(state, replyTitle),
-                                                              Container(
-                                                                decoration: BoxDecoration(
-                                                                  borderRadius: outlineBorder.borderRadius,
-                                                                  color: widget.sendMessageConfig
-                                                                          ?.textFieldBackgroundColor ??
-                                                                      Colors.white,
-                                                                ),
-                                                                child: Stack(
-                                                                  children: [
-                                                                    if (playerState != null &&
-                                                                        // (playerState.isInitialised) &&
-                                                                        // recorderState.isPaused &&
-                                                                        _recorderController != null &&
-                                                                        !kIsWeb &&
-                                                                        isLocked.value &&
-                                                                        recorderState == RecordState.stop)
-                                                                      _pausedRecordView(playerState, recordingPath,
-                                                                          context, maxDuration)
-                                                                    else if (_recorderController != null &&
-                                                                        recorderState == RecordState.record)
-                                                                      _recordingView(
-                                                                          recorderState, isRecordingLocked)
-                                                                    else
-                                                                      Container(
-                                                                        decoration: BoxDecoration(
-                                                                          color: sendMessageConfig
-                                                                                  ?.textFieldBackgroundColor ??
-                                                                              Colors.white,
-                                                                          borderRadius: outlineBorder.borderRadius,
-                                                                        ),
-                                                                        height: inputFieldHeight,
-                                                                      ),
-                                                                    Column(
-                                                                      children: [
-                                                                        Visibility(
-                                                                          visible: recorderState !=
-                                                                                  RecordState.record &&
-                                                                              !isRecordingLocked,
-                                                                          maintainState: true,
-                                                                          child: TextFieldView(
-                                                                            replyMessage: widget.replyMessage,
-                                                                            imagePicker: _imagePicker,
-                                                                            inputText: _inputText,
-                                                                            textFieldConfig: textFieldConfig,
-                                                                            sendMessageConfig: sendMessageConfig,
-                                                                            focusNode: widget.focusNode,
-                                                                            textEditingController:
-                                                                                widget.textEditingController,
-                                                                            onPressed: widget.onPressed,
-                                                                            onImageSelected:
-                                                                                widget.onImageSelected,
-                                                                          ),
-                                                                        ),
-                                                                      ],
+                                                          return _replyView(state, replyTitle);
+                                                        }),
+                                                    ValueListenableBuilder<ReplyMessage>(
+                                                        valueListenable: widget.replyMessage,
+                                                        builder: (_, state, child) {
+                                                          final bool replyMessageNotEmpty =
+                                                              state.mediaPath.isNotEmpty || state.text.isNotEmpty;
+                                                          final OutlineInputBorder outlineBorder =
+                                                              replyMessageNotEmpty
+                                                                  ? _outLineBorderWithReply
+                                                                  : _outLineBorder;
+                                                          return Container(
+                                                            margin: EdgeInsets.fromLTRB(
+                                                              textFieldMargin?.left ?? horizontalPadding,
+                                                              replyMessageNotEmpty ? 0 : textFieldMargin?.top ?? 0,
+                                                              textFieldMargin?.right ?? horizontalPadding,
+                                                              textFieldMargin?.bottom ?? 8,
+                                                            ),
+                                                            decoration: BoxDecoration(
+                                                              borderRadius: outlineBorder.borderRadius,
+                                                              color: widget.sendMessageConfig
+                                                                      ?.textFieldBackgroundColor ??
+                                                                  Colors.white,
+                                                            ),
+                                                            child: Stack(
+                                                              children: [
+                                                                if (playerState != null &&
+                                                                    // (playerState.isInitialised) &&
+                                                                    // recorderState.isPaused &&
+                                                                    _recorderController != null &&
+                                                                    !kIsWeb &&
+                                                                    isLocked.value &&
+                                                                    recorderState == RecordState.stop)
+                                                                  _pausedRecordView(playerState, recordingPath,
+                                                                      context, maxDuration)
+                                                                else if (_recorderController != null &&
+                                                                    recorderState == RecordState.record)
+                                                                  _recordingView(recorderState, isRecordingLocked)
+                                                                else if (playerState == null &&
+                                                                    recorderState == RecordState.stop &&
+                                                                    isRecordingLocked)
+                                                                  Container(
+                                                                    decoration: BoxDecoration(
+                                                                      color: sendMessageConfig
+                                                                              ?.textFieldBackgroundColor ??
+                                                                          Colors.white,
+                                                                      borderRadius: outlineBorder.borderRadius,
                                                                     ),
-                                                                  ],
+                                                                    height: inputFieldHeight,
+                                                                  ),
+                                                                Visibility(
+                                                                  visible: recorderState != RecordState.record &&
+                                                                      !isRecordingLocked,
+                                                                  maintainState: true,
+                                                                  child: Row(
+                                                                    children: [
+                                                                      Expanded(
+                                                                        child: TextFieldView(
+                                                                          replyMessage: widget.replyMessage,
+                                                                          imagePicker: _imagePicker,
+                                                                          inputText: _inputText,
+                                                                          textFieldConfig: textFieldConfig,
+                                                                          sendMessageConfig: sendMessageConfig,
+                                                                          focusNode: widget.focusNode,
+                                                                          textEditingController:
+                                                                              widget.textEditingController,
+                                                                          onPressed: widget.onPressed,
+                                                                          onImageSelected: widget.onImageSelected,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
                                                                 ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Padding(
-                                                        padding: EdgeInsets.fromLTRB(
-                                                          0,
-                                                          textFieldMargin?.top ?? 0,
-                                                          textFieldMargin?.left ?? horizontalPadding,
-                                                          textFieldMargin?.bottom ?? 8,
-                                                        ),
-                                                        child: ShowSendMessageButton(
-                                                          recorderState: recorderState,
-                                                          isRecordingLocked: isRecordingLocked,
-                                                          sendMessageConfig: sendMessageConfig,
-                                                          voiceRecordingConfig: voiceRecordingConfig,
-                                                          onFinishRecording: _stopRecording,
-                                                          onVerticalDragUpdate: _onVerticalDragUpdate,
-                                                          onHorizontalDragUpdate: _onHorizontalDragUpdate,
-                                                          inputText: _inputText,
-                                                          sendMessage: () {
-                                                            widget.onPressed();
-                                                            _inputText.value = '';
-                                                          },
-                                                          startRecording: _startRecording,
-                                                          stopRecording: _stopRecording,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        }),
+                                                  ],
                                                 ),
-                                              ],
-                                            ),
-                                          ],
+                                              ),
+                                              Container(
+                                                padding: EdgeInsets.fromLTRB(
+                                                  0,
+                                                  textFieldMargin?.top ?? 0,
+                                                  textFieldMargin?.left ?? horizontalPadding,
+                                                  textFieldMargin?.bottom ?? 8,
+                                                ),
+                                                child: Column(
+                                                  children: [
+                                                    _recordControllView(
+                                                        isRecordingValue, recorderState, isRecordingLocked),
+                                                    ShowSendMessageButton(
+                                                      recorderState: recorderState,
+                                                      isRecordingLocked: isRecordingLocked,
+                                                      sendMessageConfig: sendMessageConfig,
+                                                      voiceRecordingConfig: voiceRecordingConfig,
+                                                      onFinishRecording: _stopRecording,
+                                                      onVerticalDragUpdate: _onVerticalDragUpdate,
+                                                      onHorizontalDragUpdate: _onHorizontalDragUpdate,
+                                                      inputText: _inputText,
+                                                      sendMessage: () {
+                                                        widget.onPressed();
+                                                        _inputText.value = '';
+                                                      },
+                                                      startRecording: _startRecording,
+                                                      stopRecording: _stopRecording,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         );
                                       });
                                 });
@@ -511,9 +416,98 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
         });
   }
 
+  Padding _recordControllView(bool isRecordingValue, RecordState recorderState, bool isRecordingLocked) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        bottom: 60,
+      ),
+      child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 120),
+          layoutBuilder: (_, __) {
+            if (isRecordingValue && recorderState == RecordState.record && !isRecordingLocked) {
+              return AnimatedOpacity(
+                duration: const Duration(milliseconds: 120),
+                opacity: horizontalDragOffset.value.isNegative ? 0.0 : 1.0,
+                child: RepaintBoundary(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 120),
+                    curve: Curves.linear,
+                    transform: Matrix4.translationValues(
+                      0,
+                      horizontalDragOffset.value.isNegative ? 60 : 0,
+                      0,
+                    ),
+                    child: ValueListenableBuilder<double>(
+                        valueListenable: verticalDragOffset,
+                        builder: (context, verticalOffset, _) {
+                          return Padding(
+                            // duration: const Duration(milliseconds: 20),
+                            // curve: Curves.easeInOut,
+                            padding:
+                                EdgeInsets.only(bottom: !verticalOffset.isNegative ? 0 : (verticalOffset.abs())),
+                            child: IconButton(
+                              onPressed: null,
+                              style: IconButton.styleFrom(
+                                disabledBackgroundColor: voiceRecordingConfig?.backgroundColor,
+                                backgroundColor: voiceRecordingConfig?.backgroundColor,
+                              ),
+                              icon: voiceRecordingConfig?.lockIcon ??
+                                  Icon(
+                                    Icons.lock,
+                                    color: voiceRecordingConfig?.playIconColor ?? Colors.black,
+                                  ),
+                            ),
+                          );
+                        }),
+                  ),
+                ),
+              );
+            }
+            if (recorderState == RecordState.record && isRecordingLocked) {
+              return IconButton(
+                onPressed: () {
+                  _pauseRecording();
+                },
+                style: IconButton.styleFrom(
+                  backgroundColor: voiceRecordingConfig?.backgroundColor ?? Colors.white,
+                ),
+                icon: voiceRecordingConfig?.pauseIcon ??
+                    Icon(
+                      Icons.pause,
+                      color: voiceRecordingConfig?.pauseIconColor ?? Colors.black87,
+                    ),
+              );
+            }
+            if (recorderState == RecordState.stop && isRecordingLocked) {
+              return IconButton(
+                onPressed: () {
+                  _startRecording();
+                },
+                style: IconButton.styleFrom(
+                  backgroundColor: voiceRecordingConfig?.backgroundColor ?? Colors.white,
+                ),
+                icon: voiceRecordingConfig?.micIcon ??
+                    Icon(
+                      Icons.mic,
+                      color: voiceRecordingConfig?.micIconColor ?? Colors.black87,
+                    ),
+              );
+            }
+
+            return const SizedBox.shrink();
+          }),
+    );
+  }
+
   Container _replyView(ReplyMessage state, String replyTitle) {
     return Container(
       height: 60,
+      margin: EdgeInsets.fromLTRB(
+        textFieldMargin?.left ?? horizontalPadding,
+        0,
+        textFieldMargin?.right ?? horizontalPadding,
+        0,
+      ),
       decoration: BoxDecoration(
         color: widget.sendMessageConfig?.textFieldBackgroundColor ?? Colors.white,
         borderRadius: const BorderRadius.vertical(
@@ -525,12 +519,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
       //   right: 0.4,
       //   left: 0.4,
       // ),
-      padding: const EdgeInsets.fromLTRB(
-        verticalPadding,
-        verticalPadding,
-        verticalPadding,
-        0,
-      ),
+      padding: const EdgeInsets.fromLTRB(verticalPadding, verticalPadding, verticalPadding, 0),
       child: Padding(
         padding: const EdgeInsets.only(bottom: 0),
         child: ClipRRect(
@@ -550,7 +539,7 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     mainAxisSize: MainAxisSize.min,
@@ -1192,75 +1181,82 @@ class _TextFieldViewState extends State<TextFieldView> {
     final bool replyMessageNotEmpty =
         widget.replyMessage.value.mediaPath.isNotEmpty || widget.replyMessage.value.text.isNotEmpty;
     final OutlineInputBorder outlineBorder = replyMessageNotEmpty ? _outLineBorderWithReply : _outLineBorder;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: TextField(
-            focusNode: widget.focusNode,
-            controller: widget.textEditingController,
-            style: widget.textFieldConfig?.textStyle ?? const TextStyle(color: Colors.white),
-            maxLines: widget.textFieldConfig?.maxLines ?? 5,
-            minLines: widget.textFieldConfig?.minLines ?? 1,
-            keyboardType: widget.textFieldConfig?.textInputType,
-            inputFormatters: widget.textFieldConfig?.inputFormatters,
-            onChanged: _onChanged,
-            enabled: widget.textFieldConfig?.enabled,
-            textCapitalization: widget.textFieldConfig?.textCapitalization ?? TextCapitalization.sentences,
-            decoration: InputDecoration(
-              hintText: widget.textFieldConfig?.hintText ?? PackageStrings.message,
-              fillColor: Colors.transparent,
-              filled: true,
-              hintStyle: widget.textFieldConfig?.hintStyle ??
-                  TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.grey.shade600,
-                    letterSpacing: 0.25,
-                  ),
-              contentPadding: widget.textFieldConfig?.contentPadding ??
-                  const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 4,
-                  ),
-              border: outlineBorder,
-              focusedBorder: outlineBorder,
-              enabledBorder: outlineBorder,
-              disabledBorder: outlineBorder,
+    return Container(
+      padding: textFieldPadding,
+      decoration: BoxDecoration(
+        color: widget.sendMessageConfig?.textFieldBackgroundColor ?? Colors.white,
+        borderRadius: outlineBorder.borderRadius,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: TextField(
+              focusNode: widget.focusNode,
+              controller: widget.textEditingController,
+              style: widget.textFieldConfig?.textStyle ?? const TextStyle(color: Colors.white),
+              maxLines: widget.textFieldConfig?.maxLines ?? 5,
+              minLines: widget.textFieldConfig?.minLines ?? 1,
+              keyboardType: widget.textFieldConfig?.textInputType,
+              inputFormatters: widget.textFieldConfig?.inputFormatters,
+              onChanged: _onChanged,
+              enabled: widget.textFieldConfig?.enabled,
+              textCapitalization: widget.textFieldConfig?.textCapitalization ?? TextCapitalization.sentences,
+              decoration: InputDecoration(
+                hintText: widget.textFieldConfig?.hintText ?? PackageStrings.message,
+                fillColor: Colors.transparent,
+                filled: true,
+                hintStyle: widget.textFieldConfig?.hintStyle ??
+                    TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey.shade600,
+                      letterSpacing: 0.25,
+                    ),
+                contentPadding: widget.textFieldConfig?.contentPadding ??
+                    const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                border: outlineBorder,
+                focusedBorder: outlineBorder,
+                enabledBorder: outlineBorder,
+                disabledBorder: outlineBorder,
+              ),
             ),
           ),
-        ),
-        if (widget.sendMessageConfig?.enableCameraImagePicker ?? true)
-          IconButton(
-            constraints: const BoxConstraints(),
-            onPressed: (widget.textFieldConfig?.enabled ?? true)
-                ? () => _onIconPressed(
-                      ImageSource.camera,
-                      config: widget.sendMessageConfig?.imagePickerConfiguration,
-                    )
-                : null,
-            icon: imagePickerIconsConfig?.cameraImagePickerIcon ??
-                Icon(
-                  Icons.camera_alt_outlined,
-                  color: imagePickerIconsConfig?.cameraIconColor,
-                ),
-          ),
-        if (widget.sendMessageConfig?.enableGalleryImagePicker ?? true)
-          IconButton(
-            constraints: const BoxConstraints(),
-            onPressed: (widget.textFieldConfig?.enabled ?? true)
-                ? () => _onIconPressed(
-                      ImageSource.gallery,
-                      config: widget.sendMessageConfig?.imagePickerConfiguration,
-                    )
-                : null,
-            icon: imagePickerIconsConfig?.galleryImagePickerIcon ??
-                Icon(
-                  Icons.image,
-                  color: imagePickerIconsConfig?.galleryIconColor,
-                ),
-          ),
-      ],
+          if (widget.sendMessageConfig?.enableCameraImagePicker ?? true)
+            IconButton(
+              constraints: const BoxConstraints(),
+              onPressed: (widget.textFieldConfig?.enabled ?? true)
+                  ? () => _onIconPressed(
+                        ImageSource.camera,
+                        config: widget.sendMessageConfig?.imagePickerConfiguration,
+                      )
+                  : null,
+              icon: imagePickerIconsConfig?.cameraImagePickerIcon ??
+                  Icon(
+                    Icons.camera_alt_outlined,
+                    color: imagePickerIconsConfig?.cameraIconColor,
+                  ),
+            ),
+          if (widget.sendMessageConfig?.enableGalleryImagePicker ?? true)
+            IconButton(
+              constraints: const BoxConstraints(),
+              onPressed: (widget.textFieldConfig?.enabled ?? true)
+                  ? () => _onIconPressed(
+                        ImageSource.gallery,
+                        config: widget.sendMessageConfig?.imagePickerConfiguration,
+                      )
+                  : null,
+              icon: imagePickerIconsConfig?.galleryImagePickerIcon ??
+                  Icon(
+                    Icons.image,
+                    color: imagePickerIconsConfig?.galleryIconColor,
+                  ),
+            ),
+        ],
+      ),
     );
   }
 

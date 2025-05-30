@@ -29,6 +29,7 @@ import 'package:chatview/src/widgets/preview_media_screen.dart';
 import 'package:chatview/src/widgets/scroll_to_bottom_button.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class SendMessageWidget extends StatefulWidget {
   const SendMessageWidget({
@@ -256,6 +257,9 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
       );
     }
     FocusScope.of(context).requestFocus(_focusNode);
+    if (_focusNode.hasFocus && !kIsWeb) {
+      SystemChannels.textInput.invokeMethod('TextInput.show');
+    }
     if (widget.onReplyCallback != null) widget.onReplyCallback!(replyMessage);
   }
 
