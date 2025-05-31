@@ -80,11 +80,14 @@ class _SwipeToReplyState extends State<SwipeToReply> {
                   : Alignment.centerLeft,
               fit: StackFit.passthrough,
               children: [
-                ReplyIcon(
-                  replyIconSize: replyIconSize,
-                  animationValue: paddingValue > replyIconSize
-                      ? (paddingValue) / (paddingLimit)
-                      : 0.0,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ReplyIcon(
+                    replyIconSize: replyIconSize,
+                    animationValue: paddingValue > replyIconSize
+                        ? (paddingValue) / (paddingLimit)
+                        : 0.0,
+                  ),
                 ),
                 Padding(
                   padding: EdgeInsets.only(
