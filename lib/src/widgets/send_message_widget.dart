@@ -203,19 +203,23 @@ class SendMessageWidgetState extends State<SendMessageWidget> {
         MaterialPageRoute(
           fullscreenDialog: true,
           builder: (context) => MediaPreviewScreen(
+            textEditingController: _textEditingController,
             mediaPreviewConfig: widget.mediaPreviewSendMessageConfig,
             chatBackgroundConfig: widget.chatBackgroundConfig,
             imageUri: imagePath,
             imageHeaders: widget.imageHeaders,
             imageProviderBuilder: widget.imageProviderBuilder,
             otherUser: chatViewIW!.chatController.otherUsers.first,
-            onSend: (imagePath, caption) {
+            onSend: (imagePath) {
+              final messageText = _textEditingController.text.trim();
+              _textEditingController.clear();
               widget.onSendTap.call(
                 mediaPath: imagePath,
                 replyMessage: replyMessage,
                 messageType: MessageType.image,
-                text: caption.isNotEmpty ? caption : '',
+                text: messageText,
               );
+              _assignRepliedMessage();
             },
           ),
         ),

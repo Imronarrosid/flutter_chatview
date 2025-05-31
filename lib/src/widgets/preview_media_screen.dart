@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:chatview/chatview.dart';
 import 'package:chatview/src/conditional/conditional.dart';
 import 'package:chatview/src/utils/package_strings.dart';
-import 'package:chatview/src/widgets/image_provider_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:photo_view/photo_view.dart';
 
 class MediaPreviewScreen extends StatefulWidget {
   const MediaPreviewScreen({
@@ -17,16 +17,18 @@ class MediaPreviewScreen extends StatefulWidget {
     this.mediaPreviewConfig,
     required this.otherUser,
     required this.onSend,
+    required this.textEditingController,
   }) : super(key: key);
   final String imageUri;
   final ChatUser otherUser;
-  final Function(String imagePath, String caption) onSend;
+  final Function(String imagePath) onSend;
 
   // final TextFieldConfiguration? textFieldConfig;
   final Map<String, String>? imageHeaders;
 
   final ChatBackgroundConfiguration? chatBackgroundConfig;
   final MediaPreviewConfig? mediaPreviewConfig;
+  final TextEditingController textEditingController;
 
   /// This feature allows you to use a custom image provider.
   /// This is useful if you want to manage image loading yourself, or if you need to cache images.
@@ -43,7 +45,7 @@ class MediaPreviewScreen extends StatefulWidget {
 }
 
 class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
-  final TextEditingController _controller = TextEditingController();
+  TextEditingController get _controller => widget.textEditingController;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,16 +54,19 @@ class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
         children: [
           // Main content
           // Image container - takes most of the screen
-          GestureDetector(
-            onVerticalDragEnd: (_) {},
-            child: Center(
-              child: ImageProviderWidget(
-                imageUri: widget.imageUri,
-                imageHeaders: widget.imageHeaders,
-                imageProviderBuilder: widget.imageProviderBuilder,
-              ),
-            ),
+          PhotoView(
+            imageProvider: widget.imageProviderBuilder != null
+                ? widget.imageProviderBuilder!(
+                    uri: widget.imageUri,
+                    imageHeaders: widget.imageHeaders,
+                    conditional: Conditional(),
+                  )
+                : Conditional().getProvider(
+                    widget.imageUri,
+                    headers: widget.imageHeaders,
+                  ),
           ),
+
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -98,19 +103,16 @@ class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
             right: 20,
             child: Container(
               decoration: BoxDecoration(
-                color: widget.mediaPreviewConfig?.textFieldBackgroundColor ??
-                    Colors.grey[900],
+                color: widget.mediaPreviewConfig?.textFieldBackgroundColor ?? Colors.grey[900],
                 borderRadius:
-                    widget.mediaPreviewConfig?.textFieldConfig?.borderRadius ??
-                        BorderRadius.circular(30),
+                    widget.mediaPreviewConfig?.textFieldConfig?.borderRadius ?? BorderRadius.circular(30),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(left: 12.0),
-                    child: widget.mediaPreviewConfig?.imagePickerIconsConfig
-                            ?.galleryImagePickerIcon ??
+                    child: widget.mediaPreviewConfig?.imagePickerIconsConfig?.galleryImagePickerIcon ??
                         const Icon(
                           Icons.photo,
                           size: 24,
@@ -121,25 +123,20 @@ class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
                   Expanded(
                       child: Container(
                     constraints: BoxConstraints(
-                      minHeight: MediaQuery.of(context).size.height /
-                          ((!kIsWeb && Platform.isIOS) ? 24 : 28),
+                      minHeight: MediaQuery.of(context).size.height / ((!kIsWeb && Platform.isIOS) ? 24 : 28),
                     ),
                     // margin: widget.textFieldConfig?.margin,
                     child: TextField(
                       controller: _controller,
                       minLines: 1,
                       maxLines: 4,
-                      style: widget
-                              .mediaPreviewConfig?.textFieldConfig?.textStyle ??
+                      style: widget.mediaPreviewConfig?.textFieldConfig?.textStyle ??
                           const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                        hintStyle: widget.mediaPreviewConfig?.textFieldConfig
-                                ?.hintStyle ??
+                        hintStyle: widget.mediaPreviewConfig?.textFieldConfig?.hintStyle ??
                             const TextStyle(color: Colors.white60),
                         contentPadding: EdgeInsets.zero,
-                        hintText: widget.mediaPreviewConfig?.textFieldConfig
-                                ?.hintText ??
-                            PackageStrings.message,
+                        hintText: widget.mediaPreviewConfig?.textFieldConfig?.hintText ?? PackageStrings.message,
                         border: OutlineInputBorder(
                           borderSide: BorderSide.none,
                           borderRadius: BorderRadius.circular(30),
@@ -171,8 +168,7 @@ class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
               children: [
                 widget.mediaPreviewConfig?.receiverNameWidget ??
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.grey[900],
                         borderRadius: BorderRadius.circular(20),
@@ -186,25 +182,24 @@ class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
                         ),
                       ),
                     ),
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: widget.mediaPreviewConfig?.defaultSendButtonColor ??
-                        Theme.of(context).colorScheme.primary,
+                IconButton(
+                  padding: const EdgeInsets.all(12),
+                  style: IconButton.styleFrom(
+                    backgroundColor:
+                        widget.mediaPreviewConfig?.defaultSendButtonColor ?? Theme.of(context).colorScheme.primary,
                   ),
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: widget.mediaPreviewConfig?.sendButtonIcon ??
-                        const Icon(
-                          Icons.send,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                    onPressed: () {
-                      widget.onSend(widget.imageUri, _controller.text.trim());
-                      Navigator.pop(context);
-                    },
-                  ),
+                  icon: widget.mediaPreviewConfig?.sendButtonIcon ??
+                      const Icon(
+                        Icons.send,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                  onPressed: () {
+                    widget.onSend.call(
+                      widget.imageUri,
+                    );
+                    Navigator.pop(context);
+                  },
                 ),
               ],
             ),
@@ -220,8 +215,7 @@ class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
       child: IconButton(
         style: IconButton.styleFrom(
           padding: EdgeInsets.zero,
-          backgroundColor:
-              widget.mediaPreviewConfig?.closeIconColor ?? Colors.grey[900],
+          backgroundColor: widget.mediaPreviewConfig?.closeIconColor ?? Colors.grey[900],
         ),
         icon: icon,
         onPressed: onTap,
