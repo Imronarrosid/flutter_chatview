@@ -70,8 +70,7 @@ class ReplyMessageView extends StatelessWidget {
                   sendMessageConfig?.replyMessageConfiguration?.micIcon ??
                       Icon(
                         Icons.mic,
-                        color: sendMessageConfig
-                            ?.replyMessageConfiguration?.micIconColor,
+                        color: sendMessageConfig?.replyMessageConfiguration?.micIconColor,
                       ),
                   const SizedBox(width: 4),
                   if (message.voiceMessageDuration != null)
@@ -79,9 +78,7 @@ class ReplyMessageView extends StatelessWidget {
                       message.voiceMessageDuration!.toHHMMSS(),
                       style: TextStyle(
                         fontSize: 12,
-                        color: sendMessageConfig?.replyMessageConfiguration
-                                ?.replyMessageColor ??
-                            Colors.black,
+                        color: sendMessageConfig?.replyMessageConfiguration?.replyMessageColor ?? Colors.black,
                       ),
                     ),
                 ],
@@ -90,7 +87,7 @@ class ReplyMessageView extends StatelessWidget {
           ],
         ),
       MessageType.image => Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Padding(
               padding: const EdgeInsets.only(left: 6.0, bottom: 6.0),
@@ -98,9 +95,7 @@ class ReplyMessageView extends StatelessWidget {
                   Icon(
                     Icons.photo,
                     size: 20,
-                    color: sendMessageConfig
-                            ?.replyMessageConfiguration?.replyMessageColor ??
-                        Colors.grey.shade700,
+                    color: sendMessageConfig?.replyMessageConfiguration?.replyMessageColor ?? Colors.grey.shade700,
                   ),
             ),
             Padding(
@@ -108,9 +103,7 @@ class ReplyMessageView extends StatelessWidget {
               child: Text(
                 PackageStrings.photo,
                 style: TextStyle(
-                  color: sendMessageConfig
-                          ?.replyMessageConfiguration?.replyMessageColor ??
-                      Colors.black,
+                  color: sendMessageConfig?.replyMessageConfiguration?.replyMessageColor ?? Colors.black,
                 ),
               ),
             ),
@@ -132,8 +125,7 @@ class ReplyMessageView extends StatelessWidget {
             // )
           ],
         ),
-      MessageType.custom when customMessageReplyViewBuilder != null =>
-        customMessageReplyViewBuilder!(message),
+      MessageType.custom when customMessageReplyViewBuilder != null => customMessageReplyViewBuilder!(message),
       MessageType.custom || MessageType.text => Padding(
           padding: const EdgeInsets.all(6.0),
           child: Text(
@@ -142,9 +134,7 @@ class ReplyMessageView extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 12,
-              color: sendMessageConfig
-                      ?.replyMessageConfiguration?.replyMessageColor ??
-                  Colors.black,
+              color: sendMessageConfig?.replyMessageConfiguration?.replyMessageColor ?? Colors.black,
             ),
           ),
         ),
