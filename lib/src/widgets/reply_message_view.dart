@@ -87,25 +87,30 @@ class ReplyMessageView extends StatelessWidget {
           ],
         ),
       MessageType.image => Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 6.0, bottom: 6.0),
-              child: sendMessageConfig?.replyMessageConfiguration?.imageIcon ??
-                  Icon(
-                    Icons.photo,
-                    size: 20,
-                    color: sendMessageConfig?.replyMessageConfiguration?.replyMessageColor ?? Colors.grey.shade700,
-                  ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6.0),
-              child: Text(
-                PackageStrings.photo,
-                style: TextStyle(
-                  color: sendMessageConfig?.replyMessageConfiguration?.replyMessageColor ?? Colors.black,
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 6.0, bottom: 6.0),
+                  child: sendMessageConfig?.replyMessageConfiguration?.imageIcon ??
+                      Icon(
+                        Icons.photo,
+                        size: 20,
+                        color: sendMessageConfig?.replyMessageConfiguration?.replyMessageColor ??
+                            Colors.grey.shade700,
+                      ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6.0),
+                  child: Text(
+                    PackageStrings.photo,
+                    style: TextStyle(
+                      color: sendMessageConfig?.replyMessageConfiguration?.replyMessageColor ?? Colors.black,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const Spacer(),
 

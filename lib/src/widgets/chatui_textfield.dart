@@ -514,87 +514,59 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
           top: Radius.circular(14),
         ),
       ),
-      // margin: const EdgeInsets.only(
-      //   bottom: 17,
-      //   right: 0.4,
-      //   left: 0.4,
-      // ),
       padding: const EdgeInsets.fromLTRB(verticalPadding, verticalPadding, verticalPadding, 0),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(11),
-          child: Container(
-            decoration: BoxDecoration(
-              color: widget.sendMessageConfig?.replyMessageConfiguration?.replyDialogColor ?? Colors.grey.shade200,
-            ),
-            child: Stack(
-              children: [
-                Align(
-                  alignment: Alignment.bottomLeft,
-                  child: ReplyMessageView(
-                    message: state,
-                    customMessageReplyViewBuilder: widget.messageConfig?.customMessageReplyViewBuilder,
-                    sendMessageConfig: widget.sendMessageConfig,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: widget.sendMessageConfig?.replyMessageConfiguration?.replyDialogColor ?? Colors.grey.shade200,
+          ),
+          child: Stack(
+            children: [
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: ReplyMessageView(
+                  message: state,
+                  customMessageReplyViewBuilder: widget.messageConfig?.customMessageReplyViewBuilder,
+                  sendMessageConfig: widget.sendMessageConfig,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 0),
+                child: Text(
+                  replyTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color:
+                        widget.sendMessageConfig?.replyMessageConfiguration?.replyTitleColor ?? Colors.deepPurple,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.25,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        replyTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: widget.sendMessageConfig?.replyMessageConfiguration?.replyTitleColor ??
-                              Colors.deepPurple,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.25,
-                        ),
-                      ),
-                      const Spacer(),
-                      Material(
-                        color: Colors.grey[200],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(30),
-                          onTap: widget.onCloseReplyMessage,
-                          child: Container(
-                            constraints: const BoxConstraints(
-                              maxHeight: 16,
-                              minHeight: 14,
-                              maxWidth: 16,
-                              minWidth: 14,
-                            ),
-                            // style: IconButton
-                            //     .styleFrom(
-                            //   backgroundColor:
-                            //       Colors.amber,
-                            //   padding:
-                            //       EdgeInsets.zero,
-                            //   fixedSize:
-                            //       Size(16, 16),
-                            // ),
-                            padding: EdgeInsets.zero,
-                            child: Icon(
-                              Icons.close,
-                              color: widget.sendMessageConfig?.replyMessageConfiguration?.closeIconColor ??
-                                  Colors.black26,
-                              size: 16,
-                            ),
+              ),
+              Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Material(
+                    color: Colors.white30,
+                    borderRadius: BorderRadius.circular(50),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(50),
+                      onTap: widget.onCloseReplyMessage,
+                      child: widget.sendMessageConfig?.replyMessageConfiguration?.closeIcon ??
+                          Icon(
+                            Icons.close_rounded,
+                            color: widget.sendMessageConfig?.replyMessageConfiguration?.closeIconColor ??
+                                Colors.black26,
+                            size: 16,
                           ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
