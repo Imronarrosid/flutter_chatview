@@ -88,8 +88,7 @@ class ChatListWidget extends StatefulWidget {
   State<ChatListWidget> createState() => _ChatListWidgetState();
 }
 
-class _ChatListWidgetState extends State<ChatListWidget>
-    with SingleTickerProviderStateMixin {
+class _ChatListWidgetState extends State<ChatListWidget> with SingleTickerProviderStateMixin {
   ChatController get chatController => widget.chatController;
 
   List<Message> get messageList => chatController.initialMessageList;
@@ -133,12 +132,13 @@ class _ChatListWidgetState extends State<ChatListWidget>
       valueListenable: chatViewIW!.showPopUp,
       builder: (_, showPopupValue, child) {
         return ChatGroupedListWidget(
+          imageHeaders: widget.imageHeaders,
+          imageProviderBuilder: widget.imageProviderBuilder,
           chatViewRenderBox: widget.chatViewRenderBox,
           imageListNotifier: widget.chatController.imageListNotifier,
           showPopUp: showPopupValue,
           scrollController: scrollController,
-          isEnableSwipeToSeeTime:
-              featureActiveConfig?.enableSwipeToSeeTime ?? true,
+          isEnableSwipeToSeeTime: featureActiveConfig?.enableSwipeToSeeTime ?? true,
           assignReplyMessage: widget.assignReplyMessage,
           replyMessage: widget.replyMessage,
           onChatBubbleLongPress: (yCoordinate, xCoordinate, message) {
@@ -165,8 +165,7 @@ class _ChatListWidgetState extends State<ChatListWidget>
 
   void _pagination() {
     if (widget.loadMoreData == null || widget.isLastPage == true) return;
-    if ((scrollController.position.pixels ==
-            scrollController.position.maxScrollExtent) &&
+    if ((scrollController.position.pixels == scrollController.position.maxScrollExtent) &&
         !widget.chatController.isLoadMore.value) {
       widget.chatController.isLoadMore.value = true;
       widget.loadMoreData!();
