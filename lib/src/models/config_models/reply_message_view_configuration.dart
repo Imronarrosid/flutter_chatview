@@ -35,6 +35,9 @@ class ReplyMessageViewConfiguration {
   /// Used to give color to close icon in reply pop-up.
   final Color? closeIconColor;
 
+  /// Used to give color to close icon in reply pop-up.
+  final Color? closeIconBackgroundColor;
+
   /// Used to give color to mic icon in reply pop-up.
   /// This color will be used when [micIcon] is not provided.
   final Color? micIconColor;
@@ -49,6 +52,7 @@ class ReplyMessageViewConfiguration {
   /// Creates a configuration for reply message view customization.
   const ReplyMessageViewConfiguration({
     this.replyDialogColor,
+    this.closeIconBackgroundColor,
     this.replyTitleColor,
     this.replyMessageColor,
     this.replyMessageStyle,
@@ -95,4 +99,4 @@ class ReplyMessageViewConfiguration {
       micIcon: micIcon ?? this.micIcon,
     );
   }
-} 
+}

@@ -550,7 +550,8 @@ class _ChatUITextFieldState extends State<ChatUITextField> {
                 child: Padding(
                   padding: const EdgeInsets.all(4.0),
                   child: Material(
-                    color: Colors.white30,
+                    color: widget.sendMessageConfig?.replyMessageConfiguration?.closeIconBackgroundColor ??
+                        Colors.white30,
                     borderRadius: BorderRadius.circular(50),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(50),
